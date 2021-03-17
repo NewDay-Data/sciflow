@@ -3,7 +3,8 @@
 __all__ = ["index", "modules", "custom_doc_links", "git_url"]
 
 index = {"run_nbqa_cmd": "nb_lint.ipynb",
-         "scidev_tidy": "nb_lint.ipynb",
+         "sciflow_tidy": "nb_lint.ipynb",
+         "determine_dependencies": "packaging.ipynb",
          "find_params_cell": "params.ipynb",
          "DEFAULT_PARAMS_CELL": "params.ipynb",
          "add_missing_params_cell": "params.ipynb",
@@ -13,10 +14,11 @@ index = {"run_nbqa_cmd": "nb_lint.ipynb",
          "extract_params_as_dict": "params.ipynb"}
 
 modules = ["nb_lint.py",
+           "packaging.py",
            "params.py"]
 
-doc_url = "https://{user}.github.io/scidev/"
+doc_url = "https://{user}.github.io/sciflow/"
 
-git_url = "https://github.com/{user}/scidev/tree/{branch}/"
+git_url = "https://github.com/{user}/sciflow/tree/{branch}/"
 
 def custom_doc_links(name): return None

@@ -8,7 +8,7 @@ __all__ = ['find_params_cell', 'DEFAULT_PARAMS_CELL', 'add_missing_params_cell',
 from pathlib import Path
 
 import nbformat
-from nbdev.export import Config, find_default_export, nbglob, params_cell, read_nb
+from nbdev.export import (Config, find_default_export, nbglob, read_nb)
 from nbformat.notebooknode import NotebookNode
 
 # Cell
@@ -43,11 +43,13 @@ def add_missing_params_cell(nb_path: Path, persist: bool = True):
 
 # Cell
 
+
 def extract_params_to_file(nb_path: Path, params_file_path: Path):
     with open(params_file_path, "w") as params_file:
         params_file.writelines(params_cell[0]["source"])
 
 # Cell
+
 
 def list_mod_files(files):
     modules = []
@@ -62,6 +64,7 @@ def list_mod_files(files):
 
 # Cell
 
+
 def extract_as_files(suffix="_params.py"):
     nbs = nbglob(recursive=True)
     param_files = list_mod_files(nbs)
@@ -72,6 +75,7 @@ def extract_as_files(suffix="_params.py"):
         extract_params_to_file(nb_path, pf_path)
 
 # Cell
+
 
 def extract_params_as_dict(params_file_path: Path):
     params = {}
