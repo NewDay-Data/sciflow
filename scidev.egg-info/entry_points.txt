@@ -1,0 +1,3 @@
+[console_scripts]
+scidev_tidy = scidev.nb_lint:scidev_tidy
+

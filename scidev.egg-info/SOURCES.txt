@@ -1,0 +1,17 @@
+CONTRIBUTING.md
+LICENSE
+MANIFEST.in
+README.md
+pyproject.toml
+settings.ini
+setup.py
+scidev/__init__.py
+scidev/_nbdev.py
+scidev/nb_lint.py
+scidev/params.py
+scidev.egg-info/PKG-INFO
+scidev.egg-info/SOURCES.txt
+scidev.egg-info/dependency_links.txt
+scidev.egg-info/entry_points.txt
+scidev.egg-info/not-zip-safe
+scidev.egg-info/top_level.txt

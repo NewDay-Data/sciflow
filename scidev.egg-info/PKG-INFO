@@ -1,0 +1,43 @@
+Metadata-Version: 2.1
+Name: scidev
+Version: 0.0.1
+Summary: Library that helps to discover patterns in large text sets
+Home-page: https://github.com/{user}/scidev/tree/{branch}/
+Author: {author}
+Author-email: {author_email}
+License: Apache Software License 2.0
+Description: # Text Discovery
+        > This library provides functions that help you mine large corpora of text data. 
+        
+        
+        This file will become your README and also the index of your documentation.
+        
+        ## Install
+        
+        `mamba install text_discovery`
+        
+        ## How to use
+        
+        Fill me in please! Don't forget code examples:
+        
+        ```
+        1+1
+        ```
+        
+        
+        
+        
+            2
+        
+        
+        
+Keywords: nlp,discovery,text
+Platform: UNKNOWN
+Classifier: Development Status :: 3 - Alpha
+Classifier: Intended Audience :: Developers
+Classifier: Natural Language :: English
+Classifier: Programming Language :: Python :: 3.7
+Classifier: Programming Language :: Python :: 3.8
+Classifier: License :: OSI Approved :: Apache Software License
+Requires-Python: >=3.7
+Description-Content-Type: text/markdown
