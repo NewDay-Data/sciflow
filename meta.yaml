@@ -1,12 +1,12 @@
 package:
-  name: scidev
+  name: sciflow
   version: "0.0.1"
 
 build:
   number: 0
   
 source:
-  path: ../scidev
+  path: ../sciflow
   
 requirements:
   host:
