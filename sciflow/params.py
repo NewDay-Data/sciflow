@@ -28,7 +28,7 @@ DEFAULT_PARAMS_CELL = {
     "source": "# parameters\n",
 }
 
-# Cell
+# step:add_missing
 
 
 def add_missing_params_cell(nb_path: Path, persist: bool = True):
