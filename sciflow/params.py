@@ -8,7 +8,7 @@ __all__ = ['find_params_cell', 'DEFAULT_PARAMS_CELL', 'add_missing_params_cell',
 from pathlib import Path
 
 import nbformat
-from nbdev.export import (Config, find_default_export, nbglob, read_nb)
+from nbdev.export import Config, find_default_export, nbglob, read_nb
 from nbformat.notebooknode import NotebookNode
 
 # Cell
@@ -28,7 +28,7 @@ DEFAULT_PARAMS_CELL = {
     "source": "# parameters\n",
 }
 
-# step:add_missing
+# Cell
 
 
 def add_missing_params_cell(nb_path: Path, persist: bool = True):

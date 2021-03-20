@@ -11,11 +11,21 @@ index = {"run_nbqa_cmd": "nb_lint.ipynb",
          "extract_params_to_file": "params.ipynb",
          "list_mod_files": "params.ipynb",
          "extract_as_files": "params.ipynb",
-         "extract_params_as_dict": "params.ipynb"}
+         "extract_params_as_dict": "params.ipynb",
+         "first": "test_module.ipynb",
+         "function": "test_export.ipynb",
+         "created_new_module": "test_export.ipynb",
+         "internal": "test_module.ipynb",
+         "source_in_docs": "test_module.ipynb",
+         "train": "test_export.ipynb",
+         "last": "test_export.ipynb"}
 
-modules = ["nb_lint.py",
+modules = ["export_named.py",
+           "nb_lint.py",
            "packaging.py",
-           "params.py"]
+           "params.py",
+           "test_export.py",
+           "test_module.py"]
 
 doc_url = "https://{user}.github.io/sciflow/"
 
