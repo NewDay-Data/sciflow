@@ -1,0 +1,53 @@
+<?xml version='1.0' encoding='utf-8'?>
+<graphml xmlns="http://graphml.graphdrawing.org/xmlns" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://graphml.graphdrawing.org/xmlns http://graphml.graphdrawing.org/xmlns/1.0/graphml.xsd"><key id="d3" for="node" attr.name="code" attr.type="string"/>
+<key id="d2" for="node" attr.name="has_return" attr.type="boolean"/>
+<key id="d1" for="node" attr.name="args" attr.type="string"/>
+<key id="d0" for="node" attr.name="name" attr.type="string"/>
+<graph edgedefault="undirected"><node id="0">
+  <data key="d0">first</data>
+  <data key="d1">some_params</data>
+  <data key="d2">False</data>
+  <data key="d3">from typing import List
+
+
+def first(some_params: List[str]):
+    print("".join(some_params))
+    return len(some_params)
+
+</data>
+</node>
+<node id="1">
+  <data key="d0">preprocess</data>
+  <data key="d1">input_path</data>
+  <data key="d2">False</data>
+  <data key="d3">def preprocess(input_path: Path):
+    import time
+
+    print(f"Preprocessing input data from {input_path}...")
+    time.sleep(1)
+
+</data>
+</node>
+<node id="2">
+  <data key="d0">train</data>
+  <data key="d1">input_path,model_path</data>
+  <data key="d2">False</data>
+  <data key="d3">def train(input_path: Path, model_path: Path):
+    import time
+
+    print(f"Training {model_path} on {input_path}...")
+    time.sleep(1)
+
+</data>
+</node>
+<node id="3">
+  <data key="d0">last</data>
+  <data key="d1">some_param</data>
+  <data key="d2">False</data>
+  <data key="d3">def last(some_param: None):
+    return 1</data>
+</node>
+<edge source="0" target="1"/>
+<edge source="1" target="2"/>
+<edge source="2" target="3"/>
+</graph></graphml>
