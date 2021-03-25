@@ -37,3 +37,4 @@ dependencies:
   - nteract-scrapbook
   - pigar
   - pipreqs
+  - networkx

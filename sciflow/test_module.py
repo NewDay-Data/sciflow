@@ -4,13 +4,14 @@ __all__ = ['created_new_module', 'first', 'source_in_docs']
 
 # Comes from test_export.ipynb, cell
 
-created_new_module =True
+created_new_module = True
 
 # step:first
 from typing import List
 
+
 def first(some_params: List[str]):
-    print(''.join(some_params))
+    print("".join(some_params))
     return len(some_params)
 
 # Internal Cell

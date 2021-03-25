@@ -2,7 +2,11 @@
 
 __all__ = ["index", "modules", "custom_doc_links", "git_url"]
 
-index = {"run_nbqa_cmd": "nb_lint.ipynb",
+index = {"extract_named_export": "export_named.ipynb",
+         "is_export_extended": "export_named.ipynb",
+         "set_orig_value": "export_named.ipynb",
+         "sciflow_build_lib": "export_named.ipynb",
+         "run_nbqa_cmd": "nb_lint.ipynb",
          "sciflow_tidy": "nb_lint.ipynb",
          "determine_dependencies": "packaging.ipynb",
          "find_params_cell": "params.ipynb",
@@ -12,11 +16,16 @@ index = {"run_nbqa_cmd": "nb_lint.ipynb",
          "list_mod_files": "params.ipynb",
          "extract_as_files": "params.ipynb",
          "extract_params_as_dict": "params.ipynb",
-         "first": "test_module.ipynb",
+         "extract_step_code": "parse_module.ipynb",
+         "parse_step": "parse_module.ipynb",
+         "extract_steps": "parse_module.ipynb",
+         "extract_dag": "parse_module.ipynb",
+         "first": "test_export.ipynb",
          "function": "test_export.ipynb",
          "created_new_module": "test_export.ipynb",
-         "internal": "test_module.ipynb",
-         "source_in_docs": "test_module.ipynb",
+         "internal": "test_export.ipynb",
+         "preprocess": "test_export.ipynb",
+         "source_in_docs": "test_export.ipynb",
          "train": "test_export.ipynb",
          "last": "test_export.ipynb"}
 
@@ -24,6 +33,7 @@ modules = ["export_named.py",
            "nb_lint.py",
            "packaging.py",
            "params.py",
+           "parse_module.py",
            "test_export.py",
            "test_module.py"]
 
