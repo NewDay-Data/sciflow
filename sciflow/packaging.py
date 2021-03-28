@@ -41,4 +41,4 @@ def determine_dependencies(generated_pip_file_name: str = "requirements-generate
     err = output.stderr
 
     if output_code != 0:
-        raise (EnvironmentError(err))
+        raise EnvironmentError(err)
