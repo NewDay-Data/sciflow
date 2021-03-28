@@ -1,1 +1,0 @@
-{"flow_id": "TestExportFlow", "run_number": "1616926041347835", "step_name": "end", "task_id": "4", "field_name": "log_location_stdout", "type": "log_path", "value": "{\"ds_type\": \"local\", \"location\": \"/home/jovyan/git/sciflow/nbs/.metaflow/TestExportFlow/1616926041347835/end/4/0.stdout.log\", \"attempt\": 0}", "tags": [], "user_name": "e02079", "ts_epoch": 1616926061103}

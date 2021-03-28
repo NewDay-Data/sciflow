@@ -1,1 +1,0 @@
-{"flow_id": "TestExportFlow", "run_number": "1616750902621011", "step_name": "train", "task_id": "3", "field_name": "attempt_ok", "type": "internal_attempt_status", "value": "True", "tags": ["attempt_id:0"], "user_name": "e02079", "ts_epoch": 1616750917899}

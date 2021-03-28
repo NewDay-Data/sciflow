@@ -6,6 +6,8 @@
 *.egg-info/
 build/
 
+.metaflow/
+
 conda-local-build/
 conda-build
 
