@@ -5,6 +5,7 @@ __all__ = ['find_params_cell', 'extract_params', 'DEFAULT_PARAMS_CELL', 'add_mis
 
 # Cell
 
+import os
 from io import StringIO
 from pathlib import Path
 from typing import Iterable

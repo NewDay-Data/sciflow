@@ -5,8 +5,8 @@ __all__ = []
 # Cell
 import os
 from pathlib import Path
-from nbdev.export import Config
-from .parse_module import extract_dag
-from nbdev.export import find_default_export, read_nb
+from typing import Iterable
+
+from nbdev.export import Config, find_default_export, read_nb
 from .params import params_as_dict
-from .parse_module import extract_steps
+from .parse_module import FuncDetails, extract_steps

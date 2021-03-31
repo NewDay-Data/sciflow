@@ -14,6 +14,6 @@
 * nbdev_new     
 * sciflow_tidy
 * sciflow_build_lib
-* sciflow_package
+* sciflow_prepare
 * sciflow_build
-* sciflow_release
+* sciflow_coverage

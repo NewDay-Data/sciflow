@@ -75,7 +75,11 @@ def parse_step(step_code: str):
     lister = FuncLister()
     lister.visit(tree)
     return FuncDetails(
-        lister.name, lister.docstring, ",".join(lister.arg_names), lister.returns is not None, step_code
+        lister.name,
+        lister.docstring,
+        ",".join(lister.arg_names),
+        lister.returns is not None,
+        step_code,
     )
 
 # Cell

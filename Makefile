@@ -29,13 +29,20 @@ local_release: art_pip art_conda
 	nbdev_bump_version
 
 art_conda:
-	mkdir conda-local-build
-	conda mambabuild . --output-folder conda-local-build
-	curl -4 -XPUT "https://${ARTIFACTORY_USER}:${ARTIFACTORY_PASSWORD}@$ARTIFACTORY_URL/artifactory/${ARTIFACTORY_CONDA_CHANNEL}/linux-64/" -T conda-local-build/linux-64/${LIB_NAME}-${VERSION}-${BUILD_NUMBER}.tar.bz2
+	sciflow_prepare && \
+	rm -rf conda-local-build && mkdir conda-local-build && \
+	conda mambabuild . --output-folder conda-local-build && \
+	curl -4 -XPUT "https://${ARTIFACTORY_USER}:${ARTIFACTORY_PASSWORD}@${ARTIFACTORY_URL}/artifactory/${ARTIFACTORY_CONDA_CHANNEL}/linux-64/" -T conda-local-build/linux-64/${LIB_NAME}-${VERSION}-${BUILD_NUMBER}.tar.bz2
 	rm -rf conda-local-build
 
 art_pip: dist
+	sciflow_prepare && \
 	twine upload --repository local dist/*
+    
+build:
+	sciflow_tidy
+	nbdev_test_nbs
+	sciflow_build_lib
     
 release: pypi conda_release
 	nbdev_bump_version
@@ -48,6 +55,7 @@ pypi: dist
 
 dist: clean
 	python setup.py sdist bdist_wheel
+	rm -rf build
 
 clean:
 	rm -rf dist
