@@ -43,6 +43,7 @@ build:
 	sciflow_tidy
 	nbdev_test_nbs
 	sciflow_build_lib
+	sciflow_generate
     
 release: pypi conda_release
 	nbdev_bump_version

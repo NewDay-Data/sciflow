@@ -4,6 +4,7 @@ __all__ = ['run_nbqa_cmd', 'sciflow_tidy']
 
 # Cell
 
+import os
 from pathlib import Path
 
 from fastcore.script import call_parse
