@@ -38,3 +38,4 @@ dependencies:
   - pigar
   - pipreqs
   - networkx
+  - dvc

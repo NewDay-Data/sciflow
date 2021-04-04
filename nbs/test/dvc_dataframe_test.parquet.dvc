@@ -1,0 +1,4 @@
+outs:
+- md5: ecb37eb3aee9c910a7c60ffd78a876d2
+  size: 4283600
+  path: dvc_dataframe_test.parquet
