@@ -1,10 +1,10 @@
 # SCIFLOW GENERATED FILE - DO NOT EDIT
 from metaflow import FlowSpec, step, Parameter
-from sciflow.test/test_export import first, preprocess, train, last
-from sciflow.test/test_export import some_params, some_param, input_path, model_path
+from sciflow.test/test_pandas_numpy import first, preprocess, train, last
+from sciflow.test/test_pandas_numpy import some_params, some_param, input_path, model_path
 
 
-class Test/TestExportFlow(FlowSpec):
+class Test/TestPandasNumpyFlow(FlowSpec):
     some_params = Parameter('some_params', default=some_params)
     some_param = Parameter('some_param', default=some_param)
     input_path = Parameter('input_path', default=input_path)
@@ -37,4 +37,4 @@ class Test/TestExportFlow(FlowSpec):
         last(self.some_param)
 
 if __name__ == "__main__":
-    Test/TestExportFlow()
+    Test/TestPandasNumpyFlow()

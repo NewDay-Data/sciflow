@@ -1,10 +1,10 @@
 # SCIFLOW GENERATED FILE - DO NOT EDIT
 from metaflow import FlowSpec, step, Parameter
-from sciflow.test_module import first
-from sciflow.test_module import some_param
+from sciflow.test/test_module import first
+from sciflow.test/test_module import some_param
 
 
-class TestModuleFlow(FlowSpec):
+class Test/TestModuleFlow(FlowSpec):
     some_param = Parameter('some_param', default=some_param)
 
     @step
@@ -17,4 +17,4 @@ class TestModuleFlow(FlowSpec):
         pass
 
 if __name__ == "__main__":
-    TestModuleFlow()
+    Test/TestModuleFlow()

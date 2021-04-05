@@ -6,6 +6,9 @@
 # sciflow/scilint.py: 10
 fastcore == 1.3.19
 
+# sciflow/test/test_top2vec.py: 17
+gensim == 3.8.0
+
 # sciflow/export_named.py: 15
 # sciflow/metaflow.py: 12
 # sciflow/packaging.py: 19
@@ -23,5 +26,16 @@ nbqa == 0.5.6
 # sciflow/parse_module.py: 12
 networkx == 2.5
 
+# sciflow/test/test_top2vec.py: 20
+# sciflow/utils.py: 8
+newday_nexus_data_access == 0.6.4
+
+# sciflow/test/test_top2vec.py: 18
+numpy == 1.19.2
+
 # sciflow/parse_module.py: 13
+# sciflow/test/test_top2vec.py: 10,19
 pandas == 0.25.3
+
+# sciflow/test/test_top2vec.py: 21
+top2vec == 1.0.23

@@ -44,18 +44,17 @@ def indent_multiline(multiline_text, indent=1):
 
 
 def nb_to_metaflow(nb_path: Path, flow_path: Path, silent=True):
+    print(nb_path)
     nb = read_nb(nb_path)
     lib_name = Config().lib_name
     module_name = find_default_export(nb["cells"])
-    nb_name = os.path.basename(nb_path)
     if not module_name:
-        print(f"Skipping {nb_name} - no export module")
         return
+    module_name = module_name.replace('.', '/')
+    nb_name = os.path.basename(nb_path)
     exported_module = os.path.join(Config().path("lib_path"), f"{module_name}.py")
     steps = extract_steps(exported_module)
     if len(steps) == 0:
-        if not silent:
-            print(f"Skipping {nb_name} - no steps")
         return
     orig_step_names = [step.name for step in steps]
     if len(steps) == 1:
@@ -75,7 +74,7 @@ def nb_to_metaflow(nb_path: Path, flow_path: Path, silent=True):
         params,
     )
     if not silent:
-        print(f"Wrote {flow_class_name} to: {os.path.basename(flow_path)}")
+        print(f"Converted {nb_name} to {flow_class_name} in: {os.path.basename(flow_path)}")
 
 # Cell
 
