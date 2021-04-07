@@ -74,8 +74,10 @@ def parse_step(step_code: str):
     tree = ast.parse(step_code)
     lister = FuncLister()
     lister.visit(tree)
-    if 'name' not in lister.__dict__:
-        raise(ValueError('Step must have a single valid function; check step definition'))
+    if "name" not in lister.__dict__:
+        raise (
+            ValueError("Step must have a single valid function; check step definition")
+        )
     return FuncDetails(
         lister.name,
         lister.docstring,

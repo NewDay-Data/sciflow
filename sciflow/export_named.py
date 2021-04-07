@@ -23,7 +23,7 @@ from nbformat import NotebookNode
 # Cell
 
 _re_named_export = _mk_flag_re(
-    "exportn_[a-zA-Z0-9:]+\W*$",
+    "exportn_[a-zA-Z0-9:_]+\W*$",
     0,
     "Matches any line with a named #exportn without any module name",
 )
@@ -33,8 +33,12 @@ def extract_named_export(cell: NotebookNode):
     name = None
     tst = check_re(cell, _re_named_export)
     if tst:
-        pat = re.compile(rf"""exportn_[a-zA-Z0-9:]+\W*$""", re.MULTILINE | re.VERBOSE)
-        name = pat.search(tst.string).group(0).split("_")[1].strip()
+        pat = re.compile(rf"""exportn_[a-zA-Z0-9:_]+\W*$""", re.MULTILINE | re.VERBOSE)
+        pat_match = pat.search(tst.string).group(0).split("_")
+        if len(pat_match) == 2:
+            name = pat_match[1].strip()
+        elif len(pat_match) > 2:
+            name = "_".join(pat_match[1:]).strip()
     return name
 
 # Cell

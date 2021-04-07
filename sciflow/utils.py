@@ -4,10 +4,13 @@ __all__ = ['shell_source', 'load_dremio_access']
 
 # Cell
 
-import subprocess, os
+import os
+import subprocess
+
 from data_access.dremio_access import DremioAccess
 
 # Cell
+
 
 def shell_source(script):
     """Sometime you want to emulate the action of "source" in bash,
@@ -17,13 +20,14 @@ def shell_source(script):
 
     pipe = subprocess.Popen(". %s; env" % script, stdout=subprocess.PIPE, shell=True)
     output = pipe.communicate()[0]
-    env = dict((line.split("=", 1) for line in output.decode('utf-8').splitlines()))
+    env = dict((line.split("=", 1) for line in output.decode("utf-8").splitlines()))
     os.environ.update(env)
 
 # Cell
 
+
 def load_dremio_access():
-    shell_source('/home/jovyan/.profile')
-    if 'DREMIO_PWD' in os.environ:
-        DremioAccess._get_dremio_password = lambda x: os.environ['DREMIO_PWD']
+    shell_source("/home/jovyan/.profile")
+    if "DREMIO_PWD" in os.environ:
+        DremioAccess._get_dremio_password = lambda x: os.environ["DREMIO_PWD"]
     return DremioAccess()

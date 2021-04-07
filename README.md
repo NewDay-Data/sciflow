@@ -1,4 +1,4 @@
-# Sciflow
+# Sciflow 🔬
 > This library bridges the gap between research and production for Data Science. The exploration driven development is a different paradigm to most software engineering exercises. We start by assuming only that there are high levels of uncertainty and that the code needs not only to work but to be well conditioned to real data. `sciflow` mixes the strengths of the notebook environment: flexibility, access to data and constant feedback with the strengths of production-like workflows: resilience and dedicated compute.
 
 
@@ -6,7 +6,12 @@ This file will become your README and also the index of your documentation.
 
 ## Install
 
+# Boa
 `mamba install sciflow`
+# Conda
+`conda install sciflow`
+# Pip
+`pip install sciflow`
 
 ## How to use
 
@@ -40,4 +45,6 @@ A flow is short for workflow; they help you structure your work into something c
 * sciflow_build_lib
 * sciflow_prepare
 * sciflow_build
+* sciflow_generate
+* sciflow_check_flows
 * sciflow_release

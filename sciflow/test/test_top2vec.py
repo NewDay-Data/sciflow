@@ -6,20 +6,19 @@ __all__ = ['something', 'traffic_percent', 'speed', 'workers', 'get_traffic_text
 
 # step:first
 
+
 def something():
-    import pandas as pd
+    pass
 
 # Cell
 
 import logging
-import os
 
 import gensim
 import numpy as np
 import pandas as pd
-from data_access.dremio_access import DremioAccess
-from top2vec import Top2Vec
 from ..utils import load_dremio_access
+from top2vec import Top2Vec
 
 gensim.logger.setLevel(logging.WARN)
 
@@ -79,6 +78,7 @@ def preprocess(dremio_access, model_level, min_date, traffic_percent):
 
 # step:fit
 
+
 def fit(documents, workers=workers, speed="fast-learn"):
     return Top2Vec(documents, workers=workers, speed=speed)
 
@@ -88,6 +88,7 @@ def get_num_docs(topic_idx, topic_sizes, max_k=50):
     return n_docs if n_docs < max_k else max_k
 
 # step:evaluate
+
 
 def evaluate(model):
     topic_words, word_scores, topic_nums = model.get_topics(model.get_num_topics())
