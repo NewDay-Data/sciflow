@@ -2,7 +2,14 @@
 
 __all__ = ["index", "modules", "custom_doc_links", "git_url"]
 
-index = {"extract_named_export": "export_named.ipynb",
+index = {"supported_parameters": "data_handler.ipynb",
+         "supported_args": "data_handler.ipynb",
+         "supported_conversion_args": "data_handler.ipynb",
+         "suppported_types": "data_handler.ipynb",
+         "Param": "data_handler.ipynb",
+         "load_module": "data_handler.ipynb",
+         "extract_param_meta": "data_handler.ipynb",
+         "extract_named_export": "export_named.ipynb",
          "is_export_extended": "export_named.ipynb",
          "set_orig_value": "export_named.ipynb",
          "sciflow_build_lib": "export_named.ipynb",
@@ -12,6 +19,7 @@ index = {"extract_named_export": "export_named.ipynb",
          "nb_to_metaflow": "metaflow.ipynb",
          "extract_module_only": "metaflow.ipynb",
          "write_module_to_file": "metaflow.ipynb",
+         "write_steps": "metaflow.ipynb",
          "get_module_name": "metaflow.ipynb",
          "generate_flows": "metaflow.ipynb",
          "sciflow_generate": "metaflow.ipynb",
@@ -86,7 +94,8 @@ index = {"extract_named_export": "export_named.ipynb",
          "shell_source": "utils.ipynb",
          "load_dremio_access": "utils.ipynb"}
 
-modules = ["export_named.py",
+modules = ["data_handler.py",
+           "export_named.py",
            "metaflow.py",
            "packaging.py",
            "params.py",
