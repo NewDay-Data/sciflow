@@ -30,22 +30,22 @@ df_param = pd.DataFrame({"a": ones, "b": ones, "c": ones, "d": text})
 
 
 def scalar(int_param: int, float_param: float, str_param: str):
-    print(f'int_param: {int_param}')
-    print(f'float_param: {float_param}')
-    print(f'str_param: {str_param}')
+    print(f"int_param: {int_param}")
+    print(f"float_param: {float_param}")
+    print(f"str_param: {str_param}")
     return int_param, float_param, str_param
 
 # step:py_advanced
 
 
 def py_advanced(input_path: Path, list_param: List[int], dict_param: Dict[str, Any]):
-    print(f'input_path: {input_path}')
-    print(f'input_path: {list_param[:10]}')
-    print(f'input_path: {dict_param}')
+    print(f"input_path: {input_path}")
+    print(f"input_path: {list_param[:10]}")
+    print(f"input_path: {dict_param}")
 
 # step:pandas
 
 
-def pandas(series: pd.Series, df: pd.DataFrame):
-    print(f'series: {series.shape}')
-    print(f'df: {df.shape}')
+def pandas(series_param: pd.Series, df_param: pd.DataFrame):
+    print(f"series: {series_param.shape}")
+    print(f"df: {df_param.shape}")

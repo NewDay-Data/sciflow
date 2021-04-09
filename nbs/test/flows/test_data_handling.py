@@ -9,6 +9,8 @@ class TestDataHandlingFlow(FlowSpec):
     int_param = Parameter('int_param', default=int_param)
     float_param = Parameter('float_param', default=float_param)
     str_param = Parameter('str_param', default=str_param)
+    input_path = Parameter('input_path', default=str(input_path))
+    model_path = Parameter('model_path', default=str(model_path))
     dict_param = Parameter('dict_param', default=json.dumps(dict_param), type=JSONType)
     list_param = Parameter('list_param', default=json.dumps(list_param), type=JSONType)
 
@@ -19,12 +21,12 @@ class TestDataHandlingFlow(FlowSpec):
 
     @step
     def py_advanced(self):
-        py_advanced(self.input_path, self.list_param, self.dict_param)
+        py_advanced(input_path, self.list_param, self.dict_param)
         self.next(self.end)
 
     @step
     def end(self):
-        pandas(self.series, self.df)
+        pandas(series_param, df_param)
 
 if __name__ == "__main__":
     TestDataHandlingFlow()

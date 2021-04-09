@@ -1,7 +1,7 @@
 # SCIFLOW GENERATED FILE - DO NOT EDIT
 from metaflow import FlowSpec, step, Parameter
 from sciflow.test.test_top2vec import something, preprocess, fit, evaluate
-from sciflow.test.test_top2vec import traffic_percent, speed, workers
+from sciflow.test.test_top2vec import traffic_percent, speed, workers, dremio_access
 
 
 class TestTop2VecFlow(FlowSpec):
@@ -16,17 +16,17 @@ class TestTop2VecFlow(FlowSpec):
 
     @step
     def preprocess(self):
-        preprocess(self.dremio_access, self.model_level, self.min_date, self.traffic_percent)
+        preprocess(self.dremio_access, model_level, min_date, self.traffic_percent)
         self.next(self.fit)
 
     @step
     def fit(self):
-        fit(self.documents, self.workers, self.speed)
+        fit(documents, self.workers, self.speed)
         self.next(self.end)
 
     @step
     def end(self):
-        evaluate(self.model)
+        evaluate(model)
 
 if __name__ == "__main__":
     TestTop2VecFlow()
