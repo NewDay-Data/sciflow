@@ -40,9 +40,9 @@ art_pip: dist
     
 build:
 	sciflow_tidy
-	nbdev_build_docs
 	nbdev_test_nbs
 	sciflow_build_lib
+	nbdev_build_docs
 	sciflow_generate
 	sciflow_check_flows
     

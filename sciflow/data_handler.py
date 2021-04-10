@@ -93,7 +93,7 @@ def extract_param_meta(module_name: str, params: Dict[str, Any]):
                 param_meta[key] = ParamMeta(
                     instance_type=type(val),
                     is_scalar=False,
-                    has_metaflow_param=False,
+                    has_metaflow_param=True,
                     is_json_type=False,
                     persist_type="pickle",
                 )
@@ -101,7 +101,7 @@ def extract_param_meta(module_name: str, params: Dict[str, Any]):
             param_meta[key] = ParamMeta(
                 instance_type=type(val),
                 is_scalar=False,
-                has_metaflow_param=True,
+                has_metaflow_param=False,
                 is_json_type=False,
                 persist_type="unsupported",
             )

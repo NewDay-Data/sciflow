@@ -21,7 +21,7 @@ class TestDataHandlingFlow(FlowSpec):
 
     @step
     def py_advanced(self):
-        py_advanced(input_path, self.list_param, self.dict_param)
+        py_advanced(self.input_path, self.list_param, self.dict_param)
         self.next(self.end)
 
     @step

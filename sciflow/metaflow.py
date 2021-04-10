@@ -2,7 +2,8 @@
 
 __all__ = ['titleize', 'rename_steps_for_metaflow', 'indent_multiline', 'nb_to_metaflow', 'extract_module_only',
            'write_module_to_file', 'write_params', 'format_arg', 'write_steps', 'get_module_name', 'generate_flows',
-           'sciflow_generate', 'check_flows', 'check_flow', 'sciflow_check_flows']
+           'sciflow_generate', 'check_flows', 'prep_mf_env', 'run_shell_cmd', 'check_flow', 'sciflow_check_flows',
+           'sciflow_run_flows']
 
 # Cell
 
@@ -156,11 +157,7 @@ def write_params(flow_file, param_meta, single_indent):
 
 def format_arg(arg, param_meta):
     result = arg
-    if arg not in param_meta:
-        print(
-            f"Warning: using parameter {arg} not set in params cell - flow may not work"
-        )
-    elif param_meta[arg].has_metaflow_param:
+    if arg in param_meta and param_meta[arg].has_metaflow_param:
         result = "self." + arg
     return result
 
@@ -204,7 +201,6 @@ def generate_flows(config: Config):
     flows_dir = config.path("flows_path")
     nb_paths = nbglob(recursive=True)
     for nb_path in nb_paths:
-        print(nb_path)
         flow_module_name = os.path.basename(nb_path).replace("ipynb", "py")
         nb_to_metaflow(
             nb_path, Path(os.path.join(flows_dir, flow_module_name)), silent=False
@@ -220,13 +216,15 @@ def sciflow_generate():
 # Cell
 
 
-def check_flows(config):
+def check_flows(config, flow_command="show"):
     flow_results = {}
     flows_dir = config.path("flows_path")
     for flow_path in os.listdir(flows_dir):
         flow_name = os.path.basename(flow_path)
         if flow_path.endswith(".py"):
-            ret_code, output = check_flow(flows_dir, flow_path)
+            ret_code, output = check_flow(
+                flows_dir, flow_path, flow_command=flow_command
+            )
             flow_results[flow_name] = ret_code, output
             if ret_code == 0:
                 print(f"Flow: {flow_name} verified")
@@ -236,7 +234,7 @@ def check_flows(config):
 # Cell
 
 
-def check_flow(flows_dir, flow_module):
+def prep_mf_env():
     if "USER" not in os.environ:
         try:
             os.environ["USER"] = os.environ["GIT_COMMITTER_NAME"]
@@ -244,12 +242,25 @@ def check_flow(flows_dir, flow_module):
             raise EnvironmentError(
                 "Metaflow requires a known user for tracked execution. Add USER or GIT_COMMITTER_NAME to Jupyter environment variables"
             )
-    script = f"python '{os.path.join(flows_dir, flow_module)}' show"
+
+# Cell
+
+
+def run_shell_cmd(script):
     pipe = subprocess.Popen(
         "%s" % script, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, shell=True
     )
     output = pipe.communicate()[0]
-    return pipe.returncode, output.decode("utf-8").strip()
+    return pipe, output.decode("utf-8").strip()
+
+# Cell
+
+
+def check_flow(flows_dir, flow_module, flow_command="show"):
+    prep_mf_env()
+    script = f"python '{os.path.join(flows_dir, flow_module)}' {flow_command}"
+    pipe, output = run_shell_cmd(script)
+    return pipe.returncode, output
 
 # Cell
 
@@ -257,3 +268,10 @@ def check_flow(flows_dir, flow_module):
 @call_parse
 def sciflow_check_flows():
     check_flows(Config())
+
+# Cell
+
+
+@call_parse
+def sciflow_run_flows():
+    check_flows(Config(), "--no-pylint run")

@@ -1,5 +1,6 @@
 <?xml version='1.0' encoding='utf-8'?>
-<graphml xmlns="http://graphml.graphdrawing.org/xmlns" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://graphml.graphdrawing.org/xmlns http://graphml.graphdrawing.org/xmlns/1.0/graphml.xsd"><key id="d4" for="node" attr.name="code" attr.type="string"/>
+<graphml xmlns="http://graphml.graphdrawing.org/xmlns" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://graphml.graphdrawing.org/xmlns http://graphml.graphdrawing.org/xmlns/1.0/graphml.xsd"><key id="d5" for="node" attr.name="code" attr.type="string"/>
+<key id="d4" for="node" attr.name="return_stmt" attr.type="string"/>
 <key id="d3" for="node" attr.name="has_return" attr.type="boolean"/>
 <key id="d2" for="node" attr.name="args" attr.type="string"/>
 <key id="d1" for="node" attr.name="docstring" attr.type="string"/>
@@ -11,8 +12,9 @@
 :param some_params: this is a first param
 :returns: this is a description of what is returned</data>
   <data key="d2">some_params</data>
-  <data key="d3">False</data>
-  <data key="d4">
+  <data key="d3">True</data>
+  <data key="d4">some_params</data>
+  <data key="d5">
 
 def first(some_params: int):
     """
@@ -31,7 +33,8 @@ def first(some_params: int):
   <data key="d1">Pre-process the input data</data>
   <data key="d2">input_path</data>
   <data key="d3">False</data>
-  <data key="d4">def preprocess(input_path: str):
+  <data key="d4"></data>
+  <data key="d5">def preprocess(input_path: str):
     """Pre-process the input data"""
     import time
 
@@ -45,7 +48,8 @@ def first(some_params: int):
   <data key="d1">Train the model</data>
   <data key="d2">input_path,model_path</data>
   <data key="d3">False</data>
-  <data key="d4">def train(input_path: str, model_path: str):
+  <data key="d4"></data>
+  <data key="d5">def train(input_path: str, model_path: str):
     """Train the model"""
     import time
 
@@ -58,8 +62,9 @@ def first(some_params: int):
   <data key="d0">last</data>
   <data key="d1">Clean up and close connections</data>
   <data key="d2">some_param</data>
-  <data key="d3">False</data>
-  <data key="d4">def last(some_param: None):
+  <data key="d3">True</data>
+  <data key="d4">1</data>
+  <data key="d5">def last(some_param: None):
     """
     Clean up and close connections"""
     return 1</data>
