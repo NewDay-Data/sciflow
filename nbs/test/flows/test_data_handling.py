@@ -16,7 +16,7 @@ class TestDataHandlingFlow(FlowSpec):
 
     @step
     def start(self):
-        scalar(self.int_param, self.float_param, self.str_param)
+        self.results = scalar(self.int_param, self.float_param, self.str_param)
         self.next(self.py_advanced)
 
     @step

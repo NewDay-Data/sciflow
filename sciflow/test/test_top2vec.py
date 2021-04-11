@@ -88,7 +88,8 @@ def preprocess(dremio_access, model_level, min_date, traffic_percent):
 
 
 def fit(documents, workers=workers, speed="fast-learn"):
-    return Top2Vec(documents, workers=workers, speed=speed)
+    model = Top2Vec(documents, workers=workers, speed=speed)
+    return model
 
 # Cell
 def get_num_docs(topic_idx, topic_sizes, max_k=50):
@@ -106,11 +107,12 @@ def evaluate(model):
     as_many_items_as_topics = (
         model.get_num_topics() == len(topic_words) == word_scores.shape[0]
     )
-    return (
+    results = (
         topic_contains_non_empty_words
         and word_scores_in_range
         and as_many_items_as_topics
     )
+    return results
 
 # Cell
 def serve_num_topics(model):

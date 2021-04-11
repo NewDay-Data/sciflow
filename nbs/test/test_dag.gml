@@ -5,9 +5,9 @@ graph [
     name "first"
     docstring "This the entrypoint.&#10;&#10;:param some_params: this is a first param&#10;:returns: this is a description of what is returned"
     args "some_params"
-    has_return 1
-    return_stmt "some_params"
-    code "&#10;&#10;def first(some_params: int):&#10;    &#34;&#34;&#34;&#10;    This the entrypoint.&#10;&#10;    :param some_params: this is a first param&#10;    :returns: this is a description of what is returned&#10;    &#34;&#34;&#34;&#10;    print(some_params)&#10;    return some_params&#10;&#10;"
+    has_return 0
+    return_stmt ""
+    code "&#10;&#10;def first(some_params: int):&#10;    &#34;&#34;&#34;&#10;    This the entrypoint.&#10;&#10;    :param some_params: this is a first param&#10;    :returns: this is a description of what is returned&#10;    &#34;&#34;&#34;&#10;    print(some_params)&#10;&#10;"
   ]
   node [
     id 1
@@ -36,8 +36,8 @@ graph [
     docstring "Clean up and close connections"
     args "some_param"
     has_return 1
-    return_stmt "1"
-    code "def last(some_param: None):&#10;    &#34;&#34;&#34;&#10;    Clean up and close connections&#34;&#34;&#34;&#10;    return 1"
+    return_stmt "one"
+    code "def last(some_param: None):&#10;    &#34;&#34;&#34;&#10;    Clean up and close connections&#34;&#34;&#34;&#10;    one = 1&#10;    return one"
   ]
   edge [
     source 0

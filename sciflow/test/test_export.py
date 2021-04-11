@@ -27,7 +27,6 @@ def first(some_params: int):
     :returns: this is a description of what is returned
     """
     print(some_params)
-    return some_params
 
 # Cell
 # some other comment
@@ -73,4 +72,5 @@ def train(input_path: str, model_path: str):
 def last(some_param: None):
     """
     Clean up and close connections"""
-    return 1
+    one = 1
+    return one

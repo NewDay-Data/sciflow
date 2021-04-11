@@ -34,7 +34,7 @@ class TestExportFlow(FlowSpec):
     @step
     def end(self):
         """Clean up and close connections"""
-        last(self.some_param)
+        self.one = last(self.some_param)
 
 if __name__ == "__main__":
     TestExportFlow()

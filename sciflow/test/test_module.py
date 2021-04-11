@@ -15,7 +15,8 @@ some_param = 2
 
 def first(some_param: int):
     print(some_param)
-    return some_param
+    anohter_int = some_param + 5
+    return anohter_int
 
 # Internal Cell
 

@@ -27,7 +27,12 @@ def shell_source(script):
 
 
 def load_dremio_access():
-    shell_source("/home/jovyan/.profile")
-    if "DREMIO_PWD" in os.environ:
-        DremioAccess._get_dremio_password = lambda x: os.environ["DREMIO_PWD"]
+    if os.path.exists("/home/jovyan/.auth/dremio"):
+        with open("/home/jovyan/.auth/dremio", "r") as pat_file:
+            pat = pat_file.read().strip()
+            DremioAccess._get_dremio_password = lambda x: pat
+    else:
+        shell_source("/home/jovyan/.profile")
+        if "DREMIO_PWD" in os.environ:
+            DremioAccess._get_dremio_password = lambda x: os.environ["DREMIO_PWD"]
     return DremioAccess()

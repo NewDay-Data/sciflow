@@ -66,7 +66,7 @@ def nb_to_metaflow(nb_path: Path, flow_path: Path, silent=True):
         return
     orig_step_names = [step.name for step in steps]
     if len(steps) == 1:
-        steps.append(FuncDetails("end", None, None, False, "pass"))
+        steps.append(FuncDetails("end", None, None, False, "", "pass"))
     params = params_as_dict(nb_path)
     if len(params) == 0:
         print(f"No params cell found for: {os.path.basename(nb_path)}")
@@ -155,14 +155,17 @@ def write_params(flow_file, param_meta, single_indent):
 # Cell
 
 
-def format_arg(arg, param_meta):
+def format_arg(arg, param_meta, returned_params):
     result = arg
-    if arg in param_meta and param_meta[arg].has_metaflow_param:
+    if (
+        arg in param_meta and param_meta[arg].has_metaflow_param
+    ) or arg in returned_params:
         result = "self." + arg
     return result
 
 
 def write_steps(flow_file, steps, orig_step_names, param_meta, single_indent):
+    returned_params = []
     for i, step in enumerate(steps):
         flow_file.write(f"{single_indent}@step\n")
         flow_file.write(f"{single_indent}def {step.name}(self):\n")
@@ -173,11 +176,27 @@ def write_steps(flow_file, steps, orig_step_names, param_meta, single_indent):
             flow_step_args = ""
             if len(step.args) > 0:
                 flow_step_args = ", ".join(
-                    [format_arg(a, param_meta) for a in step.args.split(",")]
+                    [
+                        format_arg(a, param_meta, returned_params)
+                        for a in step.args.split(",")
+                    ]
                 )
-            flow_file.write(
-                f"{single_indent}{single_indent}{orig_step_names[i]}({flow_step_args})\n"
-            )
+            if not step.has_return:
+                flow_file.write(
+                    f"{single_indent}{single_indent}{orig_step_names[i]}({flow_step_args})\n"
+                )
+            else:
+                if (
+                    step.return_stmt in returned_params
+                    or step.return_stmt in param_meta
+                ):
+                    raise ValueError(
+                        f"[{os.path.basename(flow_file.name)}] step return variable {step.return_stmt} shadows a parameter name - parameters must be unique"
+                    )
+                returned_params.append(step.return_stmt)
+                flow_file.write(
+                    f"{single_indent}{single_indent}self.{step.return_stmt} = {orig_step_names[i]}({flow_step_args})\n"
+                )
         else:
             flow_file.write(f"{single_indent}{single_indent}pass\n")
         if i < len(steps) - 1:

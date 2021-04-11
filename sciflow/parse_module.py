@@ -73,7 +73,7 @@ class FuncDetails:
 # Cell
 
 
-def extract_return_stmt(code):
+def extract_return_stmt(func_name, code):
     return_stmt = [
         l.strip().split("return")[1].strip()
         for l in code.splitlines()
@@ -82,10 +82,10 @@ def extract_return_stmt(code):
     if len(return_stmt) == 0:
         return
     return_stmt = return_stmt[0]
-    is_named_variable = bool(re.search("^[a-zA-Z0-9_]+$", return_stmt))
+    is_named_variable = bool(re.search("^[a-zA-Z]+[a-zA-Z0-9_]*$", return_stmt))
     if not is_named_variable:
         raise NotImplementedError(
-            "Sciflow does not yet support inline return statements. Assign the return value to a variable before returning."
+            f"Inline return statements are not supported. Assign the return value of {func_name} to a variable before returning."
         )
     return return_stmt
 
@@ -105,7 +105,7 @@ def parse_step(step_code: str):
         lister.docstring,
         ",".join(lister.arg_names),
         lister.has_return,
-        extract_return_stmt(step_code),
+        extract_return_stmt(lister.name, step_code),
         step_code,
     )
 

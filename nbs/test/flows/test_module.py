@@ -9,7 +9,7 @@ class TestModuleFlow(FlowSpec):
 
     @step
     def start(self):
-        first(self.some_param)
+        self.anohter_int = first(self.some_param)
         self.next(self.end)
 
     @step
