@@ -25,7 +25,7 @@ docs: $(SRC)
 test:
 	nbdev_test_nbs
 
-local_release: sciflow_prepare art_pip art_conda
+local_release: art_pip art_conda
 	nbdev_bump_version
 
 art_conda:

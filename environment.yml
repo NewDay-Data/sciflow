@@ -39,3 +39,5 @@ dependencies:
   - pipreqs
   - networkx
   - dvc
+  - sacred
+  - incense
