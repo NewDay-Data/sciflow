@@ -27,8 +27,8 @@ def shell_source(script):
 
 
 def load_dremio_access():
-    if os.path.exists('/home/jovyan/.auth/dremio'):
-        with open('/home/jovyan/.auth/dremio', 'r') as pat_file:
+    if os.path.exists("/home/jovyan/.auth/dremio"):
+        with open("/home/jovyan/.auth/dremio", "r") as pat_file:
             pat = pat_file.read().strip()
             DremioAccess._get_dremio_password = lambda x: pat
     else:

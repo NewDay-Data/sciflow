@@ -1,21 +1,12 @@
-name: discovery
+name: sciflow
 channels:
   - https://nexus_eut_svc:AKCp8hzCxcyh1Uh9s4LMNZKmEHY1V4jwUhfqRsEUvdvMNZKhyncwt8MTtzwaq2rZkhx6dxW3e@ndartifactory.jfrog.io/artifactory/api/conda/conda
   - https://nexus_eut_svc:AKCp8hzCxcyh1Uh9s4LMNZKmEHY1V4jwUhfqRsEUvdvMNZKhyncwt8MTtzwaq2rZkhx6dxW3e@ndartifactory.jfrog.io/artifactory/api/conda/conda-forge
 dependencies:
   - python==3.7.6
+  - nbdev
+  - fastcore
   - pandas
-  - gensim
-  - pattern
-  - umap-learn
-  - hdbscan
-  - wordcloud
-  - tensorflow
-  - tensorflow-hub
-  - pytorch
-  - pytorch_scatter
-  - sentence-transformers
-  - hnswlib
   - ipykernel
   - nd_nexus_data_access
   - pyodbc
@@ -25,7 +16,7 @@ dependencies:
   - jupyter
   - jupyter_client
   - s3contents
-  - nbformat
+  - papermill
   - notebook
   - black
   - nbqa
@@ -33,11 +24,17 @@ dependencies:
   - pytest
   - pytest-cov
   - isort
+  - autoflake
+  - numba
   - cython
   - nteract-scrapbook
   - pigar
-  - pipreqs
   - networkx
   - dvc
-  - sacred
-  - incense
+  - graphviz
+  - pyrsistent
+  - metaflow
+  - pip
+  - pip:
+      - sacred
+      - incense
