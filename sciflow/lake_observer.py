@@ -239,7 +239,6 @@ class AWSLakeObserver(RunObserver):
 
     def log_metrics(self, metrics_by_name, info):
         """Store new measurements into metrics.csv"""
-        print(metrics_by_name)
         if len(metrics_by_name.values()) > 0:
             metric_frames = [pd.DataFrame(v) for v in metrics_by_name.values()]
             metrics = pd.concat(metric_frames).reset_index(drop=True)

@@ -1,17 +1,16 @@
 #!/usr/bin/env python
 # coding=utf-8
-
 # SCIFLOW GENERATED FILE - DO NOT EDIT
 from metaflow import FlowSpec, step, Parameter, current
 from sciflow.test.test_top2vec import something, preprocess, fit, evaluate
 from sciflow.test.test_top2vec import traffic_percent, speed, workers, dremio_access, model_level, min_date
 from sacred import Experiment
-from sacred.run import Run
 from sciflow.lake_observer import AWSLakeObserver
 from pathlib import Path
 import os
+import time
 
-ex = Experiment("captured_functions", interactive=True)
+ex = Experiment("Top2Vec", interactive=True)
 obs = AWSLakeObserver(
     bucket_name="pprsandboxpdlras3",
     experiment_dir="experiments/sciflow/sacred_sciflow",
@@ -21,15 +20,19 @@ ex.observers.append(obs)
 
 @ex.config
 def config():
-    run_id = None
+    flow_run_id = None
     metrics = []
     artifacts = []
 
 class TestTop2VecFlow(FlowSpec):
-    traffic_percent = Parameter('traffic_percent', default=traffic_percent)  
+    traffic_percent = Parameter('traffic_percent', default=traffic_percent)
+    artifacts = []
+    metrics = []
+    
     
     @step
     def start(self):
+        self.start_time = time.time()
         self.artifacts = [os.path.join(Path(".").resolve(), "nbs", "test", "dataframe_artifact.csv")]
         self.next(self.train)
         
@@ -46,15 +49,13 @@ class TestTop2VecFlow(FlowSpec):
             "flow_name": current.flow_name,
             "run id": current.run_id,
             "origin run id": current.origin_run_id,
-            "step name": current.step_name,
-            "task ids": current.task_id,
             "pathspec": current.pathspec,
             "namespace": current.namespace,
             "username": current.username,
-            "flow parameters": str(current.parameter_names)
+            "flow parameters": str(current.parameter_names),
+            "run_time_mins": (time.time() - self.start_time) / 60.0
         }
-        
-        run = ex.run(config_updates={'run_id': current.run_id,
+        run = ex.run(config_updates={'flow_run_id': current.run_id,
                                     'artifacts': self.artifacts,
                                     'metrics': self.metrics},
                      meta_info = flow_info)
@@ -65,6 +66,7 @@ class TestTop2VecFlow(FlowSpec):
             _run.add_artifact(artifact)
         for metric_name, metric_value, step in metrics:
             _run.log_scalar(metric_name, metric_value, step)
+    
     
 if __name__ == "__main__":
     TestTop2VecFlow()

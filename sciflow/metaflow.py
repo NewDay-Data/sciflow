@@ -106,13 +106,16 @@ def write_module_to_file(
     orig_step_names: Iterable[str],
     steps: Iterable[FuncDetails],
     params: dict,
+    track_experiment: bool
 ):
     if not os.path.exists(flow_path.parent):
         os.mkdir(flow_path.parent)
     fq_module_name = f"{lib_name}.{module_name}"
     param_meta = extract_param_meta(fq_module_name, params)
     with open(flow_path, "w") as flow_file:
-        flow_file.write("# SCIFLOW GENERATED FILE - DO NOT EDIT\n")
+        flow_file.write("#!/usr/bin/env python")
+        flow_file.write("# coding=utf-8")
+        flow_file.write("# SCIFLOW GENERATED FILE - EDIT COMPANION NOTEBOOK\n")
         has_mf_param = any((p.has_metaflow_param for p in param_meta.values()))
         has_json_param = any((p.is_json_type for p in param_meta.values()))
         mf_params_import = "from metaflow import FlowSpec, step"
