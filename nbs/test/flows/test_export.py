@@ -1,4 +1,6 @@
-#!/usr/bin/env python# coding=utf-8# SCIFLOW GENERATED FILE - EDIT COMPANION NOTEBOOK
+#!/usr/bin/env python
+# coding=utf-8
+# SCIFLOW GENERATED FILE - EDIT COMPANION NOTEBOOK
 from metaflow import FlowSpec, step, current, Parameter
 from sciflow.test.test_export import first, preprocess, train, last
 from sciflow.test.test_export import some_params, some_param, input_path, model_path
@@ -18,8 +20,8 @@ ex.observers.append(obs)
 @ex.config
 def config():
     flow_run_id = None
-    metrics = []
     artifacts = []
+    metrics = []
     
 
 class TestExportFlow(FlowSpec):
@@ -55,7 +57,14 @@ class TestExportFlow(FlowSpec):
     @step
     def last(self):
         """Clean up and close connections"""
-        self.one = last(self.some_param)
+        results = last(self.some_param)
+
+        for key in results.keys():
+            if key in self.__dict__:
+                self.__dict__[key] = self.__dict__[key] + results[key]
+            else:
+                self.__dict__[key] = results[key]
+
         self.next(self.end)
 
 
@@ -71,12 +80,12 @@ class TestExportFlow(FlowSpec):
             "flow parameters": str(current.parameter_names),
             "run_time_mins": (time.time() - self.start_time) / 60.0
         }
-
+        
         run = ex.run(config_updates={'flow_run_id': current.run_id,
                                     'artifacts': self.artifacts,
                                     'metrics': self.metrics},
                      meta_info = flow_info)
-
+        
     @ex.main
     def track_flow(artifacts, metrics, _run):
         for artifact in artifacts:

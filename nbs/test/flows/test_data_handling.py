@@ -1,4 +1,6 @@
-#!/usr/bin/env python# coding=utf-8# SCIFLOW GENERATED FILE - EDIT COMPANION NOTEBOOK
+#!/usr/bin/env python
+# coding=utf-8
+# SCIFLOW GENERATED FILE - EDIT COMPANION NOTEBOOK
 import json
 from metaflow import FlowSpec, step, current, Parameter, JSONType
 from sciflow.test.test_data_handling import scalar, py_advanced, pandas
@@ -19,8 +21,8 @@ ex.observers.append(obs)
 @ex.config
 def config():
     flow_run_id = None
-    metrics = []
     artifacts = []
+    metrics = []
     
 
 class TestDataHandlingFlow(FlowSpec):
@@ -36,13 +38,13 @@ class TestDataHandlingFlow(FlowSpec):
 
     @step
     def start(self):
-        self.results = scalar(self.int_param, self.float_param, self.str_param)
+        results = scalar(self.int_param, self.float_param, self.str_param)
 
-        if self.results:
-            if "artifacts" in results:
-                self.artifacts = self.artifacts + results['artifacts']
-            if "metrics" in results:
-                self.metrics = self.metrics + results['metrics']
+        for key in results.keys():
+            if key in self.__dict__:
+                self.__dict__[key] = self.__dict__[key] + results[key]
+            else:
+                self.__dict__[key] = results[key]
 
         self.start_time = time.time()
         self.next(self.py_advanced)
