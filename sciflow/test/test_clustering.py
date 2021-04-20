@@ -16,9 +16,10 @@ def something():
 # Cell
 
 
+from pathlib import Path
+
 import numpy as np
 import pandas as pd
-from pathlib import Path
 from ..utils import load_dremio_access
 
 # Cell
@@ -81,7 +82,8 @@ def preprocess(dremio_access, model_level, min_date, traffic_percent):
     button_filter = get_button_responses_filter(dremio_access)
     user_texts = data[~data.Utterance.isin(button_filter)].copy()
     documents = user_texts.Utterance.tolist()
-    return documents
+    results = {"documents": documents}
+    return results
 
 # Cell
 
@@ -121,7 +123,8 @@ class Topics:
 
 def fit(documents, workers=workers, speed="fast-learn"):
     model = Topics(documents, workers=workers, speed=speed)
-    return model
+    results = {"model": model}
+    return results
 
 # Cell
 def get_num_docs(topic_idx, topic_sizes, max_k=50):
@@ -144,16 +147,12 @@ def evaluate(model):
         and word_scores_in_range
         and as_many_items_as_topics
     )
-    artifacts = [os.path.join(Path('.').resolve(), "test", "dataframe_artifact.csv")]
-    metrics = [
-        ('mae', 100, 0),
-        ('mae', 100, 0),
-        ('mae', 100, 0)
-    ]
+    artifacts = [os.path.join(Path(".").resolve(), "test", "dataframe_artifact.csv")]
+    metrics = [("mae", 100, 0), ("mae", 100, 0), ("mae", 100, 0)]
     results = {
-        'word_summaries': word_summaries,
-        'artifacts': artifacts,
-        'metrics': metrics
+        "word_summaries": word_summaries,
+        "artifacts": artifacts,
+        "metrics": metrics,
     }
     return results
 

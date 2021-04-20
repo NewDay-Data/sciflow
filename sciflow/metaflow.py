@@ -2,8 +2,8 @@
 
 __all__ = ['titleize', 'rename_steps_for_metaflow', 'indent_multiline', 'nb_to_metaflow', 'extract_module_only',
            'write_module_to_file', 'write_observers', 'config', 'ex', 'obs', 'write_track_flow', 'write_params',
-           'format_arg', 'write_steps', 'get_module_name', 'generate_flows', 'sciflow_generate', 'check_flows',
-           'prep_mf_env', 'run_shell_cmd', 'check_flow', 'sciflow_check_flows', 'sciflow_run_flows']
+           'format_arg', 'write_steps', 'write_track_capture', 'get_module_name', 'generate_flows', 'sciflow_generate',
+           'check_flows', 'prep_mf_env', 'run_shell_cmd', 'check_flow', 'sciflow_check_flows', 'sciflow_run_flows']
 
 # Cell
 
@@ -112,8 +112,8 @@ def write_module_to_file(
     fq_module_name = f"{lib_name}.{module_name}"
     param_meta = extract_param_meta(fq_module_name, params)
     with open(flow_path, "w") as flow_file:
-        flow_file.write("#!/usr/bin/env python")
-        flow_file.write("# coding=utf-8")
+        flow_file.write("#!/usr/bin/env python\n")
+        flow_file.write("# coding=utf-8\n")
         flow_file.write("# SCIFLOW GENERATED FILE - EDIT COMPANION NOTEBOOK\n")
         has_mf_param = any((p.has_metaflow_param for p in param_meta.values()))
         has_json_param = any((p.is_json_type for p in param_meta.values()))
@@ -125,7 +125,10 @@ def write_module_to_file(
             flow_file.write("import json\n")
         flow_file.write(mf_params_import + "\n")
         flow_file.write(f"from {fq_module_name} import {', '.join(orig_step_names)}\n")
-        flow_file.write(f"from {fq_module_name} import {', '.join(params.keys())}\n")
+        if len(params) > 0:
+            flow_file.write(
+                f"from {fq_module_name} import {', '.join(params.keys())}\n"
+            )
 
         if track_experiment:
             flow_file.write("from sacred import Experiment\n")
@@ -140,8 +143,7 @@ def write_module_to_file(
         flow_file.write(f"{single_indent}metrics = []\n")
         flow_file.write("\n")
         write_steps(flow_file, steps, orig_step_names, param_meta, single_indent)
-        if track_experiment:
-            write_track_flow(flow_file)
+        write_track_flow(flow_file, track_experiment)
         flow_file.write("\n")
 
         flow_file.write('if __name__ == "__main__":\n')
@@ -166,15 +168,15 @@ ex.observers.append(obs)
 @ex.config
 def config():
     flow_run_id = None
-    metrics = []
     artifacts = []
+    metrics = []
     """
     flow_file.write(sacred_setup)
 
 # Cell
 
 
-def write_track_flow(flow_file):
+def write_track_flow(flow_file, track_experiment):
     track_flow = """
     @step
     def end(self):
@@ -200,6 +202,12 @@ def write_track_flow(flow_file):
             _run.add_artifact(artifact)
         for metric_name, metric_value, step in metrics:
             _run.log_scalar(metric_name, metric_value, step)
+    """
+    if not track_experiment:
+        track_flow = """
+    @step
+    def end(self):
+        pass
     """
     flow_file.write(track_flow)
 
@@ -264,10 +272,9 @@ def write_steps(flow_file, steps, orig_step_names, param_meta, single_indent):
                     )
                 returned_params.append(step.return_stmt)
                 flow_file.write(
-                    f"{single_indent}{single_indent}self.{step.return_stmt} = {orig_step_names[i]}({flow_step_args})\n"
+                    f"{single_indent}{single_indent}results = {orig_step_names[i]}({flow_step_args})\n"
                 )
-        else:
-            flow_file.write(f"{single_indent}{single_indent}pass\n")
+                write_track_capture(flow_file)
         if i == 0:
             flow_file.write(
                 f"{single_indent}{single_indent}self.start_time = time.time()\n"
@@ -278,6 +285,21 @@ def write_steps(flow_file, steps, orig_step_names, param_meta, single_indent):
                 f"{single_indent}{single_indent}self.next(self.{next_step})\n"
             )
         flow_file.write("\n")
+
+# Cell
+
+
+def write_track_capture(flow_file):
+    flow_file.write(
+        f"""
+        for key in results.keys():
+            if key in self.__dict__:
+                self.__dict__[key] = self.__dict__[key] + results[key]
+            else:
+                self.__dict__[key] = results[key]
+
+"""
+    )
 
 # Cell
 

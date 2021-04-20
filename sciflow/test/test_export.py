@@ -31,7 +31,8 @@ def first(some_params: int):
 # Cell
 # some other comment
 def function():
-    return 1
+    results = {"foo": 1}
+    return results
 
 # Internal Cell
 
@@ -72,5 +73,5 @@ def train(input_path: str, model_path: str):
 def last(some_param: None):
     """
     Clean up and close connections"""
-    one = 1
+    one = {"one": 1}
     return one

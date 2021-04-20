@@ -4,7 +4,7 @@ __all__ = ['extract_named_export', 'is_export_extended', 'set_orig_value', 'scif
 
 # Cell
 
-# some line comment
+
 import os
 import re
 from pathlib import Path
@@ -12,12 +12,25 @@ from pathlib import Path
 import nbdev
 import nbformat
 from fastcore.script import call_parse
-from nbdev.export import (Config, _add2all, _deal_import, _from_future_import,
-                          _is_external_export, _mk_flag_re, _re_blank_export,
-                          _re_mod_export, check_re, export_names, extra_add,
-                          find_default_export, get_nbdev_module,
-                          notebook2script, read_nb, save_nbdev_module,
-                          split_flags_and_code)
+from nbdev.export import (
+    Config,
+    _add2all,
+    _deal_import,
+    _from_future_import,
+    _is_external_export,
+    _mk_flag_re,
+    _re_blank_export,
+    _re_mod_export,
+    check_re,
+    export_names,
+    extra_add,
+    find_default_export,
+    get_nbdev_module,
+    notebook2script,
+    read_nb,
+    save_nbdev_module,
+    split_flags_and_code,
+)
 from nbformat import NotebookNode
 
 # Cell

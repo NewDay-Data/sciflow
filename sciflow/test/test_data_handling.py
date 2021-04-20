@@ -33,7 +33,7 @@ def scalar(int_param: int, float_param: float, str_param: str):
     print(f"int_param: {int_param}")
     print(f"float_param: {float_param}")
     print(f"str_param: {str_param}")
-    results = int_param, float_param, str_param
+    results = {"int_param": int_param}
     return results
 
 # step:py_advanced
