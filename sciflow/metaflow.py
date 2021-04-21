@@ -233,10 +233,9 @@ def write_params(flow_file, param_meta, single_indent):
 
 
 def format_arg(arg, param_meta, returned_params):
-    result = arg
-    if (
-        arg in param_meta and param_meta[arg].has_metaflow_param
-    ) or arg in returned_params:
+    if(arg in param_meta and not param_meta[arg].has_metaflow_param):
+        result = arg
+    else:
         result = "self." + arg
     return result
 
@@ -263,14 +262,14 @@ def write_steps(flow_file, steps, orig_step_names, param_meta, single_indent):
                     f"{single_indent}{single_indent}{orig_step_names[i]}({flow_step_args})\n"
                 )
             else:
-                if (
-                    step.return_stmt in returned_params
-                    or step.return_stmt in param_meta
-                ):
+                if step.return_stmt in param_meta:
+                    print(returned_params)
+                    print(param_meta)
                     raise ValueError(
                         f"[{os.path.basename(flow_file.name)}] step return variable {step.return_stmt} shadows a parameter name - parameters must be unique"
                     )
-                returned_params.append(step.return_stmt)
+                #print(step.return_stmt)
+                #returned_params.append(step.return_stmt)
                 flow_file.write(
                     f"{single_indent}{single_indent}results = {orig_step_names[i]}({flow_step_args})\n"
                 )

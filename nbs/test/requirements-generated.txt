@@ -38,7 +38,7 @@ networkx == 2.5
 newday_nexus_data_access == 0.6.4
 
 # sciflow/data_handler.py: 14
-# sciflow/test/test_clustering.py: 21,174
+# sciflow/test/test_clustering.py: 21,176
 # sciflow/test/test_data_handling.py: 11
 # sciflow/test/test_top2vec.py: 16
 numpy == 1.19.2
@@ -47,7 +47,7 @@ numpy == 1.19.2
 # sciflow/lake_experiment.py: 10
 # sciflow/lake_observer.py: 11
 # sciflow/parse_module.py: 16
-# sciflow/test/test_clustering.py: 22,175
+# sciflow/test/test_clustering.py: 22,177
 # sciflow/test/test_data_handling.py: 12
 # sciflow/test/test_top2vec.py: 17
 pandas == 0.25.3
