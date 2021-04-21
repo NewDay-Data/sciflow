@@ -231,7 +231,7 @@ def write_params(flow_file, param_meta, single_indent):
 # Cell
 
 
-def format_arg(arg, param_meta, returned_params):
+def format_arg(arg, param_meta):
     if arg in param_meta and not param_meta[arg].has_metaflow_param:
         result = arg
     else:
@@ -240,7 +240,6 @@ def format_arg(arg, param_meta, returned_params):
 
 
 def write_steps(flow_file, steps, orig_step_names, param_meta, single_indent):
-    returned_params = []
     for i, step in enumerate(steps):
         flow_file.write(f"{single_indent}@step\n")
         flow_file.write(f"{single_indent}def {step.name}(self):\n")
@@ -252,7 +251,7 @@ def write_steps(flow_file, steps, orig_step_names, param_meta, single_indent):
             if len(step.args) > 0:
                 flow_step_args = ", ".join(
                     [
-                        format_arg(a, param_meta, returned_params)
+                        format_arg(a, param_meta)
                         for a in step.args.split(",")
                     ]
                 )
@@ -262,13 +261,9 @@ def write_steps(flow_file, steps, orig_step_names, param_meta, single_indent):
                 )
             else:
                 if step.return_stmt in param_meta:
-                    print(returned_params)
-                    print(param_meta)
                     raise ValueError(
                         f"[{os.path.basename(flow_file.name)}] step return variable {step.return_stmt} shadows a parameter name - parameters must be unique"
                     )
-                # print(step.return_stmt)
-                # returned_params.append(step.return_stmt)
                 flow_file.write(
                     f"{single_indent}{single_indent}results = {orig_step_names[i]}({flow_step_args})\n"
                 )
@@ -375,9 +370,13 @@ def run_shell_cmd(script):
 # Cell
 
 
-def check_flow(flows_dir, flow_module, flow_command="show"):
+def check_flow(flows_dir, flow_module, flow_command="show", params=None):
     prep_mf_env()
-    script = f"python '{os.path.join(flows_dir, flow_module)}' {flow_command}"
+    if params:
+        args = ' '.join([f'--{p[0]} {p[1]}' for p in params])
+        script = f"python '{os.path.join(flows_dir, flow_module)}' {flow_command} {args}"
+    else:
+        script = f"python '{os.path.join(flows_dir, flow_module)}' {flow_command}"
     pipe, output = run_shell_cmd(script)
     return pipe.returncode, output
 
