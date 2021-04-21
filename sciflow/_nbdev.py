@@ -119,6 +119,7 @@ index = {"supported_parameters": "data_handler.ipynb",
          "source_in_docs": "test_export.ipynb",
          "train": "test_export.ipynb",
          "last": "test_export.ipynb",
+         "sciflow_clean": "utils.ipynb",
          "shell_source": "utils.ipynb",
          "load_dremio_access": "utils.ipynb"}
 

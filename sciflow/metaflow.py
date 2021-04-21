@@ -188,12 +188,11 @@ def write_track_flow(flow_file, track_experiment):
             "namespace": current.namespace,
             "username": current.username,
             "flow parameters": str(current.parameter_names),
-            "run_time_mins": (time.time() - self.start_time) / 60.0
+            "run_time_mins": round((time.time() - self.__getattr__('start_time')) / 60.0, 1)
         }
 
-        run = ex.run(config_updates={'flow_run_id': current.run_id,
-                                    'artifacts': self.artifacts,
-                                    'metrics': self.metrics},
+        run = ex.run(config_updates={'artifacts': self.__getattr__('artifacts'),
+                                    'metrics': self.__getattr__('metrics')},
                      meta_info = flow_info)
 
     @ex.main
@@ -233,7 +232,7 @@ def write_params(flow_file, param_meta, single_indent):
 
 
 def format_arg(arg, param_meta, returned_params):
-    if(arg in param_meta and not param_meta[arg].has_metaflow_param):
+    if arg in param_meta and not param_meta[arg].has_metaflow_param:
         result = arg
     else:
         result = "self." + arg
@@ -268,8 +267,8 @@ def write_steps(flow_file, steps, orig_step_names, param_meta, single_indent):
                     raise ValueError(
                         f"[{os.path.basename(flow_file.name)}] step return variable {step.return_stmt} shadows a parameter name - parameters must be unique"
                     )
-                #print(step.return_stmt)
-                #returned_params.append(step.return_stmt)
+                # print(step.return_stmt)
+                # returned_params.append(step.return_stmt)
                 flow_file.write(
                     f"{single_indent}{single_indent}results = {orig_step_names[i]}({flow_step_args})\n"
                 )
@@ -330,10 +329,14 @@ def sciflow_generate():
 # Cell
 
 
-def check_flows(config, flow_command="show"):
+def check_flows(config, flow_command="show", ignore_suffix="_no_params.py"):
     flow_results = {}
     flows_dir = config.path("flows_path")
-    for flow_path in os.listdir(flows_dir):
+    if ignore_suffix:
+        flow_paths = [p for p in os.listdir(flows_dir) if not p.endswith(ignore_suffix)]
+    else:
+        flow_paths = os.listdir(flows_dir)
+    for flow_path in flow_paths:
         flow_name = os.path.basename(flow_path)
         if flow_path.endswith(".py"):
             ret_code, output = check_flow(
@@ -341,9 +344,11 @@ def check_flows(config, flow_command="show"):
             )
             flow_results[flow_name] = ret_code, output
             if ret_code == 0:
-                print(f"Flow: {flow_name} verified")
+                print(f"Flow: {flow_name} {flow_command} verified")
             else:
-                print(f"Flow: {flow_name} verification failed\nDetails:\n{output}")
+                print(
+                    f"Flow: {flow_name} {flow_command} verification failed\nDetails:\n{output}"
+                )
 
 # Cell
 
