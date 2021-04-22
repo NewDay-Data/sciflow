@@ -146,9 +146,7 @@ def evaluate(model):
         and word_scores_in_range
         and as_many_items_as_topics
     )
-    artifacts = [
-        os.path.join(Path(".").resolve(), "test", "dataframe_artifact.csv")
-    ]
+    artifacts = [os.path.join(Path(".").resolve(), "test", "dataframe_artifact.csv")]
     metrics = [("mae", 100, 0), ("mae", 67, 1), ("mae", 32, 2)]
     results = {
         "word_summaries": word_summaries,

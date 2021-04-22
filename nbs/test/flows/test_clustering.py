@@ -10,11 +10,7 @@ import time
 
 ex = Experiment("test_clustering")
 # TODO inject observers
-obs = AWSLakeObserver(
-    bucket_name="pprsandboxpdlras3",
-    experiment_dir="experiments/sciflow/test_clustering",
-    region="eu-west-1",
-)
+obs = AWSLakeObserver(experiment_name="test_clustering")
 ex.observers.append(obs)
 
 @ex.config

@@ -11,11 +11,7 @@ import time
 
 ex = Experiment("test_data_handling")
 # TODO inject observers
-obs = AWSLakeObserver(
-    bucket_name="pprsandboxpdlras3",
-    experiment_dir="experiments/sciflow/test_data_handling",
-    region="eu-west-1",
-)
+obs = AWSLakeObserver(experiment_name="test_data_handling")
 ex.observers.append(obs)
 
 @ex.config

@@ -9,6 +9,7 @@ import os.path
 
 import boto3
 import pandas as pd
+from nbdev import Config
 from sacred.dependencies import get_digest
 from sacred.observers.base import RunObserver
 from sacred.serializer import flatten
@@ -28,7 +29,12 @@ class AWSLakeObserver(RunObserver):
     VERSION = "AWSLakeObserver-0.1.0"
 
     def __init__(
-        self, bucket_name, experiment_dir, priority=DEFAULT_S3_PRIORITY, region=None,
+        self,
+        experiment_name,
+        bucket_name=None,
+        experiments_key_prefix=None,
+        priority=DEFAULT_S3_PRIORITY,
+        region="eu-west-1",
     ):
         """Constructor for a AWSLakeObserver object.
 
@@ -37,10 +43,12 @@ class AWSLakeObserver(RunObserver):
 
         Parameters
         ----------
+        experiment_name
+            The nme of this experiment
         bucket_name
             The name of the bucket you want to store results in.
             Doesn't need to contain `s3://`, but needs to be a valid bucket name
-        experiment_dir
+        experiments_key_prefix
             The relative path inside your bucket where you want this experiment to store results
         priority
             The priority to assign to this observer if
@@ -49,11 +57,18 @@ class AWSLakeObserver(RunObserver):
             The AWS region in which you want to create and access
             buckets. Needs to be either set here or configured in your AWS
         """
-        if not is_valid_bucket(bucket_name):
+        self.experiment_name = experiment_name
+        config = Config()
+        self.bucket_name = config.bucket if bucket_name is None else bucket_name
+        if not is_valid_bucket(self.bucket_name):
             raise ValueError(
                 "Your chosen bucket name doesn't follow AWS bucket naming rules"
             )
-        self.experiment_dir = experiment_dir
+        self.experiments_key_prefix = (
+            f"{config.lib_name}/experiments"
+            if experiments_key_prefix is None
+            else experiments_key_prefix
+        )
         self.bucket_name = bucket_name
         self.priority = priority
         self.resource_dir = None
@@ -100,7 +115,9 @@ class AWSLakeObserver(RunObserver):
         for s, m in ex_info["sources"]:
             abspath = os.path.join(base_dir, s)
             store_path, md5sum = self.find_or_save(abspath, self.source_dir)
-            source_info.append([s, os.path.relpath(store_path, self.experiment_dir)])
+            source_info.append(
+                [s, os.path.relpath(store_path, self.experiments_key_prefix)]
+            )
         return source_info
 
     def find_or_save(self, filename, store_dir):
@@ -115,7 +132,7 @@ class AWSLakeObserver(RunObserver):
     def _determine_run_dir(self, _id):
         if _id is None:
             path_subdirs = list_s3_subdirs(
-                self.s3, self.bucket_name, s3_join(self.experiment_dir, "runs")
+                self.s3, self.bucket_name, s3_join(self.experiments_key_prefix, "runs")
             )
             if not path_subdirs:
                 max_run_id = 0
@@ -124,17 +141,17 @@ class AWSLakeObserver(RunObserver):
                 if not integer_directories:
                     max_run_id = 0
                 else:
-                    # If there are directories under experiment_dir that aren't
+                    # If there are directories under experiments_key_prefix that aren't
                     # numeric run directories, ignore those
                     max_run_id = max(integer_directories)
 
             _id = max_run_id + 1
 
-        self.runs_dir = s3_join(self.experiment_dir, "runs", str(_id))
-        self.metrics_dir = s3_join(self.experiment_dir, "metrics", str(_id))
-        self.artifacts_dir = s3_join(self.experiment_dir, "artifacts", str(_id))
-        self.resource_dir = s3_join(self.experiment_dir, "resources", str(_id))
-        self.source_dir = s3_join(self.experiment_dir, "sources", str(_id))
+        self.runs_dir = s3_join(self.experiments_key_prefix, "runs", str(_id))
+        self.metrics_dir = s3_join(self.experiments_key_prefix, "metrics", str(_id))
+        self.artifacts_dir = s3_join(self.experiments_key_prefix, "artifacts", str(_id))
+        self.resource_dir = s3_join(self.experiments_key_prefix, "resources", str(_id))
+        self.source_dir = s3_join(self.experiments_key_prefix, "sources", str(_id))
 
         self.dirs = (
             self.runs_dir,
@@ -252,7 +269,7 @@ class AWSLakeObserver(RunObserver):
         if isinstance(other, AWSLakeObserver):
             return (
                 self.bucket == other.bucket
-                and self.experiment_dir == other.experiment_dir
+                and self.experiments_key_prefix == other.experiments_key_prefix
             )
         else:
             return False

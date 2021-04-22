@@ -3,15 +3,18 @@
 __all__ = ['titleize', 'rename_steps_for_metaflow', 'indent_multiline', 'nb_to_metaflow', 'extract_module_only',
            'write_module_to_file', 'write_observers', 'config', 'ex', 'obs', 'write_track_flow', 'write_params',
            'format_arg', 'write_steps', 'write_track_capture', 'get_module_name', 'generate_flows', 'sciflow_generate',
-           'check_flows', 'prep_mf_env', 'run_shell_cmd', 'check_flow', 'sciflow_check_flows', 'sciflow_run_flows']
+           'check_flows', 'prep_mf_env', 'run_shell_cmd', 'check_flow', 'run_flow', 'run_flow_task', 'run_flow_async',
+           'iter_param_grid', 'search_flow_grid', 'sciflow_check_flows', 'sciflow_run_flows']
 
 # Cell
 
 
+import asyncio
+import multiprocessing
 import os
 import subprocess
 from pathlib import Path, PosixPath
-from typing import Iterable
+from typing import Any, Dict, Iterable
 
 from fastcore.script import call_parse
 from nbdev.export import Config, find_default_export, nbglob, read_nb
@@ -158,11 +161,7 @@ def write_observers(flow_file, module_name, bucket_name, project):
 
 ex = Experiment("{experiment_name}")
 # TODO inject observers
-obs = AWSLakeObserver(
-    bucket_name="{bucket_name}",
-    experiment_dir="experiments/{project}/{experiment_name}",
-    region="eu-west-1",
-)
+obs = AWSLakeObserver(experiment_name={experiment_name})
 ex.observers.append(obs)
 
 @ex.config
@@ -250,10 +249,7 @@ def write_steps(flow_file, steps, orig_step_names, param_meta, single_indent):
             flow_step_args = ""
             if len(step.args) > 0:
                 flow_step_args = ", ".join(
-                    [
-                        format_arg(a, param_meta)
-                        for a in step.args.split(",")
-                    ]
+                    [format_arg(a, param_meta) for a in step.args.split(",")]
                 )
             if not step.has_return:
                 flow_file.write(
@@ -373,12 +369,100 @@ def run_shell_cmd(script):
 def check_flow(flows_dir, flow_module, flow_command="show", params=None):
     prep_mf_env()
     if params:
-        args = ' '.join([f'--{p[0]} {p[1]}' for p in params])
-        script = f"python '{os.path.join(flows_dir, flow_module)}' {flow_command} {args}"
+        args = " ".join([f"--{p[0]} {p[1]}" for p in params])
+        script = (
+            f"python '{os.path.join(flows_dir, flow_module)}' {flow_command} {args}"
+        )
     else:
         script = f"python '{os.path.join(flows_dir, flow_module)}' {flow_command}"
     pipe, output = run_shell_cmd(script)
     return pipe.returncode, output
+
+# Cell
+
+
+def run_flow(nb_path, params=None):
+    flow_path = get_flow_path(nb_path)
+    print(f"Running flow: {os.path.basename(flow_path)}")
+    ret_code, output = check_flow(
+        flow_path.parent,
+        os.path.basename(flow_path),
+        flow_command="--no-pylint run",
+        params=params,
+    )
+    return ret_code, output
+
+# Cell
+
+
+async def run_flow_task(flow_path, param_grid=None):
+    experiment_id = None
+    flows_dir = flow_path.parent
+    flow_module = os.path.basename(flow_path)
+    flow_command = "--no-pylint run"
+    prep_mf_env()
+    if params:
+        args = " ".join([f"--{k} {v}" for k, v in param_grid.items()])
+        cmd = f"python '{os.path.join(flows_dir, flow_module)}' {flow_command} {args}"
+    else:
+        cmd = f"python '{os.path.join(flows_dir, flow_module)}' {flow_command}"
+    proc = await asyncio.create_subprocess_shell(
+        cmd, stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE
+    )
+
+    stdout, stderr = await proc.communicate()
+
+    print(f"[{cmd!r} exited with {proc.returncode}]")
+    if stdout:
+        output = stdout.decode("utf-8").strip()
+        experiment_id = [
+            s.strip('"')
+            for s in re.search('Started run with ID "\d+"', output)
+            .group(0)
+            .split("ID ")
+        ][1]
+        print(f"[stdout]\n{output}")
+    if stderr:
+        print(f'[stderr]\n{stderr.decode("utf-8").strip()}')
+
+    return experiment_id
+
+# Cell
+
+
+def run_flow_async(nb_path, params=None):
+    flow_path = get_flow_path(nb_path)
+    loop = asyncio.get_event_loop()
+    task = loop.create_task(run_flow_task(flow_path, params))
+    task.add_done_callback(lambda x: print(f"Task {x.result()} finished"))
+    return task
+
+# Cell
+
+
+def iter_param_grid(param_grid):
+    # https://github.com/scikit-learn/scikit-learn/blob/main/sklearn/model_selection/_search.py
+    for p in [param_grid]:
+        # Always sort the keys of a dictionary, for reproducibility
+        items = sorted(p.items())
+        if not items:
+            yield {}
+        else:
+            keys, values = zip(*items)
+            for v in product(*values):
+                params = dict(zip(keys, v))
+                yield params
+
+# Cell
+
+
+def search_flow_grid(nb_path, param_grid, num_procs=None):
+    max_process_count = int((multiprocessing.cpu_count() / 2) - 1)
+    param_sample_space = sample_grid_space(param_grid, max_process_count)
+    tasks = []
+    for param_sample in param_sample_space:
+        tasks.append(run_flow_async(nb_path, params=param_sample))
+    return tasks
 
 # Cell
 
