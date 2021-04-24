@@ -4,12 +4,12 @@
 from metaflow import FlowSpec, step, current
 from sciflow.test.test_clustering_no_params import something, preprocess, fit, evaluate
 from sacred import Experiment
-from sciflow.lake_observer import AWSLakeObserver
+from sciflow.experiment.lake_observer import AWSLakeObserver
 import time
 
 ex = Experiment("test_clustering_no_params")
 # TODO inject observers
-obs = AWSLakeObserver(experiment_name="test_clustering_no_params")
+obs = AWSLakeObserver(project="sciflow", experiment_name="test_clustering_no_params")
 ex.observers.append(obs)
 
 @ex.config
@@ -70,12 +70,11 @@ class TestClusteringNoParamsFlow(FlowSpec):
     def end(self):
         flow_info = {
             "flow_name": current.flow_name,
-            "run id": current.run_id,
-            "origin run id": current.origin_run_id,
+            "run_id": current.run_id,
             "pathspec": current.pathspec,
             "namespace": current.namespace,
             "username": current.username,
-            "flow parameters": str(current.parameter_names),
+            "flow_parameters": str(current.parameter_names),
             "run_time_mins": round((time.time() - self.__getattr__('start_time')) / 60.0, 1)
         }
     

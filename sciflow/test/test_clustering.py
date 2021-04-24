@@ -17,7 +17,7 @@ from pathlib import Path
 
 import numpy as np
 import pandas as pd
-from ..utils import load_dremio_access
+from ..utils import load_dremio_access, lib_path
 
 # Cell
 
@@ -146,7 +146,7 @@ def evaluate(model):
         and word_scores_in_range
         and as_many_items_as_topics
     )
-    artifacts = [os.path.join(Path(".").resolve(), "test", "dataframe_artifact.csv")]
+    artifacts = [lib_path("nbs", "test", "dataframe_artifact.csv")]
     metrics = [("mae", 100, 0), ("mae", 67, 1), ("mae", 32, 2)]
     results = {
         "word_summaries": word_summaries,

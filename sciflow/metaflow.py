@@ -4,7 +4,7 @@ __all__ = ['titleize', 'rename_steps_for_metaflow', 'indent_multiline', 'nb_to_m
            'write_module_to_file', 'write_observers', 'config', 'ex', 'obs', 'write_track_flow', 'write_params',
            'format_arg', 'write_steps', 'write_track_capture', 'get_module_name', 'generate_flows', 'sciflow_generate',
            'check_flows', 'prep_mf_env', 'run_shell_cmd', 'check_flow', 'run_flow', 'run_flow_task', 'run_flow_async',
-           'iter_param_grid', 'search_flow_grid', 'sciflow_check_flows', 'sciflow_run_flows']
+           'iter_param_grid', 'sample_grid_space', 'search_flow_grid', 'sciflow_check_flows', 'sciflow_run_flows']
 
 # Cell
 
@@ -15,6 +15,8 @@ import os
 import subprocess
 from pathlib import Path, PosixPath
 from typing import Any, Dict, Iterable
+from itertools import product
+import re
 
 from fastcore.script import call_parse
 from nbdev.export import Config, find_default_export, nbglob, read_nb
@@ -137,7 +139,7 @@ def write_module_to_file(
             flow_file.write("from sacred import Experiment\n")
             flow_file.write("from sciflow.lake_observer import AWSLakeObserver\n")
             flow_file.write("import time")
-            write_observers(flow_file, module_name, Config().bucket, Config().lib_name)
+            write_observers(lib_name, flow_file, module_name, Config().bucket, Config().lib_name)
 
         flow_file.write(f"\n\nclass {flow_class_name}(FlowSpec):\n")
         single_indent = "    "
@@ -155,13 +157,13 @@ def write_module_to_file(
 # Cell
 
 
-def write_observers(flow_file, module_name, bucket_name, project):
+def write_observers(lib_name, flow_file, module_name, bucket_name, project):
     experiment_name = extract_module_only(module_name)
     sacred_setup = f"""
 
 ex = Experiment("{experiment_name}")
 # TODO inject observers
-obs = AWSLakeObserver(experiment_name={experiment_name})
+obs = AWSLakeObserver(project="{lib_name}", experiment_name="{experiment_name}")
 ex.observers.append(obs)
 
 @ex.config
@@ -413,14 +415,16 @@ async def run_flow_task(flow_path, param_grid=None):
     stdout, stderr = await proc.communicate()
 
     print(f"[{cmd!r} exited with {proc.returncode}]")
+    experiment_id = None
     if stdout:
         output = stdout.decode("utf-8").strip()
-        experiment_id = [
-            s.strip('"')
-            for s in re.search('Started run with ID "\d+"', output)
-            .group(0)
-            .split("ID ")
-        ][1]
+        if proc.returncode == 0:
+            experiment_id = [
+                s.strip('"')
+                for s in re.search('Started run with ID "\d+"', output)
+                .group(0)
+                .split("ID ")
+            ][1]
         print(f"[stdout]\n{output}")
     if stderr:
         print(f'[stderr]\n{stderr.decode("utf-8").strip()}')
@@ -452,6 +456,16 @@ def iter_param_grid(param_grid):
             for v in product(*values):
                 params = dict(zip(keys, v))
                 yield params
+
+# Cell
+
+def sample_grid_space(param_grid: Dict[str, Iterable[Any]], num_samples: int):
+    samples = []
+    for i, sample in enumerate(iter_param_grid(param_grid)):
+        samples.append(sample)
+    if num_samples < len(samples):
+        samples = pd.Series(samples).sample(num_samples).tolist()
+    return samples
 
 # Cell
 

@@ -39,18 +39,18 @@ art_pip: dist
 	twine upload --repository local dist/*
     
 build:
+	sciflow_build_lib && \
 	nbdev_test_nbs && \
 	sciflow_clean && \
 	sciflow_tidy && \
-	sciflow_build_lib && \
 	sciflow_generate && \
 	sciflow_check_flows
     
 build_run:
+	sciflow_build_lib && \
 	nbdev_test_nbs && \
 	sciflow_clean && \
 	sciflow_tidy && \
-	sciflow_build_lib && \
 	sciflow_generate && \
 	sciflow_check_flows && \
 	sciflow_run_flows
