@@ -23,6 +23,7 @@ from nbdev.export import Config, find_default_export, nbglob, read_nb
 from .data_handler import extract_param_meta
 from .params import params_as_dict
 from .parse_module import FuncDetails, extract_steps
+from .utils import prepare_env
 
 # Cell
 
