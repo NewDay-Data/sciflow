@@ -8,21 +8,18 @@ dependencies:
   - fastcore
   - pandas
   - ipykernel
-  - nd_nexus_data_access
-  - pyodbc
+  - turbodbc
+  - boto3
   - nbformat
   - pyyaml
   - nbconvert=5.6.1
   - jupyter
   - jupyter_client
-  - s3contents
   - papermill
   - notebook
   - black
   - nbqa
   - pylint
-  - pytest
-  - pytest-cov
   - isort
   - autoflake
   - numba
