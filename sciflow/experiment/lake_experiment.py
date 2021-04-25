@@ -10,7 +10,7 @@ import boto3
 import pandas as pd
 from incense.artifact import Artifact, content_type_to_artifact_cls
 from pyrsistent import freeze, thaw
-from text_discovery.s3_utils import S3File, s3_join
+from ..s3_utils import S3File, s3_join
 
 # Cell
 file_to_mime_type_map = {

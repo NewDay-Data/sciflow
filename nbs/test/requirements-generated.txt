@@ -28,7 +28,7 @@ incense == 0.0.11
 # sciflow/packaging.py: 19
 # sciflow/params.py: 14
 # sciflow/parse_module.py: 17
-# sciflow/utils.py: 11,14
+# sciflow/utils.py: 12,14
 nbdev == 1.1.14
 
 # sciflow/export_named.py: 13,34
@@ -41,9 +41,6 @@ nbqa == 0.6.0
 
 # sciflow/parse_module.py: 15
 networkx == 2.5.1
-
-# sciflow/utils.py: 12
-newday_nexus_data_access == 0.4.21
 
 # sciflow/data_handler.py: 14
 # sciflow/experiment/lake_experiment_loader.py: 11
@@ -69,5 +66,9 @@ pyrsistent == 0.17.3
 # sciflow/experiment/lake_observer.py: 12,13,14
 sacred == 0.8.2
 
+# sciflow/experiment/lake_experiment_loader.py: 18,19
+tinydb == 4.4.0
+
 # sciflow/experiment/lake_experiment_loader.py: 20
+# sciflow/utils.py: 11
 turbodbc == 3.3.0

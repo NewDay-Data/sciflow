@@ -142,7 +142,7 @@ def write_module_to_file(
             )
             flow_file.write("import time")
             write_observers(
-                lib_name, flow_file, module_name, Config().bucket, Config().lib_name
+                lib_name, flow_file, module_name, os.environ['SCIFLOW_BUCKET'], Config().lib_name
             )
 
         flow_file.write(f"\n\nclass {flow_class_name}(FlowSpec):\n")

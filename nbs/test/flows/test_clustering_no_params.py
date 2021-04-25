@@ -31,7 +31,7 @@ class TestClusteringNoParamsFlow(FlowSpec):
 
     @step
     def preprocess(self):
-        results = preprocess(self.dremio_access, self.model_level, self.min_date, self.traffic_percent)
+        results = preprocess(self.conn, self.model_level, self.min_date, self.traffic_percent)
 
         for key in results.keys():
             if key in self.__dict__:
@@ -77,11 +77,11 @@ class TestClusteringNoParamsFlow(FlowSpec):
             "flow_parameters": str(current.parameter_names),
             "run_time_mins": round((time.time() - self.__getattr__('start_time')) / 60.0, 1)
         }
-
+    
         run = ex.run(config_updates={'artifacts': self.__getattr__('artifacts'),
                                     'metrics': self.__getattr__('metrics')},
                      meta_info = flow_info)
-
+        
     @ex.main
     def track_flow(artifacts, metrics, _run):
         for artifact in artifacts:

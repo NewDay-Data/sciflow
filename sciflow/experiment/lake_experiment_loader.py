@@ -13,8 +13,8 @@ import pandas as pd
 from incense.artifact import CSVArtifact
 from incense.experiment import Experiment
 from nbdev import Config
-from ..utils import load_dremio_access
-from text_discovery.lake_experiment import LakeExperiment
+from ..utils import odbc_connect, query_odbc
+from .lake_experiment import LakeExperiment
 from tinydb import Query, TinyDB
 from tinydb.storages import MemoryStorage
 from turbodbc.exceptions import DatabaseError
@@ -27,15 +27,15 @@ class LakeExpLoader:
         self,
         experiment_name,
         experiments_key_prefix=None,
-        dremio_access=None,
+        connection=None,
         bucket_name=None,
         bucket_table_alias=None,
     ):
         config = Config()
         lib_name = config.lib_name
         self.experiment_name = experiment_name
-        self.dremio_access = (
-            load_dremio_access() if dremio_access is None else dremio_access
+        self.connection = (
+            odbc_connect() if connection is None else connection
         )
         self.bucket_name = config.bucket if bucket_name is None else bucket_name
         self.bucket_table_alias = (
@@ -76,7 +76,7 @@ class LakeExpLoader:
             query += f" order by {order_by} desc"
         if limit:
             query += f" limit {limit}"
-        data = self.dremio_access.read_sql_to_dataframe(query)
+        data = query_odbc(self.connection, query)
         experiments = [
             LakeExperiment(
                 self.bucket_name,
