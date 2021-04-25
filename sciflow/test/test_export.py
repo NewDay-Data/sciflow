@@ -70,7 +70,7 @@ def train(input_path: str, model_path: str):
 
 # step:last
 # TODO: finisih this
-def last(some_param: None):
+def last():
     """
     Clean up and close connections"""
     one = {"one": 1}

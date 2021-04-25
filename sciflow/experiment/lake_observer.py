@@ -12,7 +12,7 @@ import pandas as pd
 from sacred.dependencies import get_digest
 from sacred.observers.base import RunObserver
 from sacred.serializer import flatten
-from text_discovery.s3_utils import (
+from ..s3_utils import (
     delete_dir,
     is_valid_bucket,
     list_s3_subdirs,
@@ -60,10 +60,14 @@ class AWSLakeObserver(RunObserver):
         self.experiment_name = experiment_name
         if bucket_name is None:
             try:
-                bucket_name = os.environ['SCIFLOW_BUCKET']
+                bucket_name = os.environ["SCIFLOW_BUCKET"]
             except KeyError:
-                raise ValueError('Bucket name must be provided or set using SCIFLOW_BUCKET env')
-        self.bucket_name = os.environ['SCIFLOW_BUCKET'] if bucket_name is None else bucket_name
+                raise ValueError(
+                    "Bucket name must be provided or set using SCIFLOW_BUCKET env"
+                )
+        self.bucket_name = (
+            os.environ["SCIFLOW_BUCKET"] if bucket_name is None else bucket_name
+        )
         if not is_valid_bucket(self.bucket_name):
             raise ValueError(
                 "Your chosen bucket name doesn't follow AWS bucket naming rules"
@@ -73,7 +77,9 @@ class AWSLakeObserver(RunObserver):
             if experiments_key_prefix is None
             else experiments_key_prefix
         )
-        self.experiments_key = s3_join(self.experiments_key_prefix, self.experiment_name)
+        self.experiments_key = s3_join(
+            self.experiments_key_prefix, self.experiment_name
+        )
         self.experiment_dir = s3_join(self.bucket_name, self.experiments_key)
         self.bucket_name = bucket_name
         self.priority = priority
@@ -102,7 +108,6 @@ class AWSLakeObserver(RunObserver):
                     "You must either pass in an AWS region name, or have a "
                     "region name specified in your AWS config file"
                 )
-
 
     def put_data(self, key, binary_data):
         self.s3.Object(self.bucket_name, key).put(Body=binary_data)
@@ -137,23 +142,6 @@ class AWSLakeObserver(RunObserver):
         return store_path, md5sum
 
     def _determine_run_dir(self, run_id):
-#         if _id is None:
-#             path_subdirs = list_s3_subdirs(
-#                 self.s3, self.bucket_name, s3_join(self.experiments_key, "runs")
-#             )
-#             if not path_subdirs:
-#                 max_run_id = 0
-#             else:
-#                 integer_directories = [int(d) for d in path_subdirs if d.isdigit()]
-#                 if not integer_directories:
-#                     max_run_id = 0
-#                 else:
-#                     # If there are directories under experiments_key that aren't
-#                     # numeric run directories, ignore those
-#                     max_run_id = max(integer_directories)
-
-#             _id = max_run_id + 1
-
         self.runs_dir = s3_join(self.experiments_key, "runs", str(run_id))
         self.metrics_dir = s3_join(self.experiments_key, "metrics", str(run_id))
         self.artifacts_dir = s3_join(self.experiments_key, "artifacts", str(run_id))
@@ -170,13 +158,15 @@ class AWSLakeObserver(RunObserver):
         for dir_to_check in self.dirs:
             if objects_exist_in_dir(self.s3, self.bucket_name, dir_to_check):
                 raise FileExistsError(
-                    "S3 dir at {}/{} already exists".format(self.bucket_name, dir_to_check)
+                    "S3 dir at {}/{} already exists".format(
+                        self.bucket_name, dir_to_check
+                    )
                 )
 
     def queued_event(
         self, ex_info, command, host_info, queue_time, config, meta_info, _id
     ):
-        self._determine_run_dir(meta_info['run_id'])
+        self._determine_run_dir(meta_info["run_id"])
 
         self.run_entry = {
             "experiment": dict(ex_info),
@@ -196,8 +186,8 @@ class AWSLakeObserver(RunObserver):
     def started_event(
         self, ex_info, command, host_info, start_time, config, meta_info, _id
     ):
-        self._determine_run_dir(meta_info['run_id'])
-        self.experiment_id = meta_info['run_id']
+        self._determine_run_dir(meta_info["run_id"])
+        self.experiment_id = meta_info["run_id"]
 
         ex_info["sources"] = self.save_sources(ex_info)
 

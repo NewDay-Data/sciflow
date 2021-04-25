@@ -13,11 +13,9 @@ def something():
 # Cell
 
 
-from pathlib import Path
-
 import numpy as np
 import pandas as pd
-from ..utils import load_dremio_access, lib_path
+from ..utils import lib_path, load_dremio_access
 
 # Cell
 
@@ -132,7 +130,7 @@ def get_num_docs(topic_idx, topic_sizes, max_k=50):
 
 
 def evaluate(model):
-    import os
+    pass
 
     topic_words, word_scores, topic_nums = model.get_topics(model.get_num_topics())
 

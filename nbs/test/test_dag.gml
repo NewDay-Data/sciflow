@@ -34,10 +34,10 @@ graph [
     label "3"
     name "last"
     docstring "Clean up and close connections"
-    args "some_param"
+    args ""
     has_return 1
     return_stmt "one"
-    code "def last(some_param: None):&#10;    &#34;&#34;&#34;&#10;    Clean up and close connections&#34;&#34;&#34;&#10;    one = {&#34;one&#34;: 1}&#10;    return one"
+    code "def last():&#10;    &#34;&#34;&#34;&#10;    Clean up and close connections&#34;&#34;&#34;&#10;    one = {&#34;one&#34;: 1}&#10;    return one"
   ]
   edge [
     source 0

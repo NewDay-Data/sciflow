@@ -13,11 +13,11 @@ import asyncio
 import multiprocessing
 import os
 import subprocess
+from itertools import product
 from pathlib import Path, PosixPath
 from typing import Any, Dict, Iterable
-from itertools import product
-import re
 
+import pandas as pd
 from fastcore.script import call_parse
 from nbdev.export import Config, find_default_export, nbglob, read_nb
 from .data_handler import extract_param_meta
@@ -137,9 +137,13 @@ def write_module_to_file(
 
         if track_experiment:
             flow_file.write("from sacred import Experiment\n")
-            flow_file.write("from sciflow.lake_observer import AWSLakeObserver\n")
+            flow_file.write(
+                "from sciflow.experiment.lake_observer import AWSLakeObserver\n"
+            )
             flow_file.write("import time")
-            write_observers(lib_name, flow_file, module_name, Config().bucket, Config().lib_name)
+            write_observers(
+                lib_name, flow_file, module_name, Config().bucket, Config().lib_name
+            )
 
         flow_file.write(f"\n\nclass {flow_class_name}(FlowSpec):\n")
         single_indent = "    "
@@ -183,12 +187,11 @@ def write_track_flow(flow_file, track_experiment):
     def end(self):
         flow_info = {
             "flow_name": current.flow_name,
-            "run id": current.run_id,
-            "origin run id": current.origin_run_id,
+            "run_id": current.run_id,
             "pathspec": current.pathspec,
             "namespace": current.namespace,
             "username": current.username,
-            "flow parameters": str(current.parameter_names),
+            "flow_parameters": str(current.parameter_names),
             "run_time_mins": round((time.time() - self.__getattr__('start_time')) / 60.0, 1)
         }
 
@@ -398,7 +401,6 @@ def run_flow(nb_path, params=None):
 
 
 async def run_flow_task(flow_path, param_grid=None):
-    experiment_id = None
     flows_dir = flow_path.parent
     flow_module = os.path.basename(flow_path)
     flow_command = "--no-pylint run"
@@ -415,21 +417,13 @@ async def run_flow_task(flow_path, param_grid=None):
     stdout, stderr = await proc.communicate()
 
     print(f"[{cmd!r} exited with {proc.returncode}]")
-    experiment_id = None
     if stdout:
         output = stdout.decode("utf-8").strip()
-        if proc.returncode == 0:
-            experiment_id = [
-                s.strip('"')
-                for s in re.search('Started run with ID "\d+"', output)
-                .group(0)
-                .split("ID ")
-            ][1]
         print(f"[stdout]\n{output}")
     if stderr:
         print(f'[stderr]\n{stderr.decode("utf-8").strip()}')
 
-    return experiment_id
+    return proc.returncode
 
 # Cell
 
@@ -438,7 +432,6 @@ def run_flow_async(nb_path, params=None):
     flow_path = get_flow_path(nb_path)
     loop = asyncio.get_event_loop()
     task = loop.create_task(run_flow_task(flow_path, params))
-    task.add_done_callback(lambda x: print(f"Task {x.result()} finished"))
     return task
 
 # Cell
@@ -458,6 +451,7 @@ def iter_param_grid(param_grid):
                 yield params
 
 # Cell
+
 
 def sample_grid_space(param_grid: Dict[str, Iterable[Any]], num_samples: int):
     samples = []

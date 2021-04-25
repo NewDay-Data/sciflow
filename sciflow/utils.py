@@ -18,7 +18,7 @@ from nbqa.find_root import find_project_root
 
 
 def lib_path(*lib_relative_path):
-    lib_root_path = find_project_root(srcs=(str(Path('.').resolve()), ))
+    lib_root_path = find_project_root(srcs=(str(Path(".").resolve()),))
     return Path(os.path.join(lib_root_path, *lib_relative_path))
 
 # Cell

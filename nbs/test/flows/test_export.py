@@ -53,7 +53,7 @@ class TestExportFlow(FlowSpec):
     @step
     def last(self):
         """Clean up and close connections"""
-        results = last(self.some_param)
+        results = last()
 
         for key in results.keys():
             if key in self.__dict__:
@@ -75,11 +75,11 @@ class TestExportFlow(FlowSpec):
             "flow_parameters": str(current.parameter_names),
             "run_time_mins": round((time.time() - self.__getattr__('start_time')) / 60.0, 1)
         }
-    
+
         run = ex.run(config_updates={'artifacts': self.__getattr__('artifacts'),
                                     'metrics': self.__getattr__('metrics')},
                      meta_info = flow_info)
-        
+
     @ex.main
     def track_flow(artifacts, metrics, _run):
         for artifact in artifacts:
