@@ -16,6 +16,8 @@ import subprocess
 from itertools import product
 from pathlib import Path, PosixPath
 from typing import Any, Dict, Iterable
+import sys
+
 
 import pandas as pd
 from fastcore.script import call_parse
@@ -143,7 +145,11 @@ def write_module_to_file(
             )
             flow_file.write("import time")
             write_observers(
-                lib_name, flow_file, module_name, os.environ['SCIFLOW_BUCKET'], Config().lib_name
+                lib_name,
+                flow_file,
+                module_name,
+                os.environ["SCIFLOW_BUCKET"],
+                Config().lib_name,
             )
 
         flow_file.write(f"\n\nclass {flow_class_name}(FlowSpec):\n")
@@ -333,6 +339,8 @@ def check_flows(config, flow_command="show", ignore_suffix="_no_params.py"):
         flow_paths = [p for p in os.listdir(flows_dir) if not p.endswith(ignore_suffix)]
     else:
         flow_paths = os.listdir(flows_dir)
+    ret_codes = []
+    exit_code = 0
     for flow_path in flow_paths:
         flow_name = os.path.basename(flow_path)
         if flow_path.endswith(".py"):
@@ -346,6 +354,15 @@ def check_flows(config, flow_command="show", ignore_suffix="_no_params.py"):
                 print(
                     f"Flow: {flow_name} {flow_command} verification failed\nDetails:\n{output}"
                 )
+            ret_codes.append(ret_code)
+    if any([rc !=0 for rc in ret_codes]):
+        exit_code = 1
+        try:
+            # Exit with an error code if running from a non interactive Pyhon environment.
+            get_ipython().__class__.__name__
+        except NameError:
+            return sys.exit(exit_code)
+    return exit_code
 
 # Cell
 

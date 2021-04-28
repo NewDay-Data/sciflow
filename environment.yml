@@ -22,14 +22,14 @@ dependencies:
   - pylint
   - isort
   - autoflake
+  - pre_commit
   - numba
   - cython
-  - nteract-scrapbook
   - pigar
   - networkx
-  - dvc
   - graphviz
   - pyrsistent
+  - dvc
   - metaflow
   - tinydb
   - pip

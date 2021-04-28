@@ -13,8 +13,8 @@ import pandas as pd
 from incense.artifact import CSVArtifact
 from incense.experiment import Experiment
 from nbdev import Config
-from ..utils import odbc_connect, query_odbc
 from .lake_experiment import LakeExperiment
+from ..utils import odbc_connect, query_odbc
 from tinydb import Query, TinyDB
 from tinydb.storages import MemoryStorage
 from turbodbc.exceptions import DatabaseError
@@ -34,9 +34,7 @@ class LakeExpLoader:
         config = Config()
         lib_name = config.lib_name
         self.experiment_name = experiment_name
-        self.connection = (
-            odbc_connect() if connection is None else connection
-        )
+        self.connection = odbc_connect() if connection is None else connection
         self.bucket_name = config.bucket if bucket_name is None else bucket_name
         self.bucket_table_alias = (
             config.bucket_table_alias

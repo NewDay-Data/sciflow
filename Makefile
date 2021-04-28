@@ -41,20 +41,29 @@ art_pip: dist
 build:
 	sciflow_build_lib && \
 	nbdev_test_nbs && \
-	sciflow_clean && \
 	sciflow_tidy && \
 	sciflow_generate && \
-	sciflow_check_flows
+	sciflow_check_flows && \
+	echo "Build completed"
     
 build_run:
 	sciflow_build_lib && \
 	nbdev_test_nbs && \
+	sciflow_tidy && \
+	sciflow_generate && \
+	sciflow_check_flows && \
+	sciflow_run_flows && \
+	echo "Build & flow run checks completed"
+    
+precommit:
+	sciflow_build_lib && \
 	sciflow_clean && \
 	sciflow_tidy && \
 	sciflow_generate && \
 	sciflow_check_flows && \
-	sciflow_run_flows
-    
+	sciflow_run_flows && \
+	echo "Precommit checks completed"
+
 release: pypi conda_release
 	nbdev_bump_version
 

@@ -5,14 +5,13 @@ __all__ = ['lib_path', 'sciflow_clean', 'prepare_env', 'odbc_connect', 'query']
 # Cell
 
 import os
-import subprocess
 from pathlib import Path
 
-from turbodbc import connect, make_options, Megabytes
 import nbdev
 from fastcore.script import call_parse
 from nbdev.clean import nbdev_clean_nbs
 from nbqa.find_root import find_project_root
+from turbodbc import Megabytes, connect, make_options
 
 # Cell
 
@@ -34,53 +33,55 @@ def sciflow_clean():
 
 def prepare_env(env_file_path: str = None):
     if env_file_path is None:
-        env_file_path = os.path.expanduser('~/.sciflow/env')
+        env_file_path = os.path.expanduser("~/.sciflow/env")
     # TODO create this for user
     if not os.path.exists(env_file_path):
-        raise EnvironmentError(f'You need to create a Sciflow environment vars file at: {env_file_path}')
-    with(open(env_file_path, 'r')) as env_file:
+        raise EnvironmentError(
+            f"You need to create a Sciflow environment vars file at: {env_file_path}"
+        )
+    with (open(env_file_path, "r")) as env_file:
         for line in env_file.readlines():
-            key, value = line.strip().split('=', 1)
-            os.environ[key.replace('export ', '')] = value
+            key, value = line.strip().split("=", 1)
+            os.environ[key.replace("export ", "")] = value
 
 # Cell
 
 
-def odbc_connect(options = None, env_file_path: str = None):
-    required_vars = ('ODBC_DRIVER', 'ODBC_HOST', 'ODBC_PORT', 'ODBC_USER', 'ODBC_PWD')
+def odbc_connect(options=None, env_file_path: str = None):
+    required_vars = ("ODBC_DRIVER", "ODBC_HOST", "ODBC_PORT", "ODBC_USER", "ODBC_PWD")
     if not all([v in os.environ for v in required_vars]):
         prepare_env(env_file_path)
     if options is None:
         options = make_options(
-            fetch_wchar_as_char=True,
-            autocommit=True,
-            read_buffer_size=Megabytes(5),
+            fetch_wchar_as_char=True, autocommit=True, read_buffer_size=Megabytes(5),
         )
-    connection = connect(driver=os.environ['ODBC_DRIVER'],
-                         host=os.environ['ODBC_HOST'],
-                         port=os.environ['ODBC_PORT'],
-                         uid=os.environ['ODBC_USER'],
-                         pwd=os.environ['ODBC_PWD'],
-                         SSL=1,
-                         TrustedCerts=os.environ['SSL_CERTS'],
-                         turbodbc_options=options,
-                )
+    connection = connect(
+        driver=os.environ["ODBC_DRIVER"],
+        host=os.environ["ODBC_HOST"],
+        port=os.environ["ODBC_PORT"],
+        uid=os.environ["ODBC_USER"],
+        pwd=os.environ["ODBC_PWD"],
+        SSL=1,
+        TrustedCerts=os.environ["SSL_CERTS"],
+        turbodbc_options=options,
+    )
     return connection
 
 # Cell
 
 
-def query(conn, sql, strings_as_dictionary=False, adaptive_integers=False,
-               strings_to_categorical=False, date_as_object=False):
+def query(
+    conn,
+    sql,
+    strings_as_dictionary=False,
+    adaptive_integers=False,
+    strings_to_categorical=False,
+    date_as_object=False,
+):
     with conn.cursor() as cursor:
-        df = (cursor.execute(sql)
-                            .fetchallarrow(
-                                strings_as_dictionary=False,
-                                adaptive_integers=False,
-                            )
-                            .to_pandas(
-                                strings_to_categorical=False,
-                                date_as_object=False,
-                            )
-                        )
+        df = (
+            cursor.execute(sql)
+            .fetchallarrow(strings_as_dictionary=False, adaptive_integers=False,)
+            .to_pandas(strings_to_categorical=False, date_as_object=False,)
+        )
     return df
