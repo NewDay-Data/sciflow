@@ -1,4 +1,5 @@
--   id: trailing-whitespace
+#TODO come back to this once on github
+-   id: sciflow-precommit-build
     name: Trim Trailing Whitespace
     description: This hook trims trailing whitespace.
     entry: trailing-whitespace-fixer
