@@ -1,8 +1,6 @@
 # Sciflow 🔬
-> This library bridges the gap between research and production for Data Science. The exploration driven development is a different paradigm to most software engineering exercises. We start by assuming only that there are high levels of uncertainty and that the code needs not only to work but to be well conditioned to real data. `sciflow` mixes the strengths of the notebook environment: flexibility, access to data and constant feedback with the strengths of production-like workflows: resilience and dedicated compute.
 
 
-This file will become your README and also the index of your documentation.
 
 ## Install
 
@@ -21,11 +19,14 @@ This file will become your README and also the index of your documentation.
 
 ## Steps
 
-Steps are functions which can be executed independently. Structuring your code into steps brigns many benefits:
+Steps are functions which can be executed independently. Structuring your code into steps brings many benefits:
 
 * Save Time:
     * Checkpointing: can skip having to run expensive steps again
     * Re-use: write a step once and use in many different workflows
+    
+* Easier to debug
+    * You can narrow down where the problem is happening quicker and can use print statements or a debugger within the fewlines of a functino rather than a longer script.
 
 ## Flows
 

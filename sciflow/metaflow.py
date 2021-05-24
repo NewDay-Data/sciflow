@@ -13,11 +13,10 @@ import asyncio
 import multiprocessing
 import os
 import subprocess
+import sys
 from itertools import product
 from pathlib import Path, PosixPath
 from typing import Any, Dict, Iterable
-import sys
-
 
 import pandas as pd
 from fastcore.script import call_parse
@@ -332,7 +331,9 @@ def sciflow_generate():
 # Cell
 
 
-def check_flows(config, flow_command="show", ignore_suffix="_no_params.py"):
+def check_flows(
+    config, flow_command="show", ignore_suffix="_no_params.py", exit_on_error=True
+):
     flow_results = {}
     flows_dir = config.path("flows_path")
     if ignore_suffix:
@@ -355,13 +356,14 @@ def check_flows(config, flow_command="show", ignore_suffix="_no_params.py"):
                     f"Flow: {flow_name} {flow_command} verification failed\nDetails:\n{output}"
                 )
             ret_codes.append(ret_code)
-    if any([rc !=0 for rc in ret_codes]):
+    if any([rc != 0 for rc in ret_codes]):
         exit_code = 1
         try:
-            # Exit with an error code if running from a non interactive Pyhon environment.
+            # Exit with an error code if running from a non interactive Python environment.
             get_ipython().__class__.__name__
         except NameError:
-            return sys.exit(exit_code)
+            if exit_on_error:
+                return sys.exit(exit_code)
     return exit_code
 
 # Cell
