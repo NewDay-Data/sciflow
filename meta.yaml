@@ -1,6 +1,6 @@
 package:
   name: sciflow
-  version: 0.0.4
+  version: 0.0.1
 requirements:
   host:
   - pip
@@ -18,9 +18,9 @@ requirements:
   - networkx==2.5.1
   - numpy==1.20.1
   - pandas==1.2.4
+  - pyodbc==4.0.31
   - pyrsistent==0.17.3
   - sacred==0.8.2
   - tinydb==4.4.0
-  - turbodbc==4.1.2
 source:
   path: /home/jovyan/git/sciflow

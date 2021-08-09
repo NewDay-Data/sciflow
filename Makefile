@@ -40,7 +40,7 @@ art_pip: dist
     
 build:
 	sciflow_build_lib && \
-	nbdev_test_nbs && \
+	nbdev_test_nbs --pause=1 && \
 	sciflow_tidy && \
 	sciflow_generate && \
 	sciflow_check_flows && \
@@ -48,7 +48,7 @@ build:
     
 run:
 	sciflow_build_lib && \
-	nbdev_test_nbs && \
+	nbdev_test_nbs --pause=1 && \
 	sciflow_tidy && \
 	sciflow_generate && \
 	sciflow_check_flows && \
@@ -57,7 +57,7 @@ run:
     
 precommit:
 	sciflow_build_lib && \
-	nbdev_test_nbs && \
+	nbdev_test_nbs --pause=1 && \
 	sciflow_clean && \
 	sciflow_tidy && \
 	sciflow_generate && \

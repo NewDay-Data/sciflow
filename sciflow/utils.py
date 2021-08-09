@@ -8,10 +8,11 @@ import os
 from pathlib import Path
 
 import nbdev
+import pandas as pd
+import pyodbc
 from fastcore.script import call_parse
 from nbdev.clean import nbdev_clean_nbs
 from nbqa.find_root import find_project_root
-from turbodbc import Megabytes, connect, make_options
 
 # Cell
 
@@ -47,41 +48,45 @@ def prepare_env(env_file_path: str = None):
 # Cell
 
 
-def odbc_connect(options=None, env_file_path: str = None):
+def odbc_connect(env_file_path: str = None):
     required_vars = ("ODBC_DRIVER", "ODBC_HOST", "ODBC_PORT", "ODBC_USER", "ODBC_PWD")
     if not all([v in os.environ for v in required_vars]):
         prepare_env(env_file_path)
-    if options is None:
-        options = make_options(
-            fetch_wchar_as_char=True, autocommit=True, read_buffer_size=Megabytes(5),
-        )
-    connection = connect(
-        driver=os.environ["ODBC_DRIVER"],
-        host=os.environ["ODBC_HOST"],
-        port=os.environ["ODBC_PORT"],
-        uid=os.environ["ODBC_USER"],
-        pwd=os.environ["ODBC_PWD"],
-        SSL=1,
-        TrustedCerts=os.environ["SSL_CERTS"],
-        turbodbc_options=options,
+    #     connection = connect(
+    #         driver=os.environ["ODBC_DRIVER"],
+    #         host=os.environ["ODBC_HOST"],
+    #         port=os.environ["ODBC_PORT"],
+    #         uid=os.environ["ODBC_USER"],
+    #         pwd=os.environ["ODBC_PWD"],
+    #         SSL=1,
+    #         TrustedCerts=os.environ["SSL_CERTS"],
+    #         turbodbc_options=options,
+    #     )
+    connection = pyodbc.connect(
+        """Driver={};
+                                                   ConnectionType=Direct;
+                                                   HOST={};
+                                                   PORT={};
+                                                   AuthenticationType=Plain;
+                                                   UID={};
+                                                   PWD={};
+                                                   SSL=1;
+                                                   TrustedCerts={}""".format(
+            os.environ["ODBC_DRIVER"],
+            os.environ["ODBC_HOST"],
+            os.environ["ODBC_PORT"],
+            os.environ["ODBC_USER"],
+            os.environ["ODBC_PWD"],
+            os.environ["SSL_CERTS"],
+        ),
+        autocommit=True,
     )
     return connection
 
 # Cell
 
 
-def query(
-    conn,
-    sql,
-    strings_as_dictionary=False,
-    adaptive_integers=False,
-    strings_to_categorical=False,
-    date_as_object=False,
-):
+def query(conn, sql):
     with conn.cursor() as cursor:
-        df = (
-            cursor.execute(sql)
-            .fetchallarrow(strings_as_dictionary=False, adaptive_integers=False,)
-            .to_pandas(strings_to_categorical=False, date_as_object=False,)
-        )
+        df = pd.read_sql(sql, conn)
     return df

@@ -14,11 +14,11 @@ import pandas as pd
 from incense.artifact import CSVArtifact
 from incense.experiment import Experiment
 from nbdev import Config
+from pandas.io.sql import DatabaseError
 from .lake_experiment import LakeExperiment
 from ..utils import odbc_connect, query
 from tinydb import Query, TinyDB
 from tinydb.storages import MemoryStorage
-from turbodbc.exceptions import DatabaseError
 
 MAX_CACHE_SIZE = 32
 
