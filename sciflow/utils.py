@@ -52,26 +52,16 @@ def odbc_connect(env_file_path: str = None):
     required_vars = ("ODBC_DRIVER", "ODBC_HOST", "ODBC_PORT", "ODBC_USER", "ODBC_PWD")
     if not all([v in os.environ for v in required_vars]):
         prepare_env(env_file_path)
-    #     connection = connect(
-    #         driver=os.environ["ODBC_DRIVER"],
-    #         host=os.environ["ODBC_HOST"],
-    #         port=os.environ["ODBC_PORT"],
-    #         uid=os.environ["ODBC_USER"],
-    #         pwd=os.environ["ODBC_PWD"],
-    #         SSL=1,
-    #         TrustedCerts=os.environ["SSL_CERTS"],
-    #         turbodbc_options=options,
-    #     )
     connection = pyodbc.connect(
         """Driver={};
-                                                   ConnectionType=Direct;
-                                                   HOST={};
-                                                   PORT={};
-                                                   AuthenticationType=Plain;
-                                                   UID={};
-                                                   PWD={};
-                                                   SSL=1;
-                                                   TrustedCerts={}""".format(
+           ConnectionType=Direct;
+           HOST={};
+           PORT={};
+           AuthenticationType=Plain;
+           UID={};
+           PWD={};
+           SSL=1;
+           TrustedCerts={}""".format(
             os.environ["ODBC_DRIVER"],
             os.environ["ODBC_HOST"],
             os.environ["ODBC_PORT"],

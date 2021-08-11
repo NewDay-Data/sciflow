@@ -57,7 +57,7 @@ run:
     
 precommit:
 	sciflow_build_lib && \
-	nbdev_test_nbs --pause=1 && \
+	nbdev_test_nbs --pause=2 && \
 	sciflow_clean && \
 	sciflow_tidy && \
 	sciflow_generate && \

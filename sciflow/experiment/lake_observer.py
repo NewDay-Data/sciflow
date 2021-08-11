@@ -20,6 +20,7 @@ from ..s3_utils import (
     objects_exist_in_dir,
     s3_join,
 )
+from ..utils import prepare_env
 
 # Cell
 DEFAULT_S3_PRIORITY = 20
@@ -159,7 +160,7 @@ class AWSLakeObserver(RunObserver):
         for dir_to_check in self.dirs:
             if objects_exist_in_dir(self.s3, self.bucket_name, dir_to_check):
                 raise FileExistsError(
-                    "S3 dir at {}/{} already exists".format(
+                    "S3 dir at {}/{} already exists; check your run_id is unique".format(
                         self.bucket_name, dir_to_check
                     )
                 )

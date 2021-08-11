@@ -174,7 +174,12 @@ def write_art_conda_envs_to_file():
         existing_lines = profile_file.readlines()
         to_remove = []
         for i, line in enumerate(existing_lines):
-            if line.strip().startswith("export ARTIFACTORY_") or line.strip().startswith("export LIB_NAME") or line.strip().startswith("export VERSION") or line.strip().startswith("export BUILD_NUMBER"):
+            if (
+                line.strip().startswith("export ARTIFACTORY_")
+                or line.strip().startswith("export LIB_NAME")
+                or line.strip().startswith("export VERSION")
+                or line.strip().startswith("export BUILD_NUMBER")
+            ):
                 to_remove.append(i)
             if not line.endswith("\n"):
                 existing_lines[i] = line + "\n"

@@ -24,7 +24,7 @@ file_to_mime_type_map = {
 
 # Cell
 class LakeExperiment:
-    def __init__(self, bucket_name, experiments_dir, name, experiment_id, data):
+    def __init__(self, bucket_name, experiments_dir, name, experiment_id, start_time, data):
         self.bucket_name = bucket_name
         self.experiments_dir = experiments_dir
         self.name = name
@@ -33,6 +33,7 @@ class LakeExperiment:
         self.project_dir = s3_join(self.bucket_name, self.project_name)
         self.metrics_dir = s3_join(self.project_dir, "metrics", str(experiment_id))
         self.artifacts_dir = s3_join(self.project_dir, "artifacts", str(experiment_id))
+        self.start_time = start_time
         self._data = freeze(data)
         self.s3 = boto3.client("s3")
         self.artifacts = self._load_artifacts()
