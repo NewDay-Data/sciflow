@@ -1,0 +1,44 @@
+name: sciflow
+channels:
+  - https://nexus_eut_svc:AKCp8hzCxcyh1Uh9s4LMNZKmEHY1V4jwUhfqRsEUvdvMNZKhyncwt8MTtzwaq2rZkhx6dxW3e@ndartifactory.jfrog.io/artifactory/api/conda/conda
+  - https://nexus_eut_svc:AKCp8hzCxcyh1Uh9s4LMNZKmEHY1V4jwUhfqRsEUvdvMNZKhyncwt8MTtzwaq2rZkhx6dxW3e@ndartifactory.jfrog.io/artifactory/api/conda/conda-forge
+dependencies:
+  - python==3.7.6
+  - nbdev
+  - fastcore
+  - pandas
+  - ipykernel
+  - turbodbc
+  - boto3
+  - s3fs=0.5.1
+  - fsspec=0.8.3
+  - nbformat
+  - pyyaml
+  - nbconvert=5.6.1
+  - jupyter
+  - jupyter_client
+  - papermill
+  - notebook
+  - black
+  - nbqa=0.6.1
+  - pylint
+  - isort
+  - autoflake
+  - pre_commit
+  - mamba
+  - boa
+  - conda-verify
+  - numba
+  - cython
+  - pigar
+  - twine
+  - networkx
+  - graphviz
+  - pyrsistent
+  - dvc
+  - metaflow
+  - tinydb
+  - pip
+  - pip:
+      - sacred
+      - incense

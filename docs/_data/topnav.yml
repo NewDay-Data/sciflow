@@ -1,0 +1,10 @@
+topnav:
+- title: Topnav
+  items:
+    - title: bitbucket
+      external_url: https://github.com/{user}/text_discovery/tree/{branch}/
+
+#Topnav dropdowns
+topnav_dropdowns:
+- title: Topnav dropdowns
+  folders:
