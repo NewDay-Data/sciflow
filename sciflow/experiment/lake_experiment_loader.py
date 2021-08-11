@@ -6,22 +6,21 @@ __all__ = ['MAX_CACHE_SIZE', 'LakeExpLoader']
 
 import json
 import os
+import uuid
 from functools import lru_cache
 from typing import Tuple
-import uuid
 
+import boto3
 import numpy as np
 import pandas as pd
 from incense.artifact import CSVArtifact
 from incense.experiment import Experiment
-from nbdev import Config
 from pandas.io.sql import DatabaseError
 from .lake_experiment import LakeExperiment
-from ..utils import prepare_env, odbc_connect, query
 from ..s3_utils import delete_dir
+from ..utils import odbc_connect, prepare_env, query
 from tinydb import Query, TinyDB
 from tinydb.storages import MemoryStorage
-import boto3
 
 MAX_CACHE_SIZE = 32
 
@@ -72,12 +71,14 @@ class LakeExpLoader:
             experiment_name = self.experiment_name
         table_name = f"{self.table_context}.{experiment_name}.runs"
         # TODO Dremio Specific code in utils.py
-        data = query(self.connection, f'ALTER TABLE {table_name} REFRESH METADATA')
+        data = query(self.connection, f"ALTER TABLE {table_name} REFRESH METADATA")
 
         query_stmt = f"select * from {table_name}"
         if experiment_ids:
-            ids = ", ".join([str(i) for i in experiment_ids])
-            query_stmt += f" where dir0 IN {tuple('{}'.format(x) for x in experiment_ids)}"
+            ", ".join([str(i) for i in experiment_ids])
+            query_stmt += (
+                f" where dir0 IN {tuple('{}'.format(x) for x in experiment_ids)}"
+            )
         if experiment_id:
             query_stmt += f" where dir0 = '{experiment_id}'"
         if order_by:
@@ -91,7 +92,7 @@ class LakeExpLoader:
                 self.experiments_key_prefix,
                 experiment_name,
                 ex_id,
-                data.iloc[i, :].to_dict()['start_time'],
+                data.iloc[i, :].to_dict()["start_time"],
                 data.iloc[i, :].to_dict(),
             )
             for i, ex_id in enumerate(data.dir0.tolist())
@@ -111,7 +112,7 @@ class LakeExpLoader:
 
     @lru_cache(maxsize=MAX_CACHE_SIZE)
     def find_latest(self, n=5):
-        return self._find(order_by = 'start_time', limit=n)
+        return self._find(order_by="start_time", limit=n)
 
     @lru_cache(maxsize=MAX_CACHE_SIZE)
     def find_all(self):

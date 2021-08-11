@@ -24,7 +24,9 @@ file_to_mime_type_map = {
 
 # Cell
 class LakeExperiment:
-    def __init__(self, bucket_name, experiments_dir, name, experiment_id, start_time, data):
+    def __init__(
+        self, bucket_name, experiments_dir, name, experiment_id, start_time, data
+    ):
         self.bucket_name = bucket_name
         self.experiments_dir = experiments_dir
         self.name = name
