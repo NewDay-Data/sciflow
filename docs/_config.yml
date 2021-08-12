@@ -1,7 +1,7 @@
-repository: {user}/text_discovery
+repository: {user}/sciflow
 output: web
-topnav_title: text_discovery
-site_title: text_discovery
+topnav_title: sciflow
+site_title: sciflow
 company_name: NewDay Technology.
 description: Library that helps to discover patterns in large text sets
 # Set to false to disable KaTeX math
