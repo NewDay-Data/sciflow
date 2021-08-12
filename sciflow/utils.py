@@ -11,7 +11,7 @@ import nbdev
 import pandas as pd
 import pyodbc
 from fastcore.script import call_parse
-from nbdev.clean import nbdev_clean_nbs
+from nbdev.clean import nbdev_clean_nbs, rm_execution_count
 from nbqa.find_root import find_project_root
 
 # Cell
@@ -24,9 +24,24 @@ def lib_path(*lib_relative_path):
 # Cell
 
 
+def _clean_cell(cell, clear_all=False, clear_output=True):
+    "Clean `cell` by removing superfluous metadata or everything except the input if `clear_all`"
+    rm_execution_count(cell)
+    if 'outputs' in cell:
+        if clear_all or clear_output:
+            cell['outputs'] = []
+        else:
+            clean_cell_output(cell)
+    if cell['source'] == ['']:
+        cell['source'] = []
+    cell['metadata'] = {} if clear_all else {k:v for k,v in cell['metadata'].items() if k in cell_metadata_keep}
+
+# Cell
+
 @call_parse
 def sciflow_clean():
     nbdev.clean.cell_metadata_keep = nbdev.clean.cell_metadata_keep + ["tags"]
+    nbdev.clean.clean_cell = _clean_cell
     nbdev_clean_nbs()
 
 # Cell
