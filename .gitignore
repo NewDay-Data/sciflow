@@ -16,6 +16,9 @@ docs/
 conda-local-build/
 conda-build
 
+# Generated Flows
+nbs/test/flows/
+
 # Node artifact files
 node_modules/
 dist/
