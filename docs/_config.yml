@@ -1,4 +1,4 @@
-repository: {user}/sciflow
+repository: NewDayTechnology/sciflow
 output: web
 topnav_title: sciflow
 site_title: sciflow
@@ -64,4 +64,3 @@ plugins:
     
 remote_theme: fastai/nbdev-jekyll-theme
 baseurl: /sciflow/
-theme: jekyll-theme-midnight
