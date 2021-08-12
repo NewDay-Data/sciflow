@@ -4,6 +4,11 @@ __all__ = ['clean_cell', 'sciflow_clean_nbs', 'sciflow_clean']
 
 # Cell
 
+from fastcore.script import Param, bool_arg, call_parse
+from nbdev.clean import rm_execution_count
+
+# Cell
+
 
 def clean_cell(cell, clear_all=False, clear_output=True):
     cell_metadata_keep = nbdev.clean.cell_metadata_keep + ["tags"]
@@ -23,33 +28,40 @@ def clean_cell(cell, clear_all=False, clear_output=True):
     )
 
 # Cell
-@call_parse
-def sciflow_clean_nbs(fname:Param("A notebook name or glob to convert", str)=None,
-                    clear_all:Param("Clean all metadata and outputs", bool_arg)=False,
-                    disp:Param("Print the cleaned outputs", bool_arg)=False,
-                    read_input_stream:Param("Read input stram and not nb folder")=False):
+
+
+def sciflow_clean_nbs(
+    fname: Param("A notebook name or glob to convert", str) = None,
+    clear_all: Param("Clean all metadata and outputs", bool_arg) = False,
+    disp: Param("Print the cleaned outputs", bool_arg) = False,
+    read_input_stream: Param("Read input stram and not nb folder") = False,
+):
     "Clean all notebooks in `fname` to avoid merge conflicts"
-    #Git hooks will pass the notebooks in the stdin
+    # Git hooks will pass the notebooks in the stdin
     if read_input_stream and sys.stdin:
-        input_stream = io.TextIOWrapper(sys.stdin.buffer, encoding='utf-8')
+        input_stream = io.TextIOWrapper(sys.stdin.buffer, encoding="utf-8")
         nb = json.load(input_stream)
         clean_nb(nb, clear_all=clear_all)
         _print_output(nb)
         return
     path = None
     if fname is None:
-        try: path = get_config().path("nbs_path")
-        except Exception as e: path = Path.cwd()
+        try:
+            path = get_config().path("nbs_path")
+        except Exception:
+            path = Path.cwd()
 
-    files = nbglob(fname=ifnone(fname,path))
+    files = nbglob(fname=ifnone(fname, path))
     for f in files:
-        if not str(f).endswith('.ipynb'): continue
-        nb = json.loads(open(f, 'r', encoding='utf-8').read())
+        if not str(f).endswith(".ipynb"):
+            continue
+        nb = json.loads(open(f, "r", encoding="utf-8").read())
         clean_nb(nb, clear_all=clear_all)
-        if disp: _print_output(nb)
+        if disp:
+            _print_output(nb)
         else:
             x = json.dumps(nb, sort_keys=True, indent=1, ensure_ascii=False)
-            with io.open(f, 'w', encoding='utf-8') as f:
+            with io.open(f, "w", encoding="utf-8") as f:
                 f.write(x)
                 f.write("\n")
 

@@ -7,11 +7,8 @@ __all__ = ['lib_path', 'prepare_env', 'odbc_connect', 'query']
 import os
 from pathlib import Path
 
-import nbdev
 import pandas as pd
 import pyodbc
-from fastcore.script import call_parse
-from nbdev.clean import nbdev_clean_nbs, rm_execution_count
 from nbqa.find_root import find_project_root
 
 # Cell

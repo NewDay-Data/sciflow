@@ -10,7 +10,7 @@ build/
 .metaflow/
 
 # nbdev
-docs/
+#docs/
 
 # Conda Build
 conda-local-build/
