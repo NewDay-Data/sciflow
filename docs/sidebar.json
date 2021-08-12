@@ -1,0 +1,22 @@
+{
+  "sciflow": {
+    "Overview": "/",
+    "Clean Notebooks": "clean.html",
+    "Advanced Parameter Handling": "data_handler.html",
+    "Export cells with a name": "export_named.html",
+    "`incense` Experiment - adapted for Data Lakes": "lake_experiment.html",
+    "Sacred Data Lake Experiment Loader": "lake_experiment_loader.html",
+    "Sacred Data Lake Observer": "lake_observer.html",
+    "Sciflow Notebook to MetaFlow Flow": "metaflow.html",
+    "Simplified conda & pip packaging & deployment": "packaging.html",
+    "Notebook Parameter Management": "params.html",
+    "Write out Test Data": "parse_module.html",
+    "S3 Utilities": "s3_utils.html",
+    "Data Science Notebook Linting": "scilint.html",
+    "Example Usage: Unsupervised Modelling": "test_clustering.html",
+    "Text Discovery with Top2Vec": "test_clustering_no_params.html",
+    "Title": "test_module.html",
+    "Some Text": "test_export.html",
+    "Sciflow utils": "utils.html"
+  }
+}
