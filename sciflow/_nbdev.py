@@ -2,7 +2,10 @@
 
 __all__ = ["index", "modules", "custom_doc_links", "git_url"]
 
-index = {"supported_parameters": "data_handler.ipynb",
+index = {"clean_cell": "clean.ipynb",
+         "sciflow_clean_nbs": "clean.ipynb",
+         "sciflow_clean": "clean.ipynb",
+         "supported_parameters": "data_handler.ipynb",
          "supported_args": "data_handler.ipynb",
          "supported_conversion_args": "data_handler.ipynb",
          "suppported_types": "data_handler.ipynb",
@@ -128,12 +131,12 @@ index = {"supported_parameters": "data_handler.ipynb",
          "train": "test_export.ipynb",
          "last": "test_export.ipynb",
          "lib_path": "utils.ipynb",
-         "sciflow_clean": "utils.ipynb",
          "prepare_env": "utils.ipynb",
          "odbc_connect": "utils.ipynb",
          "query": "utils.ipynb"}
 
-modules = ["data_handler.py",
+modules = ["clean.py",
+           "data_handler.py",
            "export_named.py",
            "experiment/lake_experiment.py",
            "experiment/lake_experiment_loader.py",
