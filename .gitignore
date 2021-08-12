@@ -18,6 +18,7 @@ conda-build
 
 # Generated Flows
 nbs/test/flows/
+**/requirements-generated.txt
 
 # Node artifact files
 node_modules/
