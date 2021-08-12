@@ -9,8 +9,8 @@ build/
 # Workflow Related
 .metaflow/
 
-# nbdev
-#docs/
+# dvc
+.dvc/
 
 # Conda Build
 conda-local-build/
