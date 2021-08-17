@@ -13,7 +13,7 @@ import nbdev
 import nbformat
 from fastcore.script import call_parse
 from nbdev.export import (
-    Config,
+    get_config,
     _add2all,
     _deal_import,
     _from_future_import,
@@ -103,10 +103,10 @@ def set_orig_value(
 
 def _sciflow_notebook2script(fname, modules, silent=False, to_dict=None, bare=False):
     "Finds cells starting with `#export` and puts them into a module created by `create_mod_files`"
-    bare = str(Config().get("bare", bare)) == "True"
+    bare = str(get_config().get('bare', bare)) == 'True'
     if os.environ.get("IN_TEST", 0):
         return  # don't export if running tests
-    sep = "\n" * (int(Config().get("cell_spacing", "1")) + 1)
+    sep = "\n" * (int(get_config().get("cell_spacing", "1")) + 1)
     fname = Path(fname)
     nb = read_nb(fname)
     default = find_default_export(nb["cells"])
@@ -122,7 +122,7 @@ def _sciflow_notebook2script(fname, modules, silent=False, to_dict=None, bare=Fa
             print(
                 f'Warning: Exporting to "{e}.py" but this module is not part of this build'
             )
-        fname_out = Config().path("lib_path") / f"{e}.py"
+        fname_out = get_config().path("lib_path") / f"{e}.py"
         orig = set_orig_value(fname, c, a, e, default)
         flag_lines, code_lines = split_flags_and_code(c)
         code_lines = _deal_import(code_lines, fname_out)
@@ -159,4 +159,4 @@ def _sciflow_notebook2script(fname, modules, silent=False, to_dict=None, bare=Fa
 @call_parse
 def sciflow_build_lib():
     nbdev.export._notebook2script = _sciflow_notebook2script
-    notebook2script(recursive=True)
+    notebook2script()
