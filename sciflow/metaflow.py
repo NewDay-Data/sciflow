@@ -20,7 +20,7 @@ from typing import Any, Dict, Iterable
 
 import pandas as pd
 from fastcore.script import call_parse
-from nbdev.export import Config, find_default_export, nbglob, read_nb
+from nbdev.export import get_config, find_default_export, nbglob, read_nb
 from .data_handler import extract_param_meta
 from .params import params_as_dict
 from .parse_module import FuncDetails, extract_steps
@@ -56,7 +56,7 @@ def indent_multiline(multiline_text, indent=1):
 
 def nb_to_metaflow(nb_path: Path, flow_path: Path, silent=True, track_experiment=True):
     nb = read_nb(nb_path)
-    lib_name = Config().lib_name
+    lib_name = get_config().get("lib_name")
     module_name = find_default_export(nb["cells"])
     if not module_name:
         return
@@ -64,7 +64,7 @@ def nb_to_metaflow(nb_path: Path, flow_path: Path, silent=True, track_experiment
     path_sep_module_name = module_name.replace(".", "/")
     nb_name = os.path.basename(nb_path)
     exported_module = os.path.join(
-        Config().path("lib_path"), f"{path_sep_module_name}.py"
+        get_config().path("lib_path"), f"{path_sep_module_name}.py"
     )
     steps = extract_steps(exported_module)
     if len(steps) == 0:
@@ -148,7 +148,7 @@ def write_module_to_file(
                 flow_file,
                 module_name,
                 os.environ["SCIFLOW_BUCKET"],
-                Config().lib_name,
+                get_config().get("lib_name"),
             )
 
         flow_file.write(f"\n\nclass {flow_class_name}(FlowSpec):\n")
@@ -312,8 +312,8 @@ def get_module_name(nb_path):
 # Cell
 
 
-def generate_flows(config: Config):
-    flows_dir = config.path("flows_path")
+def generate_flows(config):
+    flows_dir = get_config().path("flows_path")
     nb_paths = nbglob(recursive=True)
     for nb_path in nb_paths:
         flow_module_name = os.path.basename(nb_path).replace("ipynb", "py")
@@ -326,7 +326,7 @@ def generate_flows(config: Config):
 
 @call_parse
 def sciflow_generate():
-    generate_flows(Config())
+    generate_flows(get_config())
 
 # Cell
 
@@ -497,11 +497,11 @@ def search_flow_grid(nb_path, param_grid, num_procs=None):
 
 @call_parse
 def sciflow_check_flows():
-    check_flows(Config())
+    check_flows(get_config())
 
 # Cell
 
 
 @call_parse
 def sciflow_run_flows():
-    check_flows(Config(), "--no-pylint run")
+    check_flows(get_config(), "--no-pylint run")

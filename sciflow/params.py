@@ -11,7 +11,7 @@ from pathlib import Path
 from typing import Iterable
 
 import nbformat
-from nbdev.export import Config, find_default_export, nbglob, read_nb
+from nbdev.export import get_config, find_default_export, nbglob, read_nb
 from nbformat.notebooknode import NotebookNode
 
 # Cell
@@ -80,7 +80,7 @@ def extract_as_files(suffix="_params.py"):
     nbs = nbglob(recursive=True)
     param_files = list_mod_files(nbs)
     params_files = [
-        Path(os.path.join(Config().path("lib_path"), pf + suffix)) for pf in param_files
+        Path(os.path.join(get_config().path("lib_path"), pf + suffix)) for pf in param_files
     ]
     for nb_path, pf_path in zip(nbs, params_files):
         extract_params_to_file(nb_path, pf_path)

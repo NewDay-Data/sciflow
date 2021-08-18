@@ -14,7 +14,7 @@ from pathlib import Path
 
 import networkx as nx
 import pandas as pd
-from nbdev.export import Config
+from nbdev.export import get_config
 
 # Cell
 

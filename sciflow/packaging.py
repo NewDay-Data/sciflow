@@ -16,7 +16,7 @@ from urllib.parse import urlparse
 
 import yaml
 from fastcore.script import call_parse
-from nbdev.export import Config
+from nbdev.export import get_config
 
 # Cell
 
@@ -59,7 +59,7 @@ def determine_dependencies(
     except:
         print("Pigar dependency is not installed - not able to determine dependencies")
         return
-    lib_path = Config().path("lib_path")
+    lib_path = get_config().path("lib_path")
     if out_dir is None:
         out_dir = lib_path.resolve().parent
 
@@ -89,7 +89,7 @@ def update_requirements(
     project_dir: Path = None, output_filename: str = "settings.ini"
 ):
     if project_dir is None:
-        lib_path = Config().path("lib_path")
+        lib_path = get_config().path("lib_path")
         project_dir = lib_path.resolve().parent
 
     config = ConfigParser(delimiters=["="])
@@ -110,15 +110,15 @@ def update_requirements(
 
 def create_conda_meta_file(project_dir: Path = None, out_file: str = "meta.yaml"):
     if project_dir is None:
-        lib_path = Config().path("lib_path")
+        lib_path = get_config().path("lib_path")
         project_dir = lib_path.resolve().parent
 
     meta_data = {
         "package": {
-            "name": Config().get("lib_name"),
-            "version": Config().get("version"),
+            "name": get_config().get("lib_name"),
+            "version": get_config().get("version"),
         },
-        "source": {"path": str(Config().path("lib_path").resolve().parent)},
+        "source": {"path": str(get_config().path("lib_path").resolve().parent)},
         "requirements": {
             "host": ["pip", "python", "setuptools"],
             "run": determine_dependencies(out_dir=project_dir).split(" "),
@@ -158,8 +158,8 @@ def read_deploy_vars():
         "artifactory_token": urlparse(conda_url).netloc.split(":")[1].split("@")[0],
         "artifactory_url": urlparse(conda_url).netloc.split(":")[1].split("@")[1],
         "artifactory_conda_channel": "conda-local",
-        "lib_name": Config().lib_name,
-        "version": Config().version,
+        "lib_name": get_config().get("lib_name"),
+        "version": get_config().get("version"),
         "build_number": 0,
     }
     return deployment
