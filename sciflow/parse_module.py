@@ -5,7 +5,6 @@ __all__ = ['extract_step_code', 'FuncLister', 'FuncDetails', 'extract_return_stm
 
 # Cell
 
-import numpy as np
 import ast
 import os
 import re
@@ -19,7 +18,11 @@ from nbdev.export import get_config
 # Cell
 
 
-def extract_step_code(module_path: Path,export_comments=("# cell", "# internal cell", "# comes from"),remove_comment_lines=True,):
+def extract_step_code(
+    module_path: Path,
+    export_comments=("# cell", "# internal cell", "# comes from"),
+    remove_comment_lines=True,
+):
     with open(module_path, "r") as module_file:
         lines = module_file.readlines()
     lines = pd.Series(lines)

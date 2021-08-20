@@ -20,7 +20,7 @@ from typing import Any, Dict, Iterable
 
 import pandas as pd
 from fastcore.script import call_parse
-from nbdev.export import get_config, find_default_export, nbglob, read_nb
+from nbdev.export import find_default_export, get_config, nbglob, read_nb
 from .data_handler import extract_param_meta
 from .params import params_as_dict
 from .parse_module import FuncDetails, extract_steps

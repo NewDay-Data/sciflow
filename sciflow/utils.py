@@ -4,16 +4,16 @@ __all__ = ['lib_path', 'load_nb', 'load_nb_module', 'prepare_env', 'odbc_connect
 
 # Cell
 
+import ast
 import os
 from pathlib import Path
-import ast
-import _ast
 
+import _ast
+import nbformat
 import pandas as pd
 import pyodbc
-import nbformat
+from nbdev.export import find_default_export, get_config, read_nb
 from nbqa.find_root import find_project_root
-from nbdev.export import read_nb, find_default_export, get_config
 
 # Cell
 
@@ -38,7 +38,7 @@ def load_nb_module(nb_path):
     nb, module_path = load_nb(nb_path)
     with open(module_path, "r") as module_file:
         lines = module_file.readlines()
-    module_code = '\n'.join(lines)
+    module_code = "\n".join(lines)
     return nb, module_code
 
 # Cell

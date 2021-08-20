@@ -13,7 +13,6 @@ import nbdev
 import nbformat
 from fastcore.script import call_parse
 from nbdev.export import (
-    get_config,
     _add2all,
     _deal_import,
     _from_future_import,
@@ -25,6 +24,7 @@ from nbdev.export import (
     export_names,
     extra_add,
     find_default_export,
+    get_config,
     get_nbdev_module,
     notebook2script,
     read_nb,
@@ -103,7 +103,7 @@ def set_orig_value(
 
 def _sciflow_notebook2script(fname, modules, silent=False, to_dict=None, bare=False):
     "Finds cells starting with `#export` and puts them into a module created by `create_mod_files`"
-    bare = str(get_config().get('bare', bare)) == 'True'
+    bare = str(get_config().get("bare", bare)) == "True"
     if os.environ.get("IN_TEST", 0):
         return  # don't export if running tests
     sep = "\n" * (int(get_config().get("cell_spacing", "1")) + 1)

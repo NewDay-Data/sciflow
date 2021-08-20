@@ -4,11 +4,12 @@ __all__ = ['clean_cell', 'sciflow_clean_nbs', 'sciflow_clean']
 
 # Cell
 
+from pathlib import Path
+
 from fastcore.script import Param, bool_arg, call_parse
 from fastcore.utils import ifnone
 from nbdev.clean import rm_execution_count
 from nbdev.export import nbglob
-from pathlib import Path
 
 # Cell
 
