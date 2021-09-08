@@ -4,6 +4,7 @@ __all__ = ['clean_cell', 'sciflow_clean_nbs', 'sciflow_clean']
 
 # Cell
 
+import json
 from pathlib import Path
 
 from fastcore.script import Param, bool_arg, call_parse

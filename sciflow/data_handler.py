@@ -6,6 +6,7 @@ __all__ = ['supported_parameters', 'supported_args', 'supported_conversion_args'
 # Cell
 
 import os
+import sys
 from dataclasses import dataclass
 from importlib import import_module
 from pathlib import Path
@@ -13,6 +14,7 @@ from typing import Any, Dict, List
 
 import numpy as np
 import pandas as pd
+from nbdev.export import get_config
 from .params import params_as_dict
 
 # Cell
@@ -40,6 +42,9 @@ class ParamMeta:
 
 
 def load_module(fully_qualified_module_name):
+    root_path = str(get_config().path("root_path"))
+    if not root_path in sys.path:
+        sys.path.append(root_path)
     package = ".".join(fully_qualified_module_name.split(".")[:-1])
     fully_qualified_module_name.split(".")[-1]
     module = import_module(fully_qualified_module_name, package)
