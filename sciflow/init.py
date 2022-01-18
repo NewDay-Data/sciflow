@@ -15,3 +15,5 @@ from fastcore.script import Param, call_parse
 def sciflow_init(project_root: Param("The root directory of the project", Path) = None):
     pass
     # Add project_root to PYTHONPATH
+    # Copy template files to project root
+    # Create sciflow env file if it doesn't exist

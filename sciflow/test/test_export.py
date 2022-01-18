@@ -69,7 +69,8 @@ def train(input_path: str, model_path: str):
     time.sleep(1)
 
 # step:last
-# TODO: finisih this
+
+
 def last():
     """
     Clean up and close connections"""

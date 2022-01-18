@@ -2,12 +2,15 @@
 
 __all__ = ["index", "modules", "custom_doc_links", "git_url"]
 
-index = {"something": "complete_workflow.ipynb",
-         "traffic_percent": "hello_sciflow.ipynb",
-         "workers": "complete_workflow.ipynb",
-         "model_level": "complete_workflow.ipynb",
-         "min_date": "complete_workflow.ipynb",
-         "get_traffic_text": "complete_workflow.ipynb",
+index = {"generate_msg": "01_hello_nbdev.ipynb",
+         "first": "02_hello_sciflow.ipynb",
+         "traffic_percent": "tidying_notebooks.ipynb",
+         "second": "02_hello_sciflow.ipynb",
+         "something": "complete_workflow.ipynb",
+         "workers": "tidying_notebooks.ipynb",
+         "model_level": "tidying_notebooks.ipynb",
+         "min_date": "tidying_notebooks.ipynb",
+         "get_traffic_text": "tidying_notebooks.ipynb",
          "get_experiment_segment": "complete_workflow.ipynb",
          "get_utterances": "complete_workflow.ipynb",
          "preprocess": "complete_workflow.ipynb",
@@ -15,12 +18,12 @@ index = {"something": "complete_workflow.ipynb",
          "fit": "complete_workflow.ipynb",
          "evaluate": "complete_workflow.ipynb",
          "serve_num_topics": "complete_workflow.ipynb",
-         "first": "hello_sciflow.ipynb",
-         "second": "hello_sciflow.ipynb"}
+         "some_func": "tidying_notebooks.ipynb"}
 
-modules = ["cleaning_notebooks.py",
+modules = ["hello_nbdev.py",
+           "hello_sciflow.py",
            "test/test_clustering.py",
-           "hello_sciflow.py"]
+           "tidying_notebooks.py"]
 
 doc_url = "https://newdaytechnology.github.io/sciflow/"
 

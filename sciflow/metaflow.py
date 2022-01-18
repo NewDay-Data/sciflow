@@ -19,7 +19,7 @@ from pathlib import Path, PosixPath
 from typing import Any, Dict, Iterable
 
 import pandas as pd
-from fastcore.script import call_parse
+from fastcore.script import Param, call_parse
 from nbdev.export import find_default_export, get_config, nbglob, read_nb
 from .data_handler import extract_param_meta
 from .params import params_as_dict
@@ -154,10 +154,18 @@ def write_module_to_file(
         flow_file.write(f"\n\nclass {flow_class_name}(FlowSpec):\n")
         single_indent = "    "
         write_params(flow_file, param_meta, single_indent)
-        flow_file.write(f"{single_indent}artifacts = []\n")
-        flow_file.write(f"{single_indent}metrics = []\n")
+        if track_experiment:
+            flow_file.write(f"{single_indent}artifacts = []\n")
+            flow_file.write(f"{single_indent}metrics = []\n")
         flow_file.write("\n")
-        write_steps(flow_file, steps, orig_step_names, param_meta, single_indent)
+        write_steps(
+            flow_file,
+            steps,
+            orig_step_names,
+            param_meta,
+            single_indent,
+            track_experiment,
+        )
         write_track_flow(flow_file, track_experiment)
         flow_file.write("\n")
 
@@ -249,7 +257,9 @@ def format_arg(arg, param_meta):
     return result
 
 
-def write_steps(flow_file, steps, orig_step_names, param_meta, single_indent):
+def write_steps(
+    flow_file, steps, orig_step_names, param_meta, single_indent, track_experiment
+):
     for i, step in enumerate(steps):
         flow_file.write(f"{single_indent}@step\n")
         flow_file.write(f"{single_indent}def {step.name}(self):\n")
@@ -275,7 +285,7 @@ def write_steps(flow_file, steps, orig_step_names, param_meta, single_indent):
                     f"{single_indent}{single_indent}results = {orig_step_names[i]}({flow_step_args})\n"
                 )
                 write_track_capture(flow_file)
-        if i == 0:
+        if i == 0 and track_experiment:
             flow_file.write(
                 f"{single_indent}{single_indent}self.start_time = time.time()\n"
             )
@@ -312,21 +322,24 @@ def get_module_name(nb_path):
 # Cell
 
 
-def generate_flows(config):
+def generate_flows(config, track_experiment=True):
     flows_dir = get_config().path("flows_path")
     nb_paths = nbglob(recursive=True)
     for nb_path in nb_paths:
         flow_module_name = os.path.basename(nb_path).replace("ipynb", "py")
         nb_to_metaflow(
-            nb_path, Path(os.path.join(flows_dir, flow_module_name)), silent=False
+            nb_path,
+            Path(os.path.join(flows_dir, flow_module_name)),
+            track_experiment=track_experiment,
+            silent=False,
         )
 
 # Cell
 
 
 @call_parse
-def sciflow_generate():
-    generate_flows(get_config())
+def sciflow_generate(track: Param("Track flows as sacred experiments", bool) = True):
+    generate_flows(get_config(), track)
 
 # Cell
 
