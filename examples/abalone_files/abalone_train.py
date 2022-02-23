@@ -12,7 +12,7 @@ import pandas as pd
 import numpy as np
 from six.moves.urllib.parse import urlparse
 from sklearn.experimental import enable_hist_gradient_boosting
-from sklearn.ensemble import HistGradientBoostingClassifier
+from sklearn.ensemble import HistGradientBoostingRegressor
 from sklearn.metrics import mean_squared_error
 from sklearn.inspection import permutation_importance
 import matplotlib.pyplot as plt
@@ -39,9 +39,6 @@ def parse_args():
     )
     parser.add_argument(
         "--hyperparameters", type=json.loads, default=os.environ["SM_HPS"]
-    )
-    parser.add_argument(
-        "--training_env", type=json.loads, default=os.environ["SM_TRAINING_ENV"]
     )
     return parser.parse_known_args()
 
@@ -70,9 +67,24 @@ def save_metrics(metrics: Dict, s3_dir: str, job_name: str):
     s3_client.put_object(Body=metrics_data, Bucket=bucket, Key=key)
 
 
-def main(sm_model_dir, train, validation, hyperparameters, training_env):
+def plot_perm_importances(sm_model_dir, model, X, y, dataset_name: str):
+    result = permutation_importance(
+        model, X, y, n_repeats=10, random_state=42, n_jobs=2
+    )
+    sorted_idx = result.importances_mean.argsort()
 
-    model = HistGradientBoostingClassifier(**hyperparameters)
+    fig, ax = plt.subplots()
+    ax.boxplot(
+        result.importances[sorted_idx].T, vert=False, labels=X.columns[sorted_idx]
+    )
+    ax.set_title(f"Permutation Importances: {dataset_name}")
+    fig.tight_layout()
+    plt.savefig(os.path.join(sm_model_dir, f"permutation_importances_{dataset_name}.pdf"), dpi=150)
+
+    
+def main(sm_model_dir, train, validation, hyperparameters):
+
+    model = HistGradientBoostingRegressor(**hyperparameters)
     
     logger.debug(f"Using GBM with {model.max_iter} estimators")
 
@@ -80,7 +92,7 @@ def main(sm_model_dir, train, validation, hyperparameters, training_env):
         train_data = pd.read_csv(f)
     y_train = train_data.iloc[:, 0].to_numpy()
     train_data.drop(train_data.columns[0], axis=1, inplace=True)
-    X_train = train_data.values
+    X_train = train_data
     logger.debug(f"Training data loaded")
     
     st = time.time()
@@ -92,54 +104,32 @@ def main(sm_model_dir, train, validation, hyperparameters, training_env):
         validation_data = pd.read_csv(f)
     y_val = validation_data.iloc[:, 0].to_numpy()
     validation_data.drop(validation_data.columns[0], axis=1, inplace=True)
-    X_val = validation_data.values
+    X_val = validation_data
     logger.debug(f"Validation data loaded")
     
-    y_pred = model.predict(X_val)
+    y_pred_train = model.predict(X_train)
+    y_pred_val = model.predict(X_val)
     
-    logger.debug("Calculating mean squared error.")
-    mse = mean_squared_error(y_val, y_pred)
-    std = np.std(y_val - y_pred)
+    logger.debug("Calculating mean squared errors.")
+    mse_train = mean_squared_error(y_train, y_pred_train)
+    std_train = np.std(y_train - y_pred_train)
+    mse_val = mean_squared_error(y_val, y_pred_val)
+    std_val = np.std(y_val - y_pred_val)
     metrics = {
         "regression_metrics": {
             "mse": {
-                "value": mse,
-                "standard_deviation": std
+                "value": mse_val,
+                "standard_deviation": std_val
             },
         },
     }
     
-    logger.debug("Calculated mean squared error.")
-    logger.info(f'Validation MSE={mse}; Validation STD={std};')
+    logger.debug("Calculated mean squared errors.")
+    logger.info(f'Train MSE={mse_train}; Train STD={std_train};')
+    logger.info(f'Validation MSE={mse_val}; Validation STD={std_val};')
 
-    result = permutation_importance(
-        model, X_train, y_train, n_repeats=10, random_state=42, n_jobs=2
-    )
-    sorted_idx = result.importances_mean.argsort()
-
-    fig, ax = plt.subplots()
-    ax.boxplot(
-        result.importances[sorted_idx].T, vert=False, labels=X_train.columns[sorted_idx]
-    )
-    ax.set_title("Permutation Importances (train set)")
-    fig.tight_layout()
-    plt.savefig(os.path.join(sm_model_dir, "permutation_importances_train.pdf"), dpi=150)
-    
-#     job_name = training_env.get("job_name")
-#     metrics = {
-#         "job_name": job_name,
-#         **metrics,
-#         **hyperparameters,
-#     }
-#     model_dir_bucket, _ = parse_s3_url(sm_model_dir)
-#     metric_s3_dir = f"s3://{model_dir_bucket}/{METRICS_DIR_NAME}"
-#     logger.debug(f"Saving metrics to: {metric_s3_dir}")
-#     save_metrics(metrics, metric_s3_dir, job_name)
-#     logger.debug("Saved metrics")
-    
-#     model_save_path = Path(sm_model_dir) / "1"
-#     metrics_save_path = model_save_path / "assets" / "extra" / "metrics.json"
-#     metrics_save_path.write_text(metrics_to_json(metrics))
+    plot_perm_importances(sm_model_dir, model, X_train, y_train, 'train')
+    plot_perm_importances(sm_model_dir, model, X_val, y_val, 'validation')
     
     joblib.dump(model, os.path.join(sm_model_dir, "model.joblib"))
     logger.info("Model persisted to file.")

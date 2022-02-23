@@ -9,6 +9,8 @@ import tempfile
 import boto3
 import numpy as np
 import pandas as pd
+from pathlib import Path
+import subprocess
 
 from sklearn.compose import ColumnTransformer
 from sklearn.impute import SimpleImputer
@@ -27,6 +29,13 @@ label_column = "rings"
 
 
 if __name__ == "__main__":
+    has_additional_dependencies = Path('requirements.txt').exists()
+    
+    if has_additional_dependencies:
+        logger.info('Installing additional dependencies from requirements.txt')
+        subprocess.check_call([sys.executable, "-m", "pip", "install", "-r", "requirements.txt"])
+        logger.debug("Installed additional dependencies")
+        
     logger.debug("Starting preprocessing.")
     parser = argparse.ArgumentParser()
     parser.add_argument("--input-data", type=str, required=True)

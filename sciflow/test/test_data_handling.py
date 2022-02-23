@@ -20,9 +20,9 @@ str_param = "Sciflow 🔬"
 input_path = Path(".").resolve()
 model_path = Path(".").resolve().parent
 dict_param = {"a": {"b": {"c": "abc"}}, "another_key": [1, 2, 3]}
-list_param = [i for i in range(10 ** 4)]
-ones = np.ones(10 ** 7)
-text = np.repeat("some string that takess space and more of it", 10 ** 7)
+list_param = [i for i in range(10**4)]
+ones = np.ones(10**7)
+text = np.repeat("some string that takess space and more of it", 10**7)
 series_param = pd.Series(text)
 df_param = pd.DataFrame({"a": ones, "b": ones, "c": ones, "d": text})
 

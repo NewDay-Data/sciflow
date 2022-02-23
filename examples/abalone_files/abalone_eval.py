@@ -6,6 +6,8 @@ import logging
 import pathlib
 import pickle
 import tarfile
+from pathlib import Path
+import os
 
 import numpy as np
 import pandas as pd
@@ -13,16 +15,45 @@ from sklearn.experimental import enable_hist_gradient_boosting
 from sklearn.ensemble import HistGradientBoostingClassifier
 from sklearn.metrics import mean_squared_error
 from sklearn.inspection import permutation_importance
-import matplotlib.pyplot as plt
 import joblib
+import subprocess
+import sys
+
 
 logger = logging.getLogger()
 logger.setLevel(logging.DEBUG)
 logger.addHandler(logging.StreamHandler())
 
 
+def plot_perm_importances(model, X, y, dataset_name: str):
+    import matplotlib.pyplot as plt
+    
+    result = permutation_importance(
+        model, X, y, n_repeats=10, random_state=42, n_jobs=2
+    )
+    sorted_idx = result.importances_mean.argsort()
+
+    fig, ax = plt.subplots()
+    ax.boxplot(
+        result.importances[sorted_idx].T, vert=False, labels=X.columns[sorted_idx]
+    )
+    ax.set_title(f"Permutation Importances: {dataset_name}")
+    fig.tight_layout()
+    plt.savefig(os.path.join("/opt/ml/processing/evaluation", f"permutation_importances_{dataset_name}.pdf"), dpi=150)
+    
 
 if __name__ == "__main__":
+    has_additional_dependencies = Path("/opt/ml/processing/requirements/requirements.txt").exists()
+    
+    logger.info(f'Has additional dependencies? {has_additional_dependencies}')
+    logger.info(f'pwd {os.getcwd()}')
+    
+    
+    if has_additional_dependencies:
+        logger.info('Installing additional dependencies from requirements.txt')
+        subprocess.check_call([sys.executable, "-m", "pip", "install", "-r", "/opt/ml/processing/requirements/requirements.txt"])
+        logger.debug("Installed additional dependencies")
+        
     logger.debug("Starting evaluation.")
     model_path = "/opt/ml/processing/model/model.tar.gz"
     with tarfile.open(model_path) as tar:
@@ -36,7 +67,7 @@ if __name__ == "__main__":
     df = pd.read_csv(test_path)
     y_test = df.iloc[:, 0].to_numpy()
     df.drop(df.columns[0], axis=1, inplace=True)
-    X_test = df.values
+    X_test = df
     logger.debug("Read in test data.")
 
     logger.info("Performing predictions against test data.")
@@ -53,23 +84,12 @@ if __name__ == "__main__":
             },
         },
     }
-    
+
     output_dir = "/opt/ml/processing/evaluation"
     pathlib.Path(output_dir).mkdir(parents=True, exist_ok=True)
-
-    result = permutation_importance(
-        model, X_train, y_train, n_repeats=10, random_state=42, n_jobs=2
-    )
-    sorted_idx = result.importances_mean.argsort()
-
-    fig, ax = plt.subplots()
-    ax.boxplot(
-        result.importances[sorted_idx].T, vert=False, labels=X_train.columns[sorted_idx]
-    )
-    ax.set_title("Permutation Importances (test set)")
-    fig.tight_layout()
-    plt.savefig(f"{output_dir}/permutation_importances_test.pdf", dpi=150)
     
+    plot_perm_importances(model, X_test, y_test, 'test')
+        
     logger.info("Writing out evaluation report with mse: %f", mse)
     evaluation_path = f"{output_dir}/evaluation.json"
     with open(evaluation_path, "w") as f:

@@ -13,7 +13,7 @@ from pathlib import Path
 import nbformat
 from fastcore.script import call_parse
 from nbdev.export import read_nb
-from nbqa.__main__ import _get_configs, _run_on_one_root_dir
+from nbqa.__main__ import _get_configs, _main
 from nbqa.cmdline import CLIArgs
 from nbqa.find_root import find_project_root
 from .utils import load_nb_module
@@ -26,7 +26,7 @@ def run_nbqa_cmd(cmd):
     project_root: Path = find_project_root(tuple([str(Path(".").resolve())]))
     args = CLIArgs.parse_args([cmd, str(project_root)])
     configs = _get_configs(args, project_root)
-    output_code = _run_on_one_root_dir(args, configs, project_root)
+    output_code = _main(args, configs)
     return output_code
 
 # Cell

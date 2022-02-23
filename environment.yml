@@ -9,6 +9,7 @@ dependencies:
   - pandas
   - ipykernel
   - turbodbc
+  - pyodbc
   - boto3
   - s3fs=0.5.1
   - fsspec=0.8.3

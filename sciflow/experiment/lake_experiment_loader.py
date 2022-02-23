@@ -13,10 +13,8 @@ from typing import Tuple
 import boto3
 import numpy as np
 import pandas as pd
-from incense.artifact import CSVArtifact
-from incense.experiment import Experiment
 from pandas.io.sql import DatabaseError
-from .lake_experiment import LakeExperiment
+from .lake_experiment import CSVArtifact, LakeExperiment
 from ..s3_utils import delete_dir
 from ..utils import odbc_connect, prepare_env, query
 from tinydb import Query, TinyDB
@@ -66,7 +64,7 @@ class LakeExpLoader:
         experiment_id: str = None,
         order_by: str = None,
         limit: int = None,
-    ) -> Experiment:
+    ) -> LakeExperiment:
         if experiment_name is None:
             experiment_name = self.experiment_name
         table_name = f"{self.table_context}.{experiment_name}.runs"
