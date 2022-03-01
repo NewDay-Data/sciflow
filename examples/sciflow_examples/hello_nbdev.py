@@ -7,10 +7,10 @@ __all__ = ['generate_msg']
 import os
 from pathlib import Path
 
-from nbdev.export import notebook2script, get_config
-from nbdev.test import test_nb, _test_one
+from nbdev.export import notebook2script
 
 # Cell
+
 
 def generate_msg(msg):
     return f"Hello nbdev: {msg}"

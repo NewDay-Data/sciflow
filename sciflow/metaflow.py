@@ -21,6 +21,7 @@ from typing import Any, Dict, Iterable
 import pandas as pd
 from fastcore.script import Param, call_parse
 from nbdev.export import find_default_export, get_config, nbglob, read_nb
+
 from .data_handler import extract_param_meta
 from .params import params_as_dict
 from .parse_module import FuncDetails, extract_steps
@@ -498,8 +499,10 @@ def sample_grid_space(param_grid: Dict[str, Iterable[Any]], num_samples: int):
 
 
 def search_flow_grid(nb_path, param_grid, num_procs=None):
-    max_process_count = int((multiprocessing.cpu_count() / 2) - 1)
-    param_sample_space = sample_grid_space(param_grid, max_process_count)
+    if num_procs is None:
+        num_procs = int((multiprocessing.cpu_count() / 2) - 1)
+
+    param_sample_space = sample_grid_space(param_grid, num_procs)
     tasks = []
     for param_sample in param_sample_space:
         tasks.append(run_flow_async(nb_path, params=param_sample))

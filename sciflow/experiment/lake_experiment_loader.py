@@ -14,11 +14,12 @@ import boto3
 import numpy as np
 import pandas as pd
 from pandas.io.sql import DatabaseError
+from tinydb import Query, TinyDB
+from tinydb.storages import MemoryStorage
+
 from .lake_experiment import CSVArtifact, LakeExperiment
 from ..s3_utils import delete_dir
 from ..utils import odbc_connect, prepare_env, query
-from tinydb import Query, TinyDB
-from tinydb.storages import MemoryStorage
 
 MAX_CACHE_SIZE = 32
 

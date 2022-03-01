@@ -4,11 +4,11 @@ __all__ = ['lib_path', 'load_nb', 'load_nb_module', 'prepare_env', 'odbc_connect
 
 # Cell
 
+import _ast
 import ast
 import os
 from pathlib import Path
 
-import _ast
 import nbformat
 import pandas as pd
 import pyodbc

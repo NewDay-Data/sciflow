@@ -16,6 +16,7 @@ from nbdev.export import read_nb
 from nbqa.__main__ import _get_configs, _main
 from nbqa.cmdline import CLIArgs
 from nbqa.find_root import find_project_root
+
 from .utils import load_nb_module
 
 # Cell

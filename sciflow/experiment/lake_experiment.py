@@ -10,6 +10,7 @@ from typing import Dict
 import boto3
 import pandas as pd
 from pyrsistent import freeze, thaw
+
 from ..s3_utils import S3File, s3_join
 
 # Cell
@@ -28,7 +29,7 @@ import os
 import pickle
 import warnings
 from copy import copy
-from typing import *
+from typing import Set
 
 import pandas as pd
 from IPython import display
