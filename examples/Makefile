@@ -39,7 +39,7 @@ art_pip: dist
 	twine upload --repository local dist/*
     
 build:
-	export USER=`git config user.name`
+	source "$${HOME}/.sciflow/env" && \
 	sciflow_build_lib && \
 	nbdev_test_nbs --pause=3 && \
 	sciflow_tidy && \
@@ -48,6 +48,7 @@ build:
 	echo "Build completed"
     
 run: build
+	source "$${HOME}/.sciflow/env" && \
 	sciflow_run_flows && \
 	echo "Flow run checks completed"
     

@@ -48,6 +48,7 @@ build:
 	echo "Build completed"
     
 run: build
+	source "$${HOME}/.sciflow/env" && \
 	sciflow_run_flows && \
 	echo "Flow run checks completed"
     

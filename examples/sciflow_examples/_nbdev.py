@@ -11,26 +11,18 @@ index = {"generate_msg": "01_hello_nbdev.ipynb",
          "data_path": "abalone.ipynb",
          "hyperparameters": "abalone.ipynb",
          "model_dir": "abalone.ipynb",
-         "preprocess": "complete_workflow.ipynb",
+         "preprocess": "abalone.ipynb",
          "plot_perm_importances": "abalone.ipynb",
-         "train": "abalone.ipynb",
-         "something": "complete_workflow.ipynb",
+         "fit": "abalone.ipynb",
          "workers": "tidying_notebooks.ipynb",
          "model_level": "tidying_notebooks.ipynb",
          "min_date": "tidying_notebooks.ipynb",
-         "get_traffic_text": "tidying_notebooks.ipynb",
-         "get_experiment_segment": "complete_workflow.ipynb",
-         "get_utterances": "complete_workflow.ipynb",
-         "Topics": "complete_workflow.ipynb",
-         "fit": "complete_workflow.ipynb",
-         "evaluate": "complete_workflow.ipynb",
-         "serve_num_topics": "complete_workflow.ipynb",
-         "some_func": "tidying_notebooks.ipynb"}
+         "some_func": "tidying_notebooks.ipynb",
+         "get_traffic_text": "tidying_notebooks.ipynb"}
 
 modules = ["hello_nbdev.py",
            "hello_sciflow.py",
            "abalone.py",
-           "test/test_clustering.py",
            "tidying_notebooks.py"]
 
 doc_url = "https://newdaytechnology.github.io/sciflow/"
