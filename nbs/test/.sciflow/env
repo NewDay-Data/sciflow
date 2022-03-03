@@ -7,4 +7,3 @@ export ODBC_HOST=
 export SSL_CERTS=
 export SCIFLOW_BUCKET=
 export SCIFLOW_BUCKET_TABLE_ALIAS=
-export PYTHONPATH=$PYTHONPATH:/home/sagemaker-user/git/sciflow/examples/home/sagemaker-user/git/sciflow/nbs/test
