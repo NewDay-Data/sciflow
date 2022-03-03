@@ -10,10 +10,15 @@ class TestClusteringPipeline():
     workers = ParameterInteger(name="workers", default_value=workers)
     model_level = ParameterString(name="model_level", default_value=model_level)
     min_date = ParameterString(name="min_date", default_value=min_date)
+    train_metrics = ParameterString(name="train_metrics", default_value=None)
+    
     
     # Auto-generate
     instance_count = ParameterInteger(name="instance_count", default_value=1)
     instance_type = ParameterString(name="instance_type", default_value="ml.m5.xlarge")
+    
+    # Hyperparameters
+    # Collection of params dict -> Iterable[params]
 
 
     steps = ["start", "preprocess", "fit"]
@@ -39,8 +44,6 @@ class TestClusteringPipeline():
         return start_step
 
     def preprocess(self):
-        results = preprocess(self.model_level, self.min_date, self.traffic_percent)
-
         script_processor = ScriptProcessor(
             command=['python3'],
             image_uri=processing_image_uri,
@@ -64,18 +67,47 @@ class TestClusteringPipeline():
                 "--min_date", self.min_date,
                 "--traffic_percent", self.traffic_percent,
             ]
-            code="test_clustering_pipeline_start.py",
+            code="test_clustering_pipeline_preprocess.py",
         )
         return preprocess_step
 
     def fit(self):
-        results = fit(self.documents, self.workers)
+        metrics = self.train_metrics.split(',')
+        metrics_regex = [{"Name": m, "Regex": f"{m}=(.*?);"} for m in metrics]
 
-        for key in results.keys():
-            if key in self.__dict__:
-                self.__dict__[key] = self.__dict__[key] + results[key]
-            else:
-                self.__dict__[key] = results[key]
+        estimator = Estimator(
+            source_dir="abalone_files",
+            entry_point="test_clustering_pipeline_fit.py",
+            hyperparameters={"max_iter": 30, "learning_rate": 0.1},
+            instance_type=training_instance_type,
+            instance_count=1,
+            output_path=model_path,
+            base_job_name=f'processing-job/{__file__}',
+            sagemaker_session=sagemaker_session,
+            role=role,
+            metric_definitions=metrics_regex,
+            enable_sagemaker_metrics=True,
+        )
+
+        step_train = TrainingStep(
+            name="TrainAbaloneModel",
+            estimator=sklearn_estimator,
+            inputs={
+                "documents": TrainingInput(
+                    s3_data=step_process.properties.ProcessingOutputConfig.Outputs[
+                        "train"
+                    ].S3Output.S3Uri,
+                    content_type="text/csv",
+                ),
+                "workers": TrainingInput(
+                    s3_data=step_process.properties.ProcessingOutputConfig.Outputs[
+                        "validation"
+                    ].S3Output.S3Uri,
+                    content_type="text/csv",
+                ),
+            },
+        )
+        return step_train
     
     def get_pipeline(self) -> Pipeline:
         pipeline = Pipeline(
@@ -88,6 +120,8 @@ class TestClusteringPipeline():
             steps = [f(self) for f in self.steps],
             sagemaker_session = sagemaker_session,
         )
+        
+        return pipeline
     
     def run(self):
         pipeline = self.get_pipeline()
@@ -96,4 +130,4 @@ class TestClusteringPipeline():
         execution.wait()
     
 if __name__ == "__main__":
-    SciflowPipeline()
+    SciflowPipeline().run()
