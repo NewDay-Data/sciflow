@@ -14,8 +14,7 @@ def something():
 
 import numpy as np
 import pandas as pd
-from pathlib import Path
-    
+
 def lib_path(*lib_relative_path):
     lib_root_path = find_project_root(srcs=(str(Path(".").resolve()),))
     return Path(os.path.join(lib_root_path, *lib_relative_path))
@@ -147,4 +146,8 @@ if __name__ == "__main__":
         subprocess.check_call([sys.executable, "-m", "pip", "install", "-r", "requirements.txt"])
         logger.debug("Installed additional dependencies")
         
-    something()
+    # Arg parse
+    results = preprocess("smodel_level", "min_date", 23)
+    
+    pd.DataFrame({'docs': [1,2,3,4], 'hello': [5,5,6,7]}).to_csv("/opt/ml/processing/documents")
+    pd.DataFrame({'docs': [1,2,3,4], 'hello': [5,5,6,7]}).to_csv("/opt/ml/processing/workers")
