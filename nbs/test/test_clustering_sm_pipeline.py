@@ -12,6 +12,7 @@ from sagemaker.processing import ScriptProcessor, ProcessingInput, ProcessingOut
 from sagemaker.workflow.parameters import ParameterInteger, ParameterString
 from sagemaker.workflow.pipeline import Pipeline
 from sagemaker.workflow.steps import ProcessingStep, TrainingStep
+from sagemaker.estimator import Estimator
 
 from sciflow.test.test_clustering import something, preprocess, fit, evaluate
 from sciflow.test.test_clustering import traffic_percent, workers, model_level, min_date
@@ -22,7 +23,6 @@ class TestClusteringPipeline():
     workers = ParameterInteger(name="workers", default_value=workers)
     model_level = ParameterString(name="model_level", default_value=model_level)
     min_date = ParameterString(name="min_date", default_value=min_date)
-    train_metrics = ParameterString(name="train_metrics", default_value=None)
     
     
     # Auto-generate
@@ -36,10 +36,7 @@ class TestClusteringPipeline():
     # Hyperparameters
     # Collection of params dict -> Iterable[params]
 
-    
-    steps = ["start", "preprocess"]
-    
-    #steps = ["start", "preprocess", "fit"]
+    steps = ["start", "preprocess", "fit"]
     
     def start(self):
         script_processor = ScriptProcessor(
@@ -59,6 +56,7 @@ class TestClusteringPipeline():
             code="test_clustering_pipeline_start.py",
         )
         
+        self.start_step = start_step
         return start_step
 
     def preprocess(self):
@@ -81,26 +79,27 @@ class TestClusteringPipeline():
                 ProcessingOutput(output_name="workers", source="/opt/ml/processing/workers")
             ],
             job_arguments=[
-                "--model_level", self.model_level,
-                "--min_date", self.min_date,
-                "--traffic_percent", self.traffic_percent,
+                "--model_level", self.model_level.__str__(),
+                "--min_date", self.min_date.__str__(),
+                "--traffic_percent", str(self.traffic_percent.__int__()),
             ],
             code = "test_clustering_pipeline_preprocess.py"
         )
         
+        self.preprocess_step = preprocess_step
         return preprocess_step
 
     def fit(self):
-        metrics = self.train_metrics.split(',')
+        metrics = ["Train MSE", "Train STD", "Validation MSE", "Validation STD"]
         metrics_regex = [{"Name": m, "Regex": f"{m}=(.*?);"} for m in metrics]
 
         estimator = Estimator(
-            source_dir="abalone_files",
+            image_uri = self.train_image_uri,
             entry_point="test_clustering_pipeline_fit.py",
-            hyperparameters={"max_iter": 30, "learning_rate": 0.1},
-            instance_type=training_instance_type,
+            #hyperparameters={"max_iter": 30, "learning_rate": 0.1},
+            instance_type=self.train_instance_type,
             instance_count=1,
-            output_path=model_path,
+            output_path=f"s3://{os.environ['SCIFLOW_BUCKET']}/test_clustering/training-job-output",
             base_job_name=f'processing-job/{__file__}',
             sagemaker_session = self.sagemaker_session,
             role = self.role,
@@ -109,23 +108,25 @@ class TestClusteringPipeline():
         )
 
         step_train = TrainingStep(
-            name="TrainAbaloneModel",
-            estimator=sklearn_estimator,
+            name="fit-cluster",
+            estimator=estimator,
             inputs={
                 "documents": TrainingInput(
-                    s3_data=step_process.properties.ProcessingOutputConfig.Outputs[
-                        "train"
+                    s3_data=self.preprocess_step.properties.ProcessingOutputConfig.Outputs[
+                        "documents"
                     ].S3Output.S3Uri,
                     content_type="text/csv",
                 ),
                 "workers": TrainingInput(
-                    s3_data=step_process.properties.ProcessingOutputConfig.Outputs[
-                        "validation"
+                    s3_data=self.preprocess_step.properties.ProcessingOutputConfig.Outputs[
+                        "workers"
                     ].S3Output.S3Uri,
                     content_type="text/csv",
                 ),
             },
         )
+        
+        self.step_train = step_train
         return step_train
     
     def get_pipeline(self) -> Pipeline:

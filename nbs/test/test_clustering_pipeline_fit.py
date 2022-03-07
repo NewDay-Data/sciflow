@@ -136,30 +136,23 @@ def serve_num_topics(model):
     return model.get_num_topics()
 
 
-def main(model_level, min_date, traffic_percent):
+def main(documents, workers):
     # Fetch code from S3
     # add to path
     
-    # requirements.txt is a Processing Input
-    has_additional_dependencies = Path('requirements.txt').exists()
+    # requirements.txt is a Processing Input   
+    model = fit(documents, workers)
     
-    if has_additional_dependencies:
-        logger.info('Installing additional dependencies from requirements.txt')
-        subprocess.check_call([sys.executable, "-m", "pip", "install", "-r", "requirements.txt"])
-        logger.debug("Installed additional dependencies")
-        
-    results = preprocess(model_level, min_date, int(traffic_percent))
+    import joblib
     
-    pd.DataFrame({'docs': [1,2,3,4], 'hello': [5,5,6,7]}).to_csv("/opt/ml/processing/documents/documents.csv")
-    pd.DataFrame({'docs': [1,2,3,4], 'hello': [5,5,6,7]}).to_csv("/opt/ml/processing/workers/workers.csv")
+    joblib.dump(model, "/opt/ml/model/model.joblib")
     
 def parse_args():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.formatter_class = argparse.RawDescriptionHelpFormatter
     
-    parser.add_argument("--model_level", required=True)
-    parser.add_argument("--min_date", required=True)
-    parser.add_argument("--traffic_percent", required=True)
+    parser.add_argument("--documents", required=True)
+    parser.add_argument("--workers", required=True)
     return parser.parse_args()
 
 if __name__ == "__main__":
