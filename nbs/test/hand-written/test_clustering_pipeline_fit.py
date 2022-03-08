@@ -16,6 +16,7 @@ import numpy as np
 import pandas as pd
 import argparse
 from pathlib import Path
+import os
 
 def lib_path(*lib_relative_path):
     lib_root_path = find_project_root(srcs=(str(Path(".").resolve()),))
@@ -137,22 +138,19 @@ def serve_num_topics(model):
 
 
 def main(documents, workers):
-    # Fetch code from S3
-    # add to path
-    
-    # requirements.txt is a Processing Input   
-    model = fit(documents, workers)
+    results = fit(documents, workers)
     
     import joblib
     
-    joblib.dump(model, "/opt/ml/model/model.joblib")
+    joblib.dump(results["model"], "/opt/ml/model/model.joblib")
     
 def parse_args():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.formatter_class = argparse.RawDescriptionHelpFormatter
     
-    parser.add_argument("--documents", required=True)
-    parser.add_argument("--workers", required=True)
+    parser.add_argument("--documents", type=str, default=os.environ.get("SM_CHANNEL_DOCUMENTS"))
+    parser.add_argument("--workers", type=str, default=os.environ.get("SM_CHANNEL_WORKERS"))
+    
     return parser.parse_args()
 
 if __name__ == "__main__":

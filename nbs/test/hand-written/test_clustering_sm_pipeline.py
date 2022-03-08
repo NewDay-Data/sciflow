@@ -36,7 +36,7 @@ class TestClusteringPipeline():
     # Hyperparameters
     # Collection of params dict -> Iterable[params]
 
-    steps = ["start", "preprocess", "fit"]
+    steps = ["start", "preprocess", "fit", "evaluate"]
     
     def start(self):
         script_processor = ScriptProcessor(
@@ -123,11 +123,41 @@ class TestClusteringPipeline():
                     ].S3Output.S3Uri,
                     content_type="text/csv",
                 ),
-            },
+            }
         )
         
         self.step_train = step_train
         return step_train
+    
+    
+    def evaluate(self):
+        script_processor = ScriptProcessor(
+            command=['python3'],
+            image_uri=self.proc_image_uri,
+            role=self.role,
+            instance_count=self.proc_instance_count,
+            instance_type=self.proc_instance_type,
+            sagemaker_session=self.sagemaker_session,
+            env={'AWS_DEFAULT_REGION': self.region},
+            base_job_name=f'processing-job/{__file__}'
+        )
+        
+        evaluate_step = ProcessingStep(
+            name="evaluate",
+            processor=script_processor,
+            inputs = [
+                ProcessingInput(source=self.step_train.properties.ModelArtifacts.S3ModelArtifacts, destination="/opt/ml/processing/model")
+            ],
+            outputs=[
+                ProcessingOutput(output_name="word_summaries", source="/opt/ml/processing/word_summaries"),
+                ProcessingOutput(output_name="artifacts", source="/opt/ml/processing/artifacts"),
+                ProcessingOutput(output_name="metrics", source="/opt/ml/processing/metrics")
+            ],
+            code = "test_clustering_pipeline_evaluate.py"
+        )
+        
+        self.evaluate_step = evaluate_step
+        return evaluate_step
     
     def get_pipeline(self) -> Pipeline:
         pipeline_steps = [getattr(self, step)() for step in self.steps]
