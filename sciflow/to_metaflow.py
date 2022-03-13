@@ -2,9 +2,10 @@
 
 __all__ = ['titleize', 'rename_steps_for_metaflow', 'indent_multiline', 'nb_to_metaflow', 'extract_module_only',
            'write_module_to_file', 'write_observers', 'config', 'ex', 'obs', 'write_track_flow', 'write_params',
-           'format_arg', 'write_steps', 'write_track_capture', 'get_module_name', 'generate_flows', 'sciflow_generate',
-           'check_flows', 'prep_mf_env', 'run_shell_cmd', 'check_flow', 'run_flow', 'run_flow_task', 'run_flow_async',
-           'iter_param_grid', 'sample_grid_space', 'search_flow_grid', 'sciflow_check_flows', 'sciflow_run_flows']
+           'format_arg', 'write_steps', 'write_track_capture', 'get_module_name', 'get_flow_path', 'generate_flows',
+           'sciflow_generate', 'check_flows', 'prep_mf_env', 'run_shell_cmd', 'check_flow', 'run_flow', 'run_flow_task',
+           'run_flow_async', 'iter_param_grid', 'sample_grid_space', 'search_flow_grid', 'sciflow_check_flows',
+           'sciflow_run_flows']
 
 # Cell
 
@@ -319,6 +320,15 @@ def get_module_name(nb_path):
     nb = read_nb(nb_path)
     module_name = find_default_export(nb["cells"])
     return module_name
+
+# Cell
+
+def get_flow_path(nb_path, flow_provider='metaflow'):
+    flows_dir = Path(get_config().path("flows_path"), flow_provider)
+    if not flows_dir.exists():
+        flows_dir.mkdir()
+
+    return Path(flows_dir, f"{get_module_name(nb_path).split('.')[-1]}.py")
 
 # Cell
 

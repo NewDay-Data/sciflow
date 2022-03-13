@@ -35,9 +35,10 @@ suppported_types.extend(supported_conversion_args)
 class ParamMeta:
     instance_type: type
     is_scalar: bool
-    has_metaflow_param: bool
     is_json_type: bool
     persist_type: str
+    has_metaflow_param: bool
+    has_sagemaker_param: bool
 
 # Cell
 
@@ -66,49 +67,55 @@ def extract_param_meta(module_name: str, params: Dict[str, Any]):
             param_meta[key] = ParamMeta(
                 instance_type=type(val),
                 is_scalar=True,
-                has_metaflow_param=True,
                 is_json_type=False,
                 persist_type="pickle",
+                has_metaflow_param=True,
+                has_sagemaker_param = True
             )
         elif any([isinstance(val, t) for t in supported_args]):
             param_meta[key] = ParamMeta(
                 instance_type=type(val),
                 is_scalar=False,
-                has_metaflow_param=True,
                 is_json_type=True,
                 persist_type="pickle",
+                has_metaflow_param=True,
+                has_sagemaker_param = False
             )
         elif any([isinstance(val, t) for t in supported_conversion_args]):
             if isinstance(val, np.ndarray):
                 param_meta[key] = ParamMeta(
                     instance_type=type(val),
                     is_scalar=False,
-                    has_metaflow_param=False,
                     is_json_type=False,
                     persist_type="numpy",
+                    has_metaflow_param=False,
+                    has_sagemaker_param = False
                 )
             elif isinstance(val, pd.Series) or isinstance(val, pd.DataFrame):
                 param_meta[key] = ParamMeta(
                     instance_type=type(val),
                     is_scalar=False,
-                    has_metaflow_param=False,
                     is_json_type=False,
                     persist_type="pandas",
+                    has_metaflow_param=False,
+                    has_sagemaker_param = False
                 )
             elif isinstance(val, Path):
                 param_meta[key] = ParamMeta(
                     instance_type=type(val),
                     is_scalar=False,
-                    has_metaflow_param=True,
                     is_json_type=False,
                     persist_type="pickle",
+                    has_metaflow_param=True,
+                    has_sagemaker_param = False
                 )
         else:
             param_meta[key] = ParamMeta(
                 instance_type=type(val),
                 is_scalar=False,
-                has_metaflow_param=False,
                 is_json_type=False,
                 persist_type="unsupported",
+                has_metaflow_param=False,
+                has_sagemaker_param = False
             )
     return param_meta

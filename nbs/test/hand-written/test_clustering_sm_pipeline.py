@@ -12,7 +12,7 @@ from sagemaker.processing import ScriptProcessor, ProcessingInput, ProcessingOut
 from sagemaker.workflow.parameters import ParameterInteger, ParameterString
 from sagemaker.workflow.pipeline import Pipeline
 from sagemaker.workflow.steps import ProcessingStep, TrainingStep
-from sagemaker.estimator import Estimator
+
 
 from sciflow.test.test_clustering import something, preprocess, fit, evaluate
 from sciflow.test.test_clustering import traffic_percent, workers, model_level, min_date
