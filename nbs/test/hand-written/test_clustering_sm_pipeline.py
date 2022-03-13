@@ -12,7 +12,7 @@ from sagemaker.processing import ScriptProcessor, ProcessingInput, ProcessingOut
 from sagemaker.workflow.parameters import ParameterInteger, ParameterString
 from sagemaker.workflow.pipeline import Pipeline
 from sagemaker.workflow.steps import ProcessingStep, TrainingStep
-
+from sagemaker.estimator import Estimator
 
 from sciflow.test.test_clustering import something, preprocess, fit, evaluate
 from sciflow.test.test_clustering import traffic_percent, workers, model_level, min_date
@@ -76,7 +76,6 @@ class TestClusteringPipeline():
             processor=script_processor,
             outputs=[
                 ProcessingOutput(output_name="documents", source="/opt/ml/processing/documents"),
-                ProcessingOutput(output_name="workers", source="/opt/ml/processing/workers")
             ],
             job_arguments=[
                 "--model_level", self.model_level.__str__(),
@@ -96,7 +95,7 @@ class TestClusteringPipeline():
         estimator = Estimator(
             image_uri = self.train_image_uri,
             entry_point="test_clustering_pipeline_fit.py",
-            #hyperparameters={"max_iter": 30, "learning_rate": 0.1},
+            hyperparameters={"workers": str(self.workers.__int__())},
             instance_type=self.train_instance_type,
             instance_count=1,
             output_path=f"s3://{os.environ['SCIFLOW_BUCKET']}/test_clustering/training-job-output",
@@ -116,13 +115,7 @@ class TestClusteringPipeline():
                         "documents"
                     ].S3Output.S3Uri,
                     content_type="text/csv",
-                ),
-                "workers": TrainingInput(
-                    s3_data=self.preprocess_step.properties.ProcessingOutputConfig.Outputs[
-                        "workers"
-                    ].S3Output.S3Uri,
-                    content_type="text/csv",
-                ),
+                )
             }
         )
         

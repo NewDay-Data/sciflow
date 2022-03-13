@@ -137,19 +137,24 @@ def serve_num_topics(model):
     return model.get_num_topics()
 
 
-def main(documents, workers):
+def main(documents, hyperparameters):
+    expanded_main(documents, **vars(hyperparameters))
+    
+    
+def expanded_main(documents, workers):
     results = fit(documents, workers)
     
     import joblib
     
     joblib.dump(results["model"], "/opt/ml/model/model.joblib")
     
+    
 def parse_args():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.formatter_class = argparse.RawDescriptionHelpFormatter
     
     parser.add_argument("--documents", type=str, default=os.environ.get("SM_CHANNEL_DOCUMENTS"))
-    parser.add_argument("--workers", type=str, default=os.environ.get("SM_CHANNEL_WORKERS"))
+    parser.add_argument("--workers", type=str, default=os.environ.get("SM_USER_ARGS"))
     
     return parser.parse_args()
 

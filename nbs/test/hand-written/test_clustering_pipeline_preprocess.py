@@ -151,7 +151,6 @@ def main(model_level, min_date, traffic_percent):
     results = preprocess(model_level, min_date, int(traffic_percent))
     
     pd.DataFrame({'docs': [1,2,3,4], 'hello': [5,5,6,7]}).to_csv("/opt/ml/processing/documents/documents.csv")
-    pd.DataFrame({'docs': [1,2,3,4], 'hello': [5,5,6,7]}).to_csv("/opt/ml/processing/workers/workers.csv")
     
 def parse_args():
     parser = argparse.ArgumentParser(description=__doc__)
