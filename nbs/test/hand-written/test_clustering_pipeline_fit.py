@@ -137,8 +137,8 @@ def serve_num_topics(model):
     return model.get_num_topics()
 
 
-def main(documents, hyperparameters):
-    expanded_main(documents, **vars(hyperparameters))
+# def main(documents, hyperparameters):
+#     expanded_main(documents, **vars(hyperparameters))
     
     
 def expanded_main(documents, workers):
@@ -154,10 +154,10 @@ def parse_args():
     parser.formatter_class = argparse.RawDescriptionHelpFormatter
     
     parser.add_argument("--documents", type=str, default=os.environ.get("SM_CHANNEL_DOCUMENTS"))
-    parser.add_argument("--workers", type=str, default=os.environ.get("SM_USER_ARGS"))
+    parser.add_argument("--workers", type=str, default=os.environ.get("SM_HP_WORKERS"))
     
     return parser.parse_args()
 
 if __name__ == "__main__":
     args = parse_args()
-    main(**vars(args))
+    expanded_main(**vars(args))

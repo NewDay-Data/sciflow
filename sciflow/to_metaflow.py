@@ -323,24 +323,27 @@ def get_module_name(nb_path):
 
 # Cell
 
-def get_flow_path(nb_path, flow_provider='metaflow'):
-    flows_dir = Path(get_config().path("flows_path"), flow_provider)
+def get_flow_path(nb_path, config=None, flow_provider='metaflow'):
+    module_name = get_module_name(nb_path)
+    if module_name is None:
+        return None
+    if config is None:
+        config = get_config()
+    flows_dir = Path(config.path("flows_path"), flow_provider)
     if not flows_dir.exists():
         flows_dir.mkdir()
 
-    return Path(flows_dir, f"{get_module_name(nb_path).split('.')[-1]}.py")
+    return Path(flows_dir, f"{module_name.split('.')[-1]}.py")
 
 # Cell
 
 
 def generate_flows(config, track_experiment=True):
-    flows_dir = get_config().path("flows_path")
     nb_paths = nbglob(recursive=True)
     for nb_path in nb_paths:
-        flow_module_name = os.path.basename(nb_path).replace("ipynb", "py")
         nb_to_metaflow(
             nb_path,
-            Path(os.path.join(flows_dir, flow_module_name)),
+            get_flow_path(nb_path, config=config),
             track_experiment=track_experiment,
             silent=False,
         )
