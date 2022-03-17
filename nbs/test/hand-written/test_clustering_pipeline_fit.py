@@ -135,13 +135,9 @@ def evaluate(model):
 # Cell
 def serve_num_topics(model):
     return model.get_num_topics()
-
-
-# def main(documents, hyperparameters):
-#     expanded_main(documents, **vars(hyperparameters))
     
     
-def expanded_main(documents, workers):
+def main(documents, workers):
     results = fit(documents, workers)
     
     import joblib
@@ -160,4 +156,4 @@ def parse_args():
 
 if __name__ == "__main__":
     args = parse_args()
-    expanded_main(**vars(args))
+    main(**vars(args))

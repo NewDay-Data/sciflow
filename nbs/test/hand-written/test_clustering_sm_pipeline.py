@@ -89,8 +89,10 @@ class TestClusteringPipeline():
         return preprocess_step
 
     def fit(self):
-        metrics = ["Train MSE", "Train STD", "Validation MSE", "Validation STD"]
-        metrics_regex = [{"Name": m, "Regex": f"{m}=(.*?);"} for m in metrics]
+        metrics_regex = None
+        if metric_names in self.__dict__:
+            metrics = self.metric_names.split(",")
+            metrics_regex = [{"Name": m, "Regex": f"{m}=(.*?);"} for m in metrics]
 
         estimator = Estimator(
             image_uri = self.train_image_uri,
