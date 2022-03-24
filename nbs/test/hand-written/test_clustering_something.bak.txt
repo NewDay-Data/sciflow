@@ -14,9 +14,11 @@ def something():
 
 import numpy as np
 import pandas as pd
-
-# TODO bring back in library calls
-from ..utils import lib_path
+from pathlib import Path
+    
+def lib_path(*lib_relative_path):
+    lib_root_path = find_project_root(srcs=(str(Path(".").resolve()),))
+    return Path(os.path.join(lib_root_path, *lib_relative_path))
 
 # Cell
 
@@ -131,3 +133,55 @@ def evaluate(model):
 # Cell
 def serve_num_topics(model):
     return model.get_num_topics()
+
+
+# export
+
+lib_name = "sciflow"
+
+
+def download_directory(bucketname, remote_key, local_dir):
+    from pathlib import Path
+    import boto3
+    s3 = boto3.client('s3')
+    if not Path(local_dir).exists():
+        Path(local_dir).mkdir(parents=True)
+    all_files = [obj.key for obj in boto3.resource('s3').Bucket(bucketname).objects.filter(Prefix=remote_key)]
+    for file in all_files:
+        file_name = file.split('/')[-1]
+        s3.download_file(bucketname, file, f'{local_dir}/{file_name}')
+      
+
+def add_library_to_pythonpath():
+    # Download lib from s3
+    remote_key = f'test-clustering/pipeline-2022-03-24-09-24-21-978/code/{lib_name}'
+    lib_dir = f'/opt/ml/processing/{lib_name}'
+    package_dir = f'{lib_dir}/{lib_name}'
+    
+    import os
+    download_directory(os.environ['SCIFLOW_BUCKET'], remote_key, package_dir)
+
+    import sys
+    sys.path.append(lib_dir)
+    
+#     print(os.path.exists(local_dir))
+#     print(os.listdir(local_dir))
+    
+    from sciflow.utils import lib_path
+    print(lib_path())
+    
+    
+if __name__ == "__main__":
+    # Fetch code from S3
+    # add to path
+    add_library_to_pythonpath()
+    
+    # requirements.txt is a Processing Input
+    has_additional_dependencies = Path('requirements.txt').exists()
+    
+    if has_additional_dependencies:
+        logger.info('Installing additional dependencies from requirements.txt')
+        subprocess.check_call([sys.executable, "-m", "pip", "install", "-r", "requirements.txt"])
+        logger.debug("Installed additional dependencies")
+        
+    something()

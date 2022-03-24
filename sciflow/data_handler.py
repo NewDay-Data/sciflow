@@ -70,7 +70,7 @@ def extract_param_meta(module_name: str, params: Dict[str, Any]):
                 is_json_type=False,
                 persist_type="pickle",
                 has_metaflow_param=True,
-                has_sagemaker_param = True
+                has_sagemaker_param=True,
             )
         elif any([isinstance(val, t) for t in supported_args]):
             param_meta[key] = ParamMeta(
@@ -79,7 +79,7 @@ def extract_param_meta(module_name: str, params: Dict[str, Any]):
                 is_json_type=True,
                 persist_type="pickle",
                 has_metaflow_param=True,
-                has_sagemaker_param = False
+                has_sagemaker_param=False,
             )
         elif any([isinstance(val, t) for t in supported_conversion_args]):
             if isinstance(val, np.ndarray):
@@ -89,7 +89,7 @@ def extract_param_meta(module_name: str, params: Dict[str, Any]):
                     is_json_type=False,
                     persist_type="numpy",
                     has_metaflow_param=False,
-                    has_sagemaker_param = False
+                    has_sagemaker_param=False,
                 )
             elif isinstance(val, pd.Series) or isinstance(val, pd.DataFrame):
                 param_meta[key] = ParamMeta(
@@ -98,7 +98,7 @@ def extract_param_meta(module_name: str, params: Dict[str, Any]):
                     is_json_type=False,
                     persist_type="pandas",
                     has_metaflow_param=False,
-                    has_sagemaker_param = False
+                    has_sagemaker_param=False,
                 )
             elif isinstance(val, Path):
                 param_meta[key] = ParamMeta(
@@ -107,7 +107,7 @@ def extract_param_meta(module_name: str, params: Dict[str, Any]):
                     is_json_type=False,
                     persist_type="pickle",
                     has_metaflow_param=True,
-                    has_sagemaker_param = False
+                    has_sagemaker_param=False,
                 )
         else:
             param_meta[key] = ParamMeta(
@@ -116,6 +116,6 @@ def extract_param_meta(module_name: str, params: Dict[str, Any]):
                 is_json_type=False,
                 persist_type="unsupported",
                 has_metaflow_param=False,
-                has_sagemaker_param = False
+                has_sagemaker_param=False,
             )
     return param_meta

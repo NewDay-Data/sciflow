@@ -323,7 +323,8 @@ def get_module_name(nb_path):
 
 # Cell
 
-def get_flow_path(nb_path, config=None, flow_provider='metaflow'):
+
+def get_flow_path(nb_path, config=None, flow_provider="metaflow"):
     module_name = get_module_name(nb_path)
     if module_name is None:
         return None

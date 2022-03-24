@@ -1,0 +1,214 @@
+#!/usr/bin/env python
+# coding=utf-8
+# SCIFLOW GENERATED FILE - EDIT COMPANION NOTEBOOK
+import os
+
+import boto3
+import sagemaker
+from sagemaker.session import Session
+from sagemaker.workflow.pipeline import Pipeline
+from sagemaker.workflow.steps import ProcessingStep, TrainingStep
+from sagemaker.processing import ScriptProcessor, ProcessingInput, ProcessingOutput
+from sagemaker.workflow.pipeline import Pipeline
+from sagemaker.inputs import TrainingInput
+from sagemaker.estimator import Estimator
+from sagemaker.workflow.parameters import ParameterInteger, ParameterString
+
+from sciflow.test.test_clustering import something, preprocess, fit, evaluate
+from sciflow.test.test_clustering import traffic_percent, workers, model_level, min_date
+from sciflow.utils import lib_path
+
+
+class TestClusteringPipeline():
+    traffic_percent = ParameterInteger(name='traffic_percent', default_value=traffic_percent)
+    workers = ParameterInteger(name='workers', default_value=workers)
+    model_level = ParameterString(name='model_level', default_value=model_level)
+    min_date = ParameterString(name='min_date', default_value=min_date)
+
+    steps = ['something', 'preprocess', 'fit', 'evaluate']
+
+    
+    def something(self):
+
+        script_processor = ScriptProcessor(
+                command=['python3'],
+                image_uri="141502667606.dkr.ecr.eu-west-1.amazonaws.com/sagemaker-scikit-learn:0.23-1-cpu-py3",
+                role=self.role,
+                instance_count=1,
+                instance_type="ml.m5.xlarge",
+                sagemaker_session=self.sagemaker_session,
+                env={'AWS_DEFAULT_REGION': self.region, 
+                    'SCIFLOW_BUCKET': self.bucket},
+                #base_job_name='test-clustering-pipeline/something'
+        )
+        
+        something_step = ProcessingStep(
+            name = "something",
+            processor = script_processor,
+            code = f"{self.flow_s3_uri}/code/test_clustering_something.py"
+        )
+        self.something_step = something_step
+        return something_step
+
+    def preprocess(self):
+
+        script_processor = ScriptProcessor(
+                command=['python3'],
+                image_uri="141502667606.dkr.ecr.eu-west-1.amazonaws.com/sagemaker-scikit-learn:0.23-1-cpu-py3",
+                role=self.role,
+                instance_count=1,
+                instance_type="ml.m5.xlarge",
+                sagemaker_session=self.sagemaker_session,
+                env={'AWS_DEFAULT_REGION': self.region, 
+                    'SCIFLOW_BUCKET': self.bucket},
+                #base_job_name = 'test-clustering-pipeline/preprocess'
+        )
+        
+        preprocess_step = ProcessingStep(
+            name = "preprocess",
+            processor = script_processor,
+            code = f"{self.flow_s3_uri}/code/test_clustering_preprocess.py",
+            job_arguments=[
+                "--model_level", self.model_level.__str__(),
+                "--min_date", self.min_date.__str__(),
+                "--traffic_percent", str(self.traffic_percent.__int__()),
+            ],
+            outputs = [
+                ProcessingOutput(output_name="documents", source="/opt/ml/processing/documents"),
+            ]
+        )
+        self.preprocess_step = preprocess_step
+        return preprocess_step
+
+    def fit(self):
+
+        metrics_regex = None
+        if 'metric_names' in self.__dict__:
+            metrics = self.metric_names.split(",")
+            metrics_regex = [{"Name": m, "Regex": f"{m}=(.*?);"} for m in metrics]
+
+        estimator = Estimator(
+            image_uri = "141502667606.dkr.ecr.eu-west-1.amazonaws.com/sagemaker-scikit-learn:0.23-1-cpu-py3",
+            entry_point="test_clustering_fit.py",
+            hyperparameters={"workers": str(self.workers.__int__())},
+            instance_type="ml.m5.xlarge",
+            instance_count = 1,
+            output_path = self.flow_s3_uri,
+            base_job_name = "fit",
+            code_location = f"{self.flow_s3_uri}/code",
+            sagemaker_session = self.sagemaker_session,
+            role = self.role,
+            metric_definitions=metrics_regex,
+            enable_sagemaker_metrics=True,
+            environment={'AWS_DEFAULT_REGION': self.region, 
+                         'SCIFLOW_BUCKET': self.bucket},
+        )
+        
+        fit_step = TrainingStep(
+            name="fit",
+            estimator=estimator,
+            inputs={
+                "documents": TrainingInput(
+                    s3_data=self.preprocess_step.properties.ProcessingOutputConfig.Outputs[
+                        "documents"
+                    ].S3Output.S3Uri,
+                    content_type="text/csv",
+                )
+            }
+        )
+        self.fit_step = fit_step
+        return fit_step
+
+    def evaluate(self):
+
+        script_processor = ScriptProcessor(
+                command=['python3'],
+                image_uri="141502667606.dkr.ecr.eu-west-1.amazonaws.com/sagemaker-scikit-learn:0.23-1-cpu-py3",
+                role=self.role,
+                instance_count=1,
+                instance_type="ml.m5.xlarge",
+                sagemaker_session=self.sagemaker_session,
+                env={'AWS_DEFAULT_REGION': self.region, 
+                    'SCIFLOW_BUCKET': self.bucket},
+                #base_job_name = 'test-clustering-pipeline/evaluate'
+        )
+        
+        evaluate_step = ProcessingStep(
+            name = "evaluate",
+            processor = script_processor,
+            code = f"{self.flow_s3_uri}/code/test_clustering_evaluate.py",
+            inputs = [
+                ProcessingInput(source=self.fit_step.properties.ModelArtifacts.S3ModelArtifacts, destination="/opt/ml/processing/model"),
+            ],
+            outputs = [
+                ProcessingOutput(output_name="artifacts", source="/opt/ml/processing/artifacts"),
+                ProcessingOutput(output_name="metrics", source="/opt/ml/processing/metrics"),
+                ProcessingOutput(output_name="word_summaries", source="/opt/ml/processing/word_summaries"),
+            ]
+        )
+        self.evaluate_step = evaluate_step
+        return evaluate_step
+
+
+
+    def get_pipeline(self) -> Pipeline:
+        pipeline_steps = [getattr(self, step)() for step in self.steps]
+        pipeline = Pipeline(
+            name="test-clustering-pipeline",
+            parameters=[
+                self.traffic_percent,
+                self.workers,
+                self.model_level,
+                self.min_date 
+            ],
+            steps = pipeline_steps,
+            sagemaker_session = self.sagemaker_session,
+        )
+        
+        return pipeline
+    
+    def upload_directory(self, path, bucketname, prefix):
+        for root, dirs, files in os.walk(path):
+            # Ignore non-python source files and IPython checkpoint files
+            for file in [f for f in files if f.split('.')[-1] == 'py' and root.find('ipynb_checkpoints') == -1]:
+                self.s3.upload_file(os.path.join(root, file), bucketname, f"{prefix}/{file}")
+                
+    def run(self):
+        self.bucket = os.environ['SCIFLOW_BUCKET']
+        self.role = sagemaker.get_execution_role()
+        self.region = 'eu-west-1'
+        self.sagemaker_session = Session(default_bucket=self.bucket)
+        self.s3 = boto3.client("s3")
+        
+        self.flow_name = "test-clustering"
+        from datetime import datetime
+        run_timestamp = datetime.today().__str__().replace(':', '-').replace('.', '-').replace(' ', '-')[:-3]
+        self.flow_run_id = f"pipeline-{run_timestamp}"
+        self.s3_prefix = f"{self.flow_name}/{self.flow_run_id}"
+        self.flow_s3_uri = f"s3://{self.bucket}/{self.s3_prefix}"
+        
+        print(f'Running flow: {self.flow_run_id}')
+        
+        # Upload code for all processing steps
+        self.s3.upload_file('test_clustering_something.py', self.bucket, f"{self.s3_prefix}/code/test_clustering_something.py")
+        self.s3.upload_file('test_clustering_preprocess.py', self.bucket, f"{self.s3_prefix}/code/test_clustering_preprocess.py")
+        self.s3.upload_file('test_clustering_evaluate.py', self.bucket, f"{self.s3_prefix}/code/test_clustering_evaluate.py")
+  
+        from pathlib import Path
+    
+        # Upload library
+        self.upload_directory(Path(lib_path(), 'sciflow'), self.bucket, f"{self.s3_prefix}/code/sciflow")
+    
+        pipeline = self.get_pipeline()
+        pipeline.upsert(role_arn=self.role)
+        execution = pipeline.start()
+        print(execution.describe())
+        execution.wait()
+        print(f'Flow: {self.flow_run_id} completed')
+
+        
+
+                
+                
+if __name__ == "__main__":
+    TestClusteringPipeline().run()
