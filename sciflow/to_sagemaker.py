@@ -383,7 +383,7 @@ def write_steps(
                 flow_file.write(f"{single_indent}metrics_regex = None\n")
                 flow_file.write(f"{single_indent}if 'metric_names' in self.__dict__:\n")
                 flow_file.write(f"{single_indent}{single_indent}metrics = self.metric_names.split(",")\n")
-                flow_file.write(f"{single_indent}{single_indent}metrics_regex = [{"Name": m, "Regex": f"{m}=(.*?);"} for m in metrics]\n")
+                flow_file.write(f"{single_indent}{single_indent}metrics_regex = [{{\"Name\": m, \"Regex\": f\"{m}=(.*?);\"}} for m in metrics]\n")
                 flow_file.write(f"\n")
                 flow_file.write(f"{single_indent}{single_indent}estimator = Estimator(\n")
                 flow_file.write(f"{single_indent}{single_indent}{single_indent}image_uri = \"141502667606.dkr.ecr.eu-west-1.amazonaws.com/sagemaker-scikit-learn:0.23-1-cpu-py3\",")
