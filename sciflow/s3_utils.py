@@ -8,15 +8,15 @@ __all__ = ['is_valid_bucket', 's3_join', 'objects_exist_in_dir', 'delete_dir', '
 import os
 import re
 import socket
-from pathlib import Path
 import uuid
+from pathlib import Path
 
 import boto3
 from botocore.client import Config
 from botocore.errorfactory import ClientError
 from botocore.exceptions import ConnectTimeoutError
 
-from .utils import prepare_env, lib_path
+from .utils import lib_path, prepare_env
 
 # Cell
 
@@ -90,21 +90,31 @@ def list_s3_subdirs(s3_res, bucket_name, prefix):
 
 # Cell
 
+
 def upload_directory(s3_client, path, bucket_name, prefix):
     for root, dirs, files in os.walk(path):
         # Ignore non-python source files and IPython checkpoint files
-        for file in [f for f in files if f.split('.')[-1] == 'py' and root.find('ipynb_checkpoints') == -1]:
-            s3_client.upload_file(os.path.join(root, file), bucket_name, f"{prefix}/{file}")
+        for file in [
+            f
+            for f in files
+            if f.split(".")[-1] == "py" and root.find("ipynb_checkpoints") == -1
+        ]:
+            s3_client.upload_file(
+                os.path.join(root, file), bucket_name, f"{prefix}/{file}"
+            )
 
 # Cell
+
 
 def download_directory(s3_client, s3_res, bucket_name, remote_key, local_dir):
     if not Path(local_dir).exists():
         Path(local_dir).mkdir(parents=True)
-    all_files = [obj.key for obj in s3_res.Bucket(bucket_name).objects.filter(Prefix=remote_key)]
+    all_files = [
+        obj.key for obj in s3_res.Bucket(bucket_name).objects.filter(Prefix=remote_key)
+    ]
     for file in all_files:
-        file_name = file.split('/')[-1]
-        s3_client.download_file(bucket_name, file, f'{local_dir}/{file_name}')
+        file_name = file.split("/")[-1]
+        s3_client.download_file(bucket_name, file, f"{local_dir}/{file_name}")
 
 # Cell
 
