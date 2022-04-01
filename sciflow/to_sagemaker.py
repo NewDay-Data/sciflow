@@ -65,7 +65,7 @@ def nb_to_sagemaker_pipeline(
         steps,
         params,
         steps_param_meta,
-        track_experiment
+        track_experiment,
     )
 
 # Cell
@@ -173,33 +173,21 @@ def write_pipeline_to_files(
             f"{ind}{ind}pipeline_steps = [getattr(self, step)() for step in self.steps]\n"
         )
         flow_file.write(f"{ind}{ind}pipeline = Pipeline(\n")
-        flow_file.write(
-            f"{ind}{ind}{ind}name=self.flow_name,\n"
-        )
+        flow_file.write(f"{ind}{ind}{ind}name=self.flow_name,\n")
         flow_file.write(f"{ind}{ind}{ind}parameters=[\n")
         # Loop params
         for param_name in params.keys():
-            flow_file.write(
-                f"{ind}{ind}{ind}{ind}self.{param_name},\n"
-            )
+            flow_file.write(f"{ind}{ind}{ind}{ind}self.{param_name},\n")
         flow_file.write(f"{ind}{ind}{ind}],\n")
-        flow_file.write(
-            f"{ind}{ind}{ind}steps = pipeline_steps,\n"
-        )
-        flow_file.write(
-            f"{ind}{ind}{ind}sagemaker_session = self.sagemaker_session,\n"
-        )
+        flow_file.write(f"{ind}{ind}{ind}steps = pipeline_steps,\n")
+        flow_file.write(f"{ind}{ind}{ind}sagemaker_session = self.sagemaker_session,\n")
         flow_file.write(f"{ind}{ind})\n")
         flow_file.write(f"{ind}{ind}return pipeline\n")
         flow_file.write("\n")
 
         flow_file.write(f"{ind}def run(self):\n")
-        flow_file.write(
-            f"{ind}{ind}self.bucket = os.environ['SCIFLOW_BUCKET']\n"
-        )
-        flow_file.write(
-            f"{ind}{ind}self.role = sagemaker.get_execution_role()\n"
-        )
+        flow_file.write(f"{ind}{ind}self.bucket = os.environ['SCIFLOW_BUCKET']\n")
+        flow_file.write(f"{ind}{ind}self.role = sagemaker.get_execution_role()\n")
         flow_file.write(f"{ind}{ind}self.region = 'eu-west-1'\n")
         flow_file.write(
             f"{ind}{ind}self.sagemaker_session = Session(default_bucket=self.bucket)\n\n"
@@ -210,18 +198,14 @@ def write_pipeline_to_files(
         flow_file.write(
             f"{ind}{ind}run_timestamp = datetime.today().__str__().replace(':', '-').replace('.', '-').replace(' ', '-')[:-3]\n"
         )
-        flow_file.write(
-            f'{ind}{ind}self.flow_run_id = f"pipeline-{{run_timestamp}}"\n'
-        )
+        flow_file.write(f'{ind}{ind}self.flow_run_id = f"pipeline-{{run_timestamp}}"\n')
         flow_file.write(
             f'{ind}{ind}self.s3_prefix = f"{{self.flow_name}}/{{self.flow_run_id}}"\n'
         )
         flow_file.write(
             f'{ind}{ind}self.flow_s3_uri = f"s3://{{self.bucket}}/{{self.s3_prefix}}"\n'
         )
-        flow_file.write(
-            f'{ind}{ind}self.s3_client = boto3.client("s3")\n'
-        )
+        flow_file.write(f'{ind}{ind}self.s3_client = boto3.client("s3")\n')
 
         proc_steps = [s for s in steps if is_processing_step(s)]
 
@@ -235,12 +219,8 @@ def write_pipeline_to_files(
             f'{ind}{ind}upload_directory(self.s3_client, "{modules_dir}", self.bucket, f"{{self.s3_prefix}}/code/{get_config().lib_name}")\n'
         )
         flow_file.write("\n")
-        flow_file.write(
-            f"{ind}{ind}pipeline = self.get_pipeline()\n"
-        )
-        flow_file.write(
-            f"{ind}{ind}pipeline.upsert(role_arn=self.role)\n"
-        )
+        flow_file.write(f"{ind}{ind}pipeline = self.get_pipeline()\n")
+        flow_file.write(f"{ind}{ind}pipeline.upsert(role_arn=self.role)\n")
         flow_file.write(f"{ind}{ind}execution = pipeline.start()\n")
         flow_file.write(f"{ind}{ind}execution.wait()\n")
         flow_file.write("\n")
@@ -397,15 +377,9 @@ def write_steps(
             write_script_processor(flow_file, ind)
 
             flow_file.write("\n")
-            flow_file.write(
-                f"{ind}{ind}{step.name}_step = ProcessingStep(\n"
-            )
-            flow_file.write(
-                f'{ind}{ind}{ind}name = "{step.name}",\n'
-            )
-            flow_file.write(
-                f"{ind}{ind}{ind}processor = script_processor,\n"
-            )
+            flow_file.write(f"{ind}{ind}{step.name}_step = ProcessingStep(\n")
+            flow_file.write(f'{ind}{ind}{ind}name = "{step.name}",\n')
+            flow_file.write(f"{ind}{ind}{ind}processor = script_processor,\n")
             flow_file.write(
                 f'{ind}{ind}{ind}code = f"{{self.flow_s3_uri}}/code/{module_local_name}_{step.name}.py",\n'
             )
@@ -415,26 +389,20 @@ def write_steps(
                 if len(step_param_meta) > 0:
                     # Job Args
                     job_args = format_job_arguments(step_param_meta)
-                    flow_file.write(
-                        f"{ind}{ind}{ind}job_arguments=[\n"
-                    )
+                    flow_file.write(f"{ind}{ind}{ind}job_arguments=[\n")
                     job_arg_pairs = zip(job_args[::2], job_args[1::2])
                     for job_arg_pair in job_arg_pairs:
                         flow_file.write(
                             f'{ind}{ind}{ind}{ind}"{job_arg_pair[0]}", {job_arg_pair[1]},\n'
                         )
-                    flow_file.write(
-                        f"{ind}{ind}{ind}],\n"
-                    )
+                    flow_file.write(f"{ind}{ind}{ind}],\n")
 
                 # ProcInputs
                 if (
                     len(step_vars["step_proc_vars"]) > 0
                     or len(step_vars["step_train_vars"]) > 0
                 ):
-                    flow_file.write(
-                        f"{ind}{ind}{ind}inputs = [\n"
-                    )
+                    flow_file.write(f"{ind}{ind}{ind}inputs = [\n")
                     flow_file.write(
                         "\n".join(
                             [
@@ -444,9 +412,7 @@ def write_steps(
                             ]
                         )
                     )
-                    flow_file.write(
-                        f"{ind}{ind}{ind}],\n"
-                    )
+                    flow_file.write(f"{ind}{ind}{ind}],\n")
 
                 # ProcOutputs
                 proc_outs = {
@@ -458,9 +424,7 @@ def write_steps(
                 }
                 outputs.update(proc_outs)
                 if len(proc_outs) > 0:
-                    flow_file.write(
-                        f"{ind}{ind}{ind}outputs = [\n"
-                    )
+                    flow_file.write(f"{ind}{ind}{ind}outputs = [\n")
                     flow_file.write(
                         "\n".join(
                             [
@@ -492,9 +456,7 @@ def write_steps(
                     f'{ind}{ind}{ind}metrics_regex = [{{"Name": m, "Regex": f"{{m}}=(.*?);"}} for m in metrics]\n'
                 )
                 flow_file.write(f"\n")
-                flow_file.write(
-                    f"{ind}{ind}estimator = Estimator(\n"
-                )
+                flow_file.write(f"{ind}{ind}estimator = Estimator(\n")
                 flow_file.write(
                     f'{ind}{ind}{ind}image_uri = "141502667606.dkr.ecr.eu-west-1.amazonaws.com/sagemaker-scikit-learn:0.23-1-cpu-py3",\n'
                 )
@@ -504,45 +466,25 @@ def write_steps(
                 # Repeated code - refactor
                 step_param_meta = {k: param_meta[k] for k in step_vars["step_input"]}
                 steps_param_meta[step.name] = step_param_meta
-                if len(step_vars['step_input']) > 0:
+                if len(step_vars["step_input"]) > 0:
                     hyper_params = format_hyperparams(step_param_meta)
-                    flow_file.write(
-                        f"{ind}{ind}{ind}hyperparameters={{\n"
-                    )
+                    flow_file.write(f"{ind}{ind}{ind}hyperparameters={{\n")
                     for key, val in hyper_params.items():
-                        flow_file.write(
-                            f'{ind}{ind}{ind}{ind}"{key}", {val},\n'
-                        )
-                    flow_file.write(
-                        f"{ind}{ind}{ind}}},\n"
-                    )
-                flow_file.write(
-                    f'{ind}{ind}{ind}instance_type="ml.m5.xlarge",\n'
-                )
-                flow_file.write(
-                    f"{ind}{ind}{ind}instance_count=1,\n"
-                )
-                flow_file.write(
-                    f"{ind}{ind}{ind}output_path=self.flow_s3_uri,\n"
-                )
-                flow_file.write(
-                    f'{ind}{ind}{ind}base_job_name="{step.name}",\n'
-                )
+                        flow_file.write(f'{ind}{ind}{ind}{ind}"{key}", {val},\n')
+                    flow_file.write(f"{ind}{ind}{ind}}},\n")
+                flow_file.write(f'{ind}{ind}{ind}instance_type="ml.m5.xlarge",\n')
+                flow_file.write(f"{ind}{ind}{ind}instance_count=1,\n")
+                flow_file.write(f"{ind}{ind}{ind}output_path=self.flow_s3_uri,\n")
+                flow_file.write(f'{ind}{ind}{ind}base_job_name="{step.name}",\n')
                 flow_file.write(
                     f'{ind}{ind}{ind}code_location = f"{{self.flow_s3_uri}}/code",\n'
                 )
                 flow_file.write(
                     f"{ind}{ind}{ind}sagemaker_session = self.sagemaker_session,\n"
                 )
-                flow_file.write(
-                    f"{ind}{ind}{ind}role = self.role,\n"
-                )
-                flow_file.write(
-                    f"{ind}{ind}{ind}metric_definitions=metrics_regex,\n"
-                )
-                flow_file.write(
-                    f"{ind}{ind}{ind}enable_sagemaker_metrics=True,\n"
-                )
+                flow_file.write(f"{ind}{ind}{ind}role = self.role,\n")
+                flow_file.write(f"{ind}{ind}{ind}metric_definitions=metrics_regex,\n")
+                flow_file.write(f"{ind}{ind}{ind}enable_sagemaker_metrics=True,\n")
                 flow_file.write(
                     f"{ind}{ind}{ind}environment={{'AWS_DEFAULT_REGION': self.region,\n"
                 )
@@ -552,42 +494,22 @@ def write_steps(
                 flow_file.write(f"{ind}{ind})\n")
                 flow_file.write("\n")
                 flow_file.write("\n")
-                flow_file.write(
-                    f"{ind}{ind}{step.name}_step = TrainingStep(\n"
-                )
-                flow_file.write(
-                    f'{ind}{ind}{ind}name="{step.name}",\n'
-                )
-                flow_file.write(
-                    f"{ind}{ind}{ind}estimator=estimator,\n"
-                )
-                flow_file.write(
-                    f"{ind}{ind}{ind}inputs={{\n"
-                )
-                flow_file.write(
-                    f'{ind}{ind}{ind}{ind}"documents": TrainingInput(\n'
-                )
+                flow_file.write(f"{ind}{ind}{step.name}_step = TrainingStep(\n")
+                flow_file.write(f'{ind}{ind}{ind}name="{step.name}",\n')
+                flow_file.write(f"{ind}{ind}{ind}estimator=estimator,\n")
+                flow_file.write(f"{ind}{ind}{ind}inputs={{\n")
+                flow_file.write(f'{ind}{ind}{ind}{ind}"documents": TrainingInput(\n')
                 flow_file.write(
                     f"{ind}{ind}{ind}{ind}{ind}s3_data=self.preprocess_step.properties.ProcessingOutputConfig.Outputs[\n"
                 )
-                flow_file.write(
-                    f'{ind}{ind}{ind}{ind}{ind}{ind}"documents"\n'
-                )
-                flow_file.write(
-                    f"{ind}{ind}{ind}{ind}{ind}].S3Output.S3Uri,\n"
-                )
-                flow_file.write(
-                    f'{ind}{ind}{ind}{ind}{ind}content_type="text/csv",\n'
-                )
-                flow_file.write(
-                    f"{ind}{ind}{ind}{ind})\n"
-                )
+                flow_file.write(f'{ind}{ind}{ind}{ind}{ind}{ind}"documents"\n')
+                flow_file.write(f"{ind}{ind}{ind}{ind}{ind}].S3Output.S3Uri,\n")
+                flow_file.write(f'{ind}{ind}{ind}{ind}{ind}content_type="text/csv",\n')
+                flow_file.write(f"{ind}{ind}{ind}{ind})\n")
                 flow_file.write(f"{ind}{ind}{ind}}}\n")
                 flow_file.write(f"{ind}{ind})\n")
 
-        flow_file.write(
-            f"{ind}{ind}self.{step.name}_step = {step.name}_step\n"
-        )
+        flow_file.write(f"{ind}{ind}self.{step.name}_step = {step.name}_step\n")
         flow_file.write(f"{ind}{ind}return {step.name}_step\n")
         flow_file.write("\n")
 
@@ -630,30 +552,39 @@ def format_args(params):
         # TODO simplify
         if val.instance_type == int:
             result.append(f"int({key})")
-        elif val.instance_type ==float:
+        elif val.instance_type == float:
             result.append(f"float({key})")
         else:
             result.append(key)
-    return ', '.join(result)
+    return ", ".join(result)
 
 # Cell
 
 
-def generate_sagemaker_modules(flow_path, pipeline_class_name, lib_name, module_name, steps, params, steps_param_meta, track_experiment):
+def generate_sagemaker_modules(
+    flow_path,
+    pipeline_class_name,
+    lib_name,
+    module_name,
+    steps,
+    params,
+    steps_param_meta,
+    track_experiment,
+):
     # Read in module file as lines.
-    ind = '    '
+    ind = "    "
     module_path = Path(lib_path(), lib_name, f"{module_name.replace('.', '/')}.py")
 
     # Pass these in instead of replacting..
     fq_module_name = f"{lib_name}.{module_name}"
-    param_meta = extract_param_meta(fq_module_name, params)
+    extract_param_meta(fq_module_name, params)
     # TODO needs to be step specific
     # pass these in
 
     with open(module_path) as module_file:
         module_lines = module_file.readlines()
     for step in steps:
-        sm_module_path = (Path(str(flow_path).replace(".py", f"_{step.name}.py")))
+        sm_module_path = Path(str(flow_path).replace(".py", f"_{step.name}.py"))
         with open(sm_module_path, "w") as sm_module_file:
             sm_module_file.write("".join(module_lines))
             sm_module_file.write("\n\n# SCIFLOW GENERATED FROM THIS POINT\n")
@@ -661,31 +592,49 @@ def generate_sagemaker_modules(flow_path, pipeline_class_name, lib_name, module_
             sm_module_file.write("\n")
             sm_module_file.write("\n")
 
-            sm_module_file.write(f"def main(lib_name, remote_key, {', '.join(params.keys())}):\n")
+            sm_module_file.write(
+                f"def main(lib_name, remote_key, {', '.join(params.keys())}):\n"
+            )
             sm_module_file.write(f"{ind}add_lib_to_pythonpath(lib_name, remote_key)\n")
             sm_module_file.write(f"\n")
-            sm_module_file.write(f"{ind}has_additional_dependencies = Path('requirements.txt').exists()\n")
+            sm_module_file.write(
+                f"{ind}has_additional_dependencies = Path('requirements.txt').exists()\n"
+            )
             sm_module_file.write(f"{ind}if has_additional_dependencies:\n")
-            sm_module_file.write(f"{ind}{ind}logger.info('Installing additional dependencies from requirements.txt')\n")
-            sm_module_file.write(f"{ind}{ind}subprocess.check_call([sys.executable, \"-m\", \"pip\", \"install\", \"-r\", \"requirements.txt\"])\n")
-            sm_module_file.write(f"{ind}{ind}logger.debug(\"Installed additional dependencies\")\n")
-            args = ['lib_name', 'remote_key']
+            sm_module_file.write(
+                f"{ind}{ind}logger.info('Installing additional dependencies from requirements.txt')\n"
+            )
+            sm_module_file.write(
+                f'{ind}{ind}subprocess.check_call([sys.executable, "-m", "pip", "install", "-r", "requirements.txt"])\n'
+            )
+            sm_module_file.write(
+                f'{ind}{ind}logger.debug("Installed additional dependencies")\n'
+            )
+            args = ["lib_name", "remote_key"]
             if step.name in steps_param_meta:
-                sm_module_file.write(f"{ind}results = {step.name}({format_args(steps_param_meta[step.name])})\n")
+                sm_module_file.write(
+                    f"{ind}results = {step.name}({format_args(steps_param_meta[step.name])})\n"
+                )
                 args.extend(list(steps_param_meta[step.name].keys()))
             else:
                 sm_module_file.write(f"{ind}results = {step.name}()\n")
             sm_module_file.write(f"{ind}add_lib_to_pythonpath(lib_name, remote_key)\n")
-            sm_module_file.write(f"{ind}save_results(\"/opt/ml/processing\", results)\n")
+            sm_module_file.write(f'{ind}save_results("/opt/ml/processing", results)\n')
             sm_module_file.write(f"\n")
             sm_module_file.write(f"def parse_args():\n")
-            sm_module_file.write(f"{ind}parser = argparse.ArgumentParser(description=__doc__)\n")
-            sm_module_file.write(f"{ind}parser.formatter_class = argparse.RawDescriptionHelpFormatter\n")
+            sm_module_file.write(
+                f"{ind}parser = argparse.ArgumentParser(description=__doc__)\n"
+            )
+            sm_module_file.write(
+                f"{ind}parser.formatter_class = argparse.RawDescriptionHelpFormatter\n"
+            )
 
             for arg in args:
-                sm_module_file.write(f"{ind}parser.add_argument(f\"--{arg}\", required=True)\n")
+                sm_module_file.write(
+                    f'{ind}parser.add_argument(f"--{arg}", required=True)\n'
+                )
             sm_module_file.write("\n")
-            sm_module_file.write(f"if __name__ == \"__main__\":\n")
+            sm_module_file.write(f'if __name__ == "__main__":\n')
             sm_module_file.write(f"{ind}args = parse_args()\n")
             sm_module_file.write(f"{ind}main(**vars(args))\n")
             # write to flow path/step
