@@ -16,7 +16,6 @@ import numpy as np
 import pandas as pd
 
 # TODO bring back in library calls
-from ..utils import lib_path
 
 # Cell
 
@@ -118,7 +117,11 @@ def evaluate(model):
     )
     # You can add artifacts in a step that will be saved to block storage. Add the paths to the file on the local filesystem
     # and the artifact will be uploaded to remote storage.
-    artifacts = [lib_path("nbs", "test", "dataframe_artifact.csv")]
+    sample_df = pd.DataFrame(
+        {"a": model.get_topic_sizes()[0], "b": model.get_topic_sizes()[1]}
+    )
+    sample_df.to_csv("/tmp/dataframe_artifact.csv", index=False)
+    artifacts = ["/tmp/dataframe_artifact.csv"]
     # You can add step metrics too this time just add a list of 3-tuples where tuple order = (name, value, step)
     metrics = [("mae", 100, 0), ("mae", 67, 1), ("mae", 32, 2)]
     results = {
