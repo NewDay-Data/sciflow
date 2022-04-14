@@ -43,7 +43,7 @@ build:
 	sciflow_build_lib && \
 	nbdev_test_nbs --pause=3 && \
 	sciflow_tidy && \
-	sciflow_generate && \
+	sciflow_metaflow && \
 	sciflow_check_flows && \
 	echo "Build completed"
     
@@ -57,7 +57,7 @@ precommit:
 	nbdev_test_nbs --pause=3 && \
 	sciflow_tidy && \
 	sciflow_clean && \
-	sciflow_generate && \
+	sciflow_metaflow && \
 	sciflow_check_flows && \
 	echo "Precommit checks completed"
 
