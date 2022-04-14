@@ -3,7 +3,7 @@
 __all__ = ['titleize', 'rename_steps_for_metaflow', 'indent_multiline', 'nb_to_metaflow', 'extract_module_only',
            'write_module_to_file', 'write_observers', 'config', 'ex', 'obs', 'write_track_flow', 'write_params',
            'format_arg', 'write_steps', 'write_track_capture', 'get_module_name', 'get_flow_path', 'generate_flows',
-           'sciflow_generate', 'check_flows', 'prep_mf_env', 'run_shell_cmd', 'check_flow', 'run_flow', 'run_flow_task',
+           'sciflow_metaflow', 'check_flows', 'prep_mf_env', 'run_shell_cmd', 'check_flow', 'run_flow', 'run_flow_task',
            'run_flow_async', 'iter_param_grid', 'sample_grid_space', 'search_flow_grid', 'sciflow_check_flows',
            'sciflow_run_flows']
 
@@ -353,7 +353,7 @@ def generate_flows(config, track_experiment=True):
 
 
 @call_parse
-def sciflow_generate(track: Param("Track flows as sacred experiments", bool) = True):
+def sciflow_metaflow(track: Param("Track flows as sacred experiments", bool) = True):
     generate_flows(get_config(), track)
 
 # Cell
