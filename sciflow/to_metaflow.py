@@ -2,10 +2,9 @@
 
 __all__ = ['titleize', 'rename_steps_for_metaflow', 'indent_multiline', 'nb_to_metaflow', 'extract_module_only',
            'write_module_to_file', 'write_observers', 'config', 'ex', 'obs', 'write_track_flow', 'write_params',
-           'format_arg', 'write_steps', 'write_track_capture', 'get_module_name', 'get_flow_path', 'generate_flows',
-           'sciflow_metaflow', 'check_flows', 'prep_mf_env', 'run_shell_cmd', 'check_flow', 'run_flow', 'run_flow_task',
-           'run_flow_async', 'iter_param_grid', 'sample_grid_space', 'search_flow_grid', 'sciflow_check_flows',
-           'sciflow_run_flows']
+           'format_arg', 'write_steps', 'write_track_capture', 'generate_flows', 'sciflow_metaflow', 'check_flows',
+           'prep_mf_env', 'run_shell_cmd', 'check_flow', 'run_flow', 'run_flow_task', 'run_flow_async',
+           'iter_param_grid', 'sample_grid_space', 'search_flow_grid', 'sciflow_check_flows', 'sciflow_run_flows']
 
 # Cell
 
@@ -26,7 +25,7 @@ from nbdev.export import find_default_export, get_config, nbglob, read_nb
 from .data_handler import extract_param_meta
 from .params import params_as_dict
 from .parse_module import FuncDetails, extract_steps
-from .utils import prepare_env
+from .utils import get_flow_path, prepare_env
 
 # Cell
 
@@ -316,30 +315,7 @@ def write_track_capture(flow_file):
 # Cell
 
 
-def get_module_name(nb_path):
-    nb = read_nb(nb_path)
-    module_name = find_default_export(nb["cells"])
-    return module_name
-
-# Cell
-
-
-def get_flow_path(nb_path, config=None, flow_provider="metaflow"):
-    module_name = get_module_name(nb_path)
-    if module_name is None:
-        return None
-    if config is None:
-        config = get_config()
-    flows_dir = Path(config.path("flows_path"), flow_provider)
-    if not flows_dir.exists():
-        flows_dir.mkdir()
-
-    return Path(flows_dir, f"{module_name.split('.')[-1]}.py")
-
-# Cell
-
-
-def generate_flows(config, track_experiment=True):
+def generate_flows(config=None, track_experiment=True):
     nb_paths = nbglob(recursive=True)
     for nb_path in nb_paths:
         nb_to_metaflow(
@@ -434,13 +410,15 @@ def check_flow(flows_dir, flow_module, flow_command="show", params=None):
 # Cell
 
 
-def run_flow(nb_path, params=None):
-    flow_path = get_flow_path(nb_path)
+def run_flow(
+    nb_path, params=None, flow_provider="metaflow", flow_command="--no-pylint run"
+):
+    flow_path = get_flow_path(nb_path, flow_provider=flow_provider)
     print(f"Running flow: {os.path.basename(flow_path)}")
     ret_code, output = check_flow(
         flow_path.parent,
         os.path.basename(flow_path),
-        flow_command="--no-pylint run",
+        flow_command=flow_command,
         params=params,
     )
     return ret_code, output

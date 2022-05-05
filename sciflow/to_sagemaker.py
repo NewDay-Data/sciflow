@@ -20,7 +20,7 @@ from .data_handler import extract_param_meta
 from .packaging import determine_dependencies
 from .params import params_as_dict
 from .parse_module import FuncDetails, extract_steps
-from .utils import lib_path
+from .utils import get_flow_path, lib_path
 
 # Cell
 
@@ -28,7 +28,6 @@ from .utils import lib_path
 def nb_to_sagemaker_pipeline(
     nb_path: Path,
     flow_path: Path,
-    config,
     silent: bool = True,
     track_experiment: bool = True,
 ):
@@ -41,25 +40,28 @@ def nb_to_sagemaker_pipeline(
     path_sep_module_name = module_name.replace(".", "/")
     nb_name = os.path.basename(nb_path)
     exported_module = os.path.join(
-        config.path("lib_path"), f"{path_sep_module_name}.py"
+        get_config().path("lib_path"), f"{path_sep_module_name}.py"
     )
     steps = extract_steps(exported_module)
     if len(steps) == 0:
-        print("Skipping sagemaker conversion - no steps found")
         return
     params = params_as_dict(nb_path)
     if len(params) == 0:
         print(f"No params cell found for: {os.path.basename(nb_path)}")
     pipeline_class_name = f"{titleize(extract_module_only(module_name))}Pipeline"
-    steps_param_meta, steps_vars = write_pipeline_to_files(
-        flow_path,
-        pipeline_class_name,
-        lib_name,
-        module_name,
-        steps,
-        params,
-        track_experiment,
-    )
+    try:
+        steps_param_meta, steps_vars = write_pipeline_to_files(
+            flow_path,
+            pipeline_class_name,
+            lib_name,
+            module_name,
+            steps,
+            params,
+            track_experiment,
+        )
+    except ValueError as ve:
+        print(f"Sagemaker conversion failed for {nb_name}, \nReason: {ve}")
+        return
     if not silent:
         print(
             f"Converted {nb_name} to {pipeline_class_name} in: {os.path.basename(flow_path)}"
@@ -174,6 +176,7 @@ def write_pipeline_to_files(
         flow_file.write(f"{ind}steps = {[s.name for s in steps]}\n")
         flow_file.write("\n")
         steps_param_meta, steps_vars = write_steps(
+            flow_path,
             lib_name,
             module_name,
             fq_module_name,
@@ -237,11 +240,12 @@ def write_pipeline_to_files(
         if not flow_reqs_path.exists():
             shutil.copyfile(lib_reqs_path, flow_reqs_path)
         flow_file.write(
-            f'{ind}{ind}self.s3_client.upload_file("requirements.txt", self.bucket, f"{{self.s3_prefix}}/requirements.txt")\n'
+            f'{ind}{ind}self.s3_client.upload_file("{flow_reqs_path}", self.bucket, f"{{self.s3_prefix}}/requirements.txt")\n'
         )
         for proc_step in proc_steps:
+            step_module = f"{extract_module_only(module_name)}_{proc_step.name}.py"
             flow_file.write(
-                f'{ind}{ind}self.s3_client.upload_file("{extract_module_only(module_name)}_{proc_step.name}.py", self.bucket, f"{{self.s3_prefix}}/code/{extract_module_only(module_name)}_{proc_step.name}.py")\n'
+                f'{ind}{ind}self.s3_client.upload_file("{Path(lib_path(), config.flows_path, "sagemaker", step_module)}", self.bucket, f"{{self.s3_prefix}}/code/{step_module}")\n'
             )
         modules_dir = Path(lib_path(), config.lib_name)
         flow_file.write(
@@ -299,7 +303,6 @@ def write_track_flow(flow_file, track_experiment):
 
 def write_params(flow_file, param_meta, ind):
     for param in param_meta.keys():
-        print(param, param_meta[param].instance_type)
         if param_meta[param].instance_type == int:
             flow_file.write(
                 f"{ind}{param} = ParameterInteger(name='{param}', default_value={param})\n"
@@ -407,6 +410,7 @@ def format_arg(arg, param_meta):
 
 
 def write_steps(
+    flow_path,
     lib_name,
     module_name,
     fq_module_name,
@@ -543,7 +547,7 @@ def write_steps(
                 flow_file.write(
                     f'{ind}{ind}{ind}entry_point="{module_local_name}_{step.name}.py",\n'
                 )
-                flow_file.write(f'{ind}{ind}{ind}source_dir=".",\n')
+                flow_file.write(f'{ind}{ind}{ind}source_dir="{flow_path.parent}",\n')
                 # Repeated code - refactor
                 step_param_meta = {k: param_meta[k] for k in step_vars["step_input"]}
                 steps_param_meta[step.name] = step_param_meta
@@ -665,7 +669,7 @@ def generate_sagemaker_modules(
     ind = "    "
     module_path = Path(lib_path(), lib_name, f"{module_name.replace('.', '/')}.py")
 
-    # Pass these in instead of replacting..
+    # Pass these in instead of replacing..
     fq_module_name = f"{lib_name}.{module_name}"
     extract_param_meta(fq_module_name, params)
     # TODO needs to be step specific
@@ -823,13 +827,12 @@ def generate_sagemaker_modules(
 # Cell
 
 
-def generate_flows(config, track_experiment=True):
+def generate_flows(track_experiment=True):
     nb_paths = nbglob(recursive=True)
     for nb_path in nb_paths:
         nb_to_sagemaker_pipeline(
             nb_path,
             get_flow_path(nb_path, flow_provider="sagemaker"),
-            config,
             silent=False,
             track_experiment=False,
         )
@@ -839,4 +842,4 @@ def generate_flows(config, track_experiment=True):
 
 @call_parse
 def sciflow_sagemaker(track: Param("Track flows as sacred experiments", bool) = True):
-    generate_flows(get_config(), track)
+    generate_flows(track)
