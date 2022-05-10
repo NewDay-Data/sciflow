@@ -2,8 +2,8 @@
 
 __all__ = ['nb_to_sagemaker_pipeline', 'is_train_step', 'is_processing_step', 'write_pipeline_to_files',
            'write_track_flow', 'write_params', 'write_script_processor', 'extract_step_vars', 'format_job_arguments',
-           'format_hyperparams', 'format_arg', 'write_steps', 'write_track_capture', 'get_return_var_names',
-           'format_args', 'generate_sagemaker_modules', 'generate_flows', 'sciflow_sagemaker']
+           'format_hyperparams', 'format_arg', 'write_steps', 'write_track_capture', 'format_args',
+           'generate_sagemaker_modules', 'generate_flows', 'sciflow_sagemaker']
 
 # Cell
 
@@ -19,7 +19,7 @@ from nbdev.export import find_default_export, get_config, nbglob, read_nb
 from .data_handler import extract_param_meta
 from .packaging import determine_dependencies
 from .params import params_as_dict
-from .parse_module import FuncDetails, extract_steps
+from .parse_module import FuncDetails, extract_steps, extract_return_var_names
 from .utils import get_flow_path, lib_path
 
 # Cell
@@ -434,7 +434,7 @@ def write_steps(
     module_local_name = extract_module_only(module_name)
 
     for i, step in enumerate(steps):
-        return_vars = get_return_var_names(step)
+        return_vars = extract_return_var_names(step)
 
         step_vars = extract_step_vars(
             step, param_names, proc_flow_scope, train_flow_scope
@@ -454,7 +454,7 @@ def write_steps(
             flow_file.write(f'{ind}{ind}{ind}name = "{step.name}",\n')
             flow_file.write(f"{ind}{ind}{ind}processor = script_processor,\n")
             flow_file.write(
-                f'{ind}{ind}{ind}code = f"{{self.flow_s3_uri}}/code/{module_local_name}_{step.name}.py",\n'
+                f'{ind}{ind}{ind}code = f"{{self.flow_s3_uri}}/code/_sciflow_{module_local_name}_{step.name}.py",\n'
             )
             job_arg_pairs = [
                 ("--lib_name", f'"{lib_name}"'),
@@ -541,6 +541,7 @@ def write_steps(
                 )
                 flow_file.write(f"\n")
                 flow_file.write(f"{ind}{ind}estimator = Estimator(\n")
+                # TODO extract proc_image_uri
                 flow_file.write(
                     f'{ind}{ind}{ind}image_uri = "368653567616.dkr.ecr.eu-west-1.amazonaws.com/sagemaker-training-custom:conda-env-training",\n'
                 )
@@ -626,19 +627,6 @@ def write_track_capture(flow_file):
 # Cell
 
 
-def get_return_var_names(step):
-    results_index = step.code.find("results =")
-    if results_index == -1:
-        return []
-    return [
-        l.split(":")[1].strip(", \}")
-        for l in step.code[results_index:].split("\n")
-        if l.strip().find(":") > -1
-    ]
-
-# Cell
-
-
 def format_args(params):
     result = []
     for key, val in params.items():
@@ -687,7 +675,8 @@ def generate_sagemaker_modules(
     lib_refs = [l.replace("..", f"{lib_name}.") for l in lib_refs]
 
     for step in steps:
-        sm_module_path = Path(str(flow_path).replace(".py", f"_{step.name}.py"))
+        sm_module_path = Path(flow_path.parent, "_sciflow_" + flow_path.stem + f"_{step.name}.py")
+
         with open(sm_module_path, "w") as sm_module_file:
             sm_module_file.write("".join(lines))
             sm_module_file.write("\n\n# SCIFLOW->SAGEMAKER ADAPTER FROM THIS POINT\n")
