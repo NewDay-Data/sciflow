@@ -107,9 +107,9 @@ def write_pipeline_to_files(
 
     # TODO - add to profiles or accept as params from papermill
     proc_image_uri = "368653567616.dkr.ecr.eu-west-1.amazonaws.com/sagemaker-training-custom:conda-env-training"
-    proc_instance_type = "ml.t3.medium"
+    proc_instance_type = "ml.m5.xlarge"
     train_image_uri = "368653567616.dkr.ecr.eu-west-1.amazonaws.com/sagemaker-training-custom:conda-env-training"
-    train_instance_type = "ml.m5.large"
+    train_instance_type = "ml.m5.xlarge"
 
     with open(flow_path, "w") as flow_file:
         flow_file.write("#!/usr/bin/env python\n")
@@ -127,11 +127,19 @@ def write_pipeline_to_files(
         flow_file.write("from sagemaker.workflow.pipeline import Pipeline\n")
 
         has_train_step = any([is_train_step(s) for s in steps])
-        has_processing_step = sum([is_processing_step(s) for s in steps]) != len(steps)
+        has_processing_step = any([is_processing_step(s) for s in steps])
 
         if has_train_step and has_processing_step:
             flow_file.write(
                 "from sagemaker.workflow.steps import ProcessingStep, TrainingStep\n"
+            )
+        elif has_train_step:
+            flow_file.write(
+                "from sagemaker.workflow.steps import TrainingStep\n"
+            )
+        elif has_processing_step:
+            flow_file.write(
+                "from sagemaker.workflow.steps import ProcessingStep\n"
             )
         if has_processing_step:
             flow_file.write(
@@ -243,7 +251,7 @@ def write_pipeline_to_files(
             f'{ind}{ind}self.s3_client.upload_file("{flow_reqs_path}", self.bucket, f"{{self.s3_prefix}}/requirements.txt")\n'
         )
         for proc_step in proc_steps:
-            step_module = f"{extract_module_only(module_name)}_{proc_step.name}.py"
+            step_module = f"_sciflow_{extract_module_only(module_name)}_{proc_step.name}.py"
             flow_file.write(
                 f'{ind}{ind}self.s3_client.upload_file("{Path(lib_path(), config.flows_path, "sagemaker", step_module)}", self.bucket, f"{{self.s3_prefix}}/code/{step_module}")\n'
             )
@@ -259,6 +267,7 @@ def write_pipeline_to_files(
         flow_file.write(f"{ind}def show(self):\n")
         flow_file.write(f"{ind}{ind}self.init()\n")
         flow_file.write(f"{ind}{ind}pipeline = self.get_pipeline()\n")
+        flow_file.write(f"{ind}{ind}pipeline.upsert(role_arn=self.role)\n")
         flow_file.write(f"{ind}{ind}description = pipeline.describe()\n")
         flow_file.write(f'{ind}{ind}print("Sciflow generated pipeline is valid")\n')
         flow_file.write(
@@ -541,14 +550,14 @@ def write_steps(
                 )
                 flow_file.write(f"\n")
                 flow_file.write(f"{ind}{ind}estimator = Estimator(\n")
-                # TODO extract proc_image_uri
+                # TODO extract train_image_uri
                 flow_file.write(
-                    f'{ind}{ind}{ind}image_uri = "368653567616.dkr.ecr.eu-west-1.amazonaws.com/sagemaker-training-custom:conda-env-training",\n'
+                    f'{ind}{ind}{ind}image_uri = "{train_image_uri}",\n'
                 )
                 flow_file.write(
-                    f'{ind}{ind}{ind}entry_point="{module_local_name}_{step.name}.py",\n'
+                    f'{ind}{ind}{ind}entry_point = "_sciflow_{module_local_name}_{step.name}.py",\n'
                 )
-                flow_file.write(f'{ind}{ind}{ind}source_dir="{flow_path.parent}",\n')
+                flow_file.write(f'{ind}{ind}{ind}source_dir = "{flow_path.parent}",\n')
                 # Repeated code - refactor
                 step_param_meta = {k: param_meta[k] for k in step_vars["step_input"]}
                 steps_param_meta[step.name] = step_param_meta
@@ -558,14 +567,14 @@ def write_steps(
                 }
                 if len(step_vars["step_input"]) > 0:
                     hyper_params.update(format_hyperparams(step_param_meta))
-                flow_file.write(f"{ind}{ind}{ind}hyperparameters={{\n")
+                flow_file.write(f"{ind}{ind}{ind}hyperparameters = {{\n")
                 for key, val in hyper_params.items():
                     flow_file.write(f'{ind}{ind}{ind}{ind}"{key}": {val},\n')
                 flow_file.write(f"{ind}{ind}{ind}}},\n")
-                flow_file.write(f'{ind}{ind}{ind}instance_type="ml.m5.xlarge",\n')
-                flow_file.write(f"{ind}{ind}{ind}instance_count=1,\n")
-                flow_file.write(f"{ind}{ind}{ind}output_path=self.flow_s3_uri,\n")
-                flow_file.write(f'{ind}{ind}{ind}base_job_name="{step.name}",\n')
+                flow_file.write(f'{ind}{ind}{ind}instance_type = "{train_instance_type}",\n')
+                flow_file.write(f"{ind}{ind}{ind}instance_count = 1,\n")
+                flow_file.write(f"{ind}{ind}{ind}output_path = self.flow_s3_uri,\n")
+                flow_file.write(f'{ind}{ind}{ind}base_job_name = "{step.name}",\n')
                 flow_file.write(
                     f'{ind}{ind}{ind}code_location = f"{{self.flow_s3_uri}}/code",\n'
                 )
