@@ -9,6 +9,7 @@ import _ast
 import ast
 import os
 from pathlib import Path
+from itertools import islice
 
 import nbformat
 import pandas as pd

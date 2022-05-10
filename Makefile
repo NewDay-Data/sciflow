@@ -44,12 +44,14 @@ build:
 	nbdev_test_nbs --pause=3 && \
 	sciflow_tidy && \
 	sciflow_metaflow && \
-	sciflow_check_flows && \
+	sciflow_sagemaker && \
+	sciflow_check_metaflows && \
+	sciflow_check_sagemaker_flows && \
 	echo "Build completed"
     
 run: build
 	source "$${HOME}/.sciflow/env" && \
-	sciflow_run_flows && \
+	sciflow_run_metaflows && \
 	echo "Flow run checks completed"
     
 precommit:
@@ -58,7 +60,9 @@ precommit:
 	sciflow_tidy && \
 	sciflow_clean && \
 	sciflow_metaflow && \
-	sciflow_check_flows && \
+	sciflow_sagemaker && \
+	sciflow_check_metaflows && \
+	sciflow_check_sagemaker_flows && \
 	echo "Precommit checks completed"
 
 release: pypi conda_release

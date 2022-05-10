@@ -130,7 +130,7 @@ def extract_return_var_names(step):
     for l in step.code[results_index:].split("\n"):
         if l.strip().find(":") > -1:
             key_prefix = l.split(":")[0]
-            key = key_prefix[key_prefix.find('{')+1:]
+            key = key_prefix[key_prefix.find("{") + 1 :]
             keys.append(key.strip(' ",'))
     return keys
 
