@@ -177,7 +177,7 @@ def write_pipeline_to_files(
         ind = "    "
         write_params(flow_file, param_meta, ind)
 
-        flow_file.write(f"{ind}args = None\n")
+        flow_file.write(f"{ind}args = []\n")
         flow_file.write(f"{ind}param_types = {dict(zip(param_meta.keys(), [v.instance_type.__name__ for v in param_meta.values()]))}\n")
 
         flow_file.write("\n")
@@ -207,9 +207,9 @@ def write_pipeline_to_files(
         flow_file.write(f"{ind}{ind}{ind}{ind}{ind}if self.param_types[param] == 'int':\n")
         flow_file.write(f"{ind}{ind}{ind}{ind}{ind}{ind}setattr(self, param, ParameterInteger(name=param, default_value=int(arg_val)))\n")
         flow_file.write(f"{ind}{ind}{ind}{ind}{ind}elif self.param_types[param] == 'float':\n")
-        flow_file.write(f"{ind}{ind}{ind}{ind}{ind}{ind}setattr(self, param, ParameterFloat(name=param, default_value=int(arg_val)))\n")
+        flow_file.write(f"{ind}{ind}{ind}{ind}{ind}{ind}setattr(self, param, ParameterFloat(name=param, default_value=float(arg_val)))\n")
         flow_file.write(f"{ind}{ind}{ind}{ind}{ind}elif self.param_types[param] == 'str':\n")
-        flow_file.write(f"{ind}{ind}{ind}{ind}{ind}{ind}setattr(self, param, ParameterString(name=param, default_value=int(arg_val)))\n")
+        flow_file.write(f"{ind}{ind}{ind}{ind}{ind}{ind}setattr(self, param, ParameterString(name=param, default_value=arg_val))\n")
         flow_file.write("\n")
 
         flow_file.write(f"{ind}def get_pipeline(self) -> Pipeline:\n")
