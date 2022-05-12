@@ -55,6 +55,7 @@ run: build
 	echo "Flow run checks completed"
     
 precommit:
+	source "$${HOME}/.sciflow/env" && \
 	sciflow_build_lib && \
 	nbdev_test_nbs --pause=3 && \
 	sciflow_tidy && \

@@ -3,6 +3,7 @@
 __all__ = ["index", "modules", "custom_doc_links", "git_url"]
 
 index = {"clean_cell": "clean.ipynb",
+         "clean_nb": "clean.ipynb",
          "sciflow_clean_nbs": "clean.ipynb",
          "sciflow_clean": "clean.ipynb",
          "supported_parameters": "data_handler.ipynb",
