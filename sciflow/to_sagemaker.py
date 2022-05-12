@@ -3,7 +3,7 @@
 __all__ = ['nb_to_sagemaker_pipeline', 'is_train_step', 'is_processing_step', 'write_pipeline_to_files',
            'write_track_flow', 'write_params', 'write_script_processor', 'extract_step_vars', 'format_job_arguments',
            'format_hyperparams', 'format_arg', 'write_steps', 'write_track_capture', 'format_args',
-           'generate_sagemaker_modules', 'generate_flows', 'sciflow_sagemaker']
+           'generate_sagemaker_modules', 'write_preamble', 'generate_flows', 'sciflow_sagemaker']
 
 # Cell
 
@@ -19,8 +19,13 @@ from nbdev.export import find_default_export, get_config, nbglob, read_nb
 from .data_handler import extract_param_meta
 from .packaging import determine_dependencies
 from .params import params_as_dict
-from .parse_module import FuncDetails, extract_return_var_names, extract_steps
-from .utils import get_flow_path, lib_path
+from .parse_module import (
+    FuncDetails,
+    extract_module_only,
+    extract_return_var_names,
+    extract_steps,
+)
+from .utils import get_flow_path, indent_multiline, lib_path, titleize
 
 # Cell
 
@@ -111,6 +116,8 @@ def write_pipeline_to_files(
     train_image_uri = "368653567616.dkr.ecr.eu-west-1.amazonaws.com/sagemaker-training-custom:conda-env-training"
     train_instance_type = "ml.m5.xlarge"
 
+    config = get_config()
+
     with open(flow_path, "w") as flow_file:
         flow_file.write("#!/usr/bin/env python\n")
         flow_file.write("# coding=utf-8\n")
@@ -178,7 +185,9 @@ def write_pipeline_to_files(
         write_params(flow_file, param_meta, ind)
 
         flow_file.write(f"{ind}args = []\n")
-        flow_file.write(f"{ind}param_types = {dict(zip(param_meta.keys(), [v.instance_type.__name__ for v in param_meta.values()]))}\n")
+        flow_file.write(
+            f"{ind}param_types = {dict(zip(param_meta.keys(), [v.instance_type.__name__ for v in param_meta.values()]))}\n"
+        )
 
         flow_file.write("\n")
         flow_file.write(f"{ind}steps = {[s.name for s in steps]}\n")
@@ -204,12 +213,24 @@ def write_pipeline_to_files(
         flow_file.write(f"{ind}{ind}for arg_key, arg_val in self.args.items():\n")
         flow_file.write(f"{ind}{ind}{ind}for param in self.param_types.keys():\n")
         flow_file.write(f"{ind}{ind}{ind}{ind}if arg_key.strip('-') == param:\n")
-        flow_file.write(f"{ind}{ind}{ind}{ind}{ind}if self.param_types[param] == 'int':\n")
-        flow_file.write(f"{ind}{ind}{ind}{ind}{ind}{ind}setattr(self, param, ParameterInteger(name=param, default_value=int(arg_val)))\n")
-        flow_file.write(f"{ind}{ind}{ind}{ind}{ind}elif self.param_types[param] == 'float':\n")
-        flow_file.write(f"{ind}{ind}{ind}{ind}{ind}{ind}setattr(self, param, ParameterFloat(name=param, default_value=float(arg_val)))\n")
-        flow_file.write(f"{ind}{ind}{ind}{ind}{ind}elif self.param_types[param] == 'str':\n")
-        flow_file.write(f"{ind}{ind}{ind}{ind}{ind}{ind}setattr(self, param, ParameterString(name=param, default_value=arg_val))\n")
+        flow_file.write(
+            f"{ind}{ind}{ind}{ind}{ind}if self.param_types[param] == 'int':\n"
+        )
+        flow_file.write(
+            f"{ind}{ind}{ind}{ind}{ind}{ind}setattr(self, param, ParameterInteger(name=param, default_value=int(arg_val)))\n"
+        )
+        flow_file.write(
+            f"{ind}{ind}{ind}{ind}{ind}elif self.param_types[param] == 'float':\n"
+        )
+        flow_file.write(
+            f"{ind}{ind}{ind}{ind}{ind}{ind}setattr(self, param, ParameterFloat(name=param, default_value=float(arg_val)))\n"
+        )
+        flow_file.write(
+            f"{ind}{ind}{ind}{ind}{ind}elif self.param_types[param] == 'str':\n"
+        )
+        flow_file.write(
+            f"{ind}{ind}{ind}{ind}{ind}{ind}setattr(self, param, ParameterString(name=param, default_value=arg_val))\n"
+        )
         flow_file.write("\n")
 
         flow_file.write(f"{ind}def get_pipeline(self) -> Pipeline:\n")
@@ -318,9 +339,10 @@ def write_pipeline_to_files(
         flow_file.write(f"{ind}{ind}{ind}flow = {pipeline_class_name}()\n")
         flow_file.write(f"{ind}{ind}{ind}if len(sys.argv[2:]) > 0:\n")
         flow_file.write(f"{ind}{ind}{ind}{ind}args = sys.argv[2:]\n")
-        flow_file.write(f"{ind}{ind}{ind}{ind}flow.args = dict(list(zip(args, args[1:]))[::2])\n")
+        flow_file.write(
+            f"{ind}{ind}{ind}{ind}flow.args = dict(list(zip(args, args[1:]))[::2])\n"
+        )
         flow_file.write(f"{ind}{ind}{ind}flow.run()\n")
-
 
         return steps_param_meta, steps_vars
 
@@ -846,6 +868,77 @@ def generate_sagemaker_modules(
             sm_module_file.write(f"{ind}main(**vars(args))\n")
             # write to flow path/step
         print(f"Created sagemaker module: {sm_module_path.name}")
+
+# Cell
+
+
+def write_preamble(step, sm_module_file, ind):
+    sm_module_file.write("\n")
+    sm_module_file.write(
+        f"def download_directory(bucket_name: str, remote_key: str, local_dir: str):\n"
+    )
+    sm_module_file.write(f"{ind}s3_client = boto3.client('s3')\n")
+    sm_module_file.write(f"{ind}s3_res = boto3.resource('s3')\n")
+    sm_module_file.write(f"{ind}if not Path(local_dir).exists():\n")
+    sm_module_file.write(f"{ind}{ind}Path(local_dir).mkdir(parents=True)\n")
+    sm_module_file.write(
+        f"{ind}all_files = [obj.key for obj in s3_res.Bucket(bucket_name).objects.filter(Prefix=remote_key)]\n"
+    )
+    sm_module_file.write(f"{ind}for file in all_files:\n")
+    sm_module_file.write(f"{ind}{ind}file_name = file.split('/')[-1]\n")
+    sm_module_file.write(
+        f"{ind}{ind}s3_client.download_file(bucket_name, file, f'{{local_dir}}/{{file_name}}')\n"
+    )
+    sm_module_file.write("\n")
+
+    sm_module_file.write(
+        f"def add_lib_to_pythonpath(lib_name: str, remote_key: str):\n"
+    )
+    sm_module_file.write(f"{ind}lib_dir = f'/tmp/{{lib_name}}'\n")
+    sm_module_file.write(f"{ind}package_dir = f'{{lib_dir}}/{{lib_name}}'\n")
+    sm_module_file.write(
+        f"{ind}download_directory(os.environ['SCIFLOW_BUCKET'], remote_key, package_dir)\n"
+    )
+    sm_module_file.write(f"{ind}sys.path.append(lib_dir)\n")
+    sm_module_file.write("\n")
+
+    sm_module_file.write(f"def save_results(save_dir, results):\n")
+    sm_module_file.write(f"{ind}if results is not None and len(results) > 0:\n")
+    sm_module_file.write(f"{ind}{ind}for key, value in results.items():\n")
+    sm_module_file.write(
+        f"{ind}{ind}{ind}if isinstance(value, pd.Series) or isinstance(value, pd.DataFrame):\n"
+    )
+    if is_processing_step(step):
+        sm_module_file.write(
+            f'{ind}{ind}{ind}{ind}value.to_parquet(f"{{save_dir}}/{{key}}/{{key}}")\n'
+        )
+    elif is_train_step(step):
+        sm_module_file.write(
+            f'{ind}{ind}{ind}{ind}value.to_parquet(f"{{save_dir}}/{{key}}")\n'
+        )
+    sm_module_file.write(f"{ind}{ind}{ind}else:\n")
+    if is_processing_step(step):
+        sm_module_file.write(
+            f'{ind}{ind}{ind}{ind}with open(f"{{save_dir}}/{{key}}/{{key}}", "wb") as pickle_file:\n'
+        )
+    elif is_train_step(step):
+        sm_module_file.write(
+            f'{ind}{ind}{ind}{ind}with open(f"{{save_dir}}/{{key}}", "wb") as pickle_file:\n'
+        )
+    sm_module_file.write(f"{ind}{ind}{ind}{ind}{ind}pickle.dump(value, pickle_file)\n")
+    # TODO log artifacts & metrics
+    sm_module_file.write("\n")
+
+    sm_module_file.write(f"def load_result(load_dir, result_key):\n")
+    sm_module_file.write(f"{ind}try:\n")
+    sm_module_file.write(
+        f'{ind}{ind}result = pd.read_parquet(f"{{load_dir}}/{{result_key}}")\n'
+    )
+    sm_module_file.write(f"{ind}except:\n")
+    sm_module_file.write(
+        f'{ind}{ind}result = pickle.load( open(f"{{load_dir}}/{{result_key}}", "rb") )\n'
+    )
+    sm_module_file.write(f"{ind}return result")
 
 # Cell
 
