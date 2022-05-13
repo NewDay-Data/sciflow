@@ -4,14 +4,14 @@ __all__ = ['clean_cell', 'clean_nb', 'sciflow_clean_nbs', 'sciflow_clean']
 
 # Cell
 
-import json
 import io
+import json
 from pathlib import Path
 
+import nbdev
 from fastcore.script import Param, bool_arg, call_parse
 from fastcore.utils import ifnone
-from nbdev.clean import rm_execution_count, nb_metadata_keep
-import nbdev
+from nbdev.clean import nb_metadata_keep, rm_execution_count
 from nbdev.export import nbglob, read_nb
 
 from .params import find_params_cell
@@ -41,8 +41,9 @@ def clean_cell(cell, clear_all=False, clear_output=True):
 
 def clean_nb(nb, clear_all=False):
     "Clean `nb` from superfluous metadata, passing `clear_all` to `clean_cell`"
-    for c in nb['cells']: clean_cell(c, clear_all=clear_all)
-    nb['metadata'] = {k:v for k,v in nb['metadata'].items() if k in nb_metadata_keep }
+    for c in nb["cells"]:
+        clean_cell(c, clear_all=clear_all)
+    nb["metadata"] = {k: v for k, v in nb["metadata"].items() if k in nb_metadata_keep}
 
 # Cell
 

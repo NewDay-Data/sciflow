@@ -53,7 +53,11 @@ def lib_path(*lib_relative_path):
 
 def load_nb(nb_path):
     nb = read_nb(nb_path)
-    module_name = find_default_export(nb["cells"]).replace(".", "/")
+    default_export = find_default_export(nb["cells"])
+    if default_export is None:
+        raise ValueError(f"{nb_path.name} does not contain an associated nbdev module")
+
+    module_name = default_export.replace(".", "/")
     module_path = os.path.join(get_config().path("lib_path"), f"{module_name}.py")
     return nb, module_path
 
