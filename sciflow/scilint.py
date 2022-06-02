@@ -247,6 +247,8 @@ def lint_nbs(
         )
     print("*********************End Scilint Report***********************")
 
+    return lint_report
+
 # Cell
 
 
