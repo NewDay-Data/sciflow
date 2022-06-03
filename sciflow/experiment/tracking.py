@@ -5,16 +5,30 @@ __all__ = ['StepTracker']
 # Cell
 
 
-from sacred.stdout_capturing import get_stdcapturer
-from sacred.utils import SacredInterrupt, join_paths, IntervalTimer
 import datetime
+
+from sacred.stdout_capturing import get_stdcapturer
+from sacred.utils import IntervalTimer
+from ..s3_utils import (
+    delete_dir,
+    is_valid_bucket,
+    list_s3_subdirs,
+    objects_exist_in_dir,
+    s3_join,
+)
+import boto3
+import json
+from sacred.serializer import flatten
 
 # Cell
 
-class StepTracker():
-    def __init__(self, flow_base_uri, flow_run_id, step_name, capture_mode = "sys"):
+
+class StepTracker:
+    def __init__(self, bucket_name, flow_base_uri, flow_run_id, step_name, capture_mode="sys", region="eu-west-1"):
+        self.bucket_name = bucket_name
         self.flow_base_uri = flow_base_uri
         self.flow_run_id = flow_run_id
+        self.exp_base_key = s3_join(self.flow_base_uri, "experiment")
         self.step_name = step_name
         self.capture_mode = capture_mode
         self._stop_heartbeat_event = None
@@ -23,10 +37,26 @@ class StepTracker():
         self.captured_out = None
         self.saved_metrics = {}
 
+        if region is not None:
+            self.region = region
+            self.s3 = boto3.resource("s3", region_name=region)
+        else:
+            session = boto3.session.Session()
+            if session.region_name is not None:
+                self.region = session.region_name
+                self.s3 = boto3.resource("s3")
+            else:
+                raise ValueError(
+                    "You must either pass in an AWS region name, or have a "
+                    "region name specified in your AWS config file"
+                )
+
+        self.init_dirs()
+
     def start_heartbeat(self):
         print("Starting Heartbeat")
         self._stop_heartbeat_event, self._heartbeat = IntervalTimer.create(
-                _emit_heartbeat
+            _emit_heartbeat
         )
         self._heartbeat.start()
 
@@ -37,8 +67,7 @@ class StepTracker():
             self._heartbeat.join(timeout=2)
 
     def capture_out(self):
-        #
-        # TODO figure out why only sys seems to work in Sagemaker
+        # TODO figure out why only "sys" seems to work in Sagemaker? - tee is installed
         _, capture_stdout = get_stdcapturer(self.capture_mode)
         return capture_stdout()
 
@@ -52,7 +81,7 @@ class StepTracker():
             text = self.captured_out + text
         self.captured_out = text
 
-    def log_metrics(self, metrics_by_name, info):
+    def log_metrics(self, metrics_by_name):
         """Store new measurements into metrics.json."""
         for metric_name, metric_ptr in metrics_by_name.items():
 
@@ -65,15 +94,16 @@ class StepTracker():
 
             self.saved_metrics[metric_name]["values"] += metric_ptr["values"]
             self.saved_metrics[metric_name]["steps"] += metric_ptr["steps"]
-
             timestamps_norm = [ts.isoformat() for ts in metric_ptr["timestamps"]]
             self.saved_metrics[metric_name]["timestamps"] += timestamps_norm
+        print(self.saved_metrics)
+        print(self.metrics_dir)
+        self.save_json(self.metrics_dir, self.saved_metrics, "metrics.json")
 
-        self.save_json(self.saved_metrics, "metrics.json")
-
-    def add_artifact(self, name, filename, metadata=None, content_type=None):
-        self.save_file(self.artifacts_dir, filename, name)
-        self.run_entry["artifacts"].append(name)
+    def add_artifacts(self, artifacts):
+        for name, filepath in artifacts:
+            self.save_file(self.artifacts_dir, filepath, name)
+            self.run_entry["artifacts"].append(name)
         self.save_json(self.runs_dir, self.run_entry, "run.json")
 
     def _emit_heartbeat(self):
@@ -82,31 +112,87 @@ class StepTracker():
         logged_metrics = self._metrics.get_last_metrics()
         metrics_by_name = linearize_metrics(logged_metrics)
         self.log_metrics(metrics_by_name, self.info)
-        self.heartbeat_event()
-
-    def heartbeat_event(self):
         beat_time = datetime.datetime.utcnow()
         self.run_entry["heartbeat"] = beat_time.isoformat()
         self.run_entry["captured_out"] = self.get_captured_out()
         self.run_entry["result"] = self.result
         self.save_json(self.runs_dir, self.run_entry, "run.json")
 
+    def put_data(self, key, binary_data):
+        self.s3.Object(self.bucket_name, key).put(Body=binary_data)
+
+    def save_json(self, table_dir, obj, filename):
+        key = s3_join(table_dir, filename)
+        print("save_json", key)
+        self.put_data(key, json.dumps(flatten(obj), sort_keys=True, indent=2))
+
+    def save_file(self, file_save_dir, filename, target_name=None):
+        target_name = target_name or os.path.basename(filename)
+        key = s3_join(file_save_dir, target_name)
+        self.put_data(key, open(filename, "rb"))
+
+    def save_sources(self, ex_info):
+        base_dir = ex_info["base_dir"]
+        source_info = []
+        for s, m in ex_info["sources"]:
+            abspath = os.path.join(base_dir, s)
+            store_path, md5sum = self.find_or_save(abspath, self.source_dir)
+            source_info.append(
+                [s, os.path.relpath(store_path, self.experiments_key_prefix)]
+            )
+        return source_info
+
+    def find_or_save(self, filename, store_dir):
+        source_name, ext = os.path.splitext(os.path.basename(filename))
+        md5sum = get_digest(filename)
+        store_name = source_name + "_" + md5sum + ext
+        store_path = s3_join(store_dir, store_name)
+        if len(list_s3_subdirs(self.s3, self.bucket_name, prefix=store_path)) == 0:
+            self.save_file(self.source_dir, filename, store_path)
+        return store_path, md5sum
+
+    def init_dirs(self):
+        self.runs_dir = s3_join(self.exp_base_key, "runs")
+        self.metrics_dir = s3_join(self.exp_base_key, "metrics")
+        self.artifacts_dir = s3_join(self.exp_base_key, "artifacts")
+        self.resource_dir = s3_join(self.exp_base_key, "resources")
+        self.source_dir = s3_join(self.exp_base_key, "sources")
+
+        self.dirs = (
+            self.runs_dir,
+            self.metrics_dir,
+            self.artifacts_dir,
+            self.resource_dir,
+            self.source_dir,
+        )
+#         for dir_to_check in self.dirs:
+#             if objects_exist_in_dir(self.s3, self.bucket_name, dir_to_check):
+#                 raise FileExistsError(
+#                     "S3 dir at {}/{} already exists; check your run_id is unique".format(
+#                         self.bucket_name, dir_to_check
+#                     )
+#                 )
+
 # Cell
+
 
 def _emit_started(flow_run_id):
     pass
 
 # Cell
 
+
 def _emit_interrupted(flow_run_id):
     pass
 
 # Cell
 
+
 def _emit_failed(flow_run_id):
     pass
 
 # Cell
+
 
 def _emit_completed(flow_run_id):
     pass
