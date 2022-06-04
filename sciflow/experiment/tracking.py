@@ -6,29 +6,39 @@ __all__ = ['StepTracker']
 
 
 import datetime
+import json
+import uuid
 
+import boto3
+from sacred.serializer import flatten
 from sacred.stdout_capturing import get_stdcapturer
 from sacred.utils import IntervalTimer
+
 from ..s3_utils import (
-    delete_dir,
-    is_valid_bucket,
     list_s3_subdirs,
-    objects_exist_in_dir,
     s3_join,
+    list_bucket,
+    delete_dir,
+    objects_exist_in_dir
 )
-import boto3
-import json
-from sacred.serializer import flatten
 
 # Cell
 
 
 class StepTracker:
-    def __init__(self, bucket_name, flow_base_uri, flow_run_id, step_name, capture_mode="sys", region="eu-west-1"):
+    def __init__(
+        self,
+        bucket_name,
+        flow_base_key,
+        flow_run_id,
+        step_name,
+        capture_mode="sys",
+        region="eu-west-1",
+    ):
         self.bucket_name = bucket_name
-        self.flow_base_uri = flow_base_uri
+        self.flow_base_key = flow_base_key
         self.flow_run_id = flow_run_id
-        self.exp_base_key = s3_join(self.flow_base_uri, "experiment")
+        self.exp_base_key = s3_join(flow_base_key, flow_run_id, "experiment")
         self.step_name = step_name
         self.capture_mode = capture_mode
         self._stop_heartbeat_event = None
@@ -51,7 +61,7 @@ class StepTracker:
                     "region name specified in your AWS config file"
                 )
 
-        self.init_dirs()
+        self.init_keys()
 
     def start_heartbeat(self):
         print("Starting Heartbeat")
@@ -96,15 +106,13 @@ class StepTracker:
             self.saved_metrics[metric_name]["steps"] += metric_ptr["steps"]
             timestamps_norm = [ts.isoformat() for ts in metric_ptr["timestamps"]]
             self.saved_metrics[metric_name]["timestamps"] += timestamps_norm
-        print(self.saved_metrics)
-        print(self.metrics_dir)
-        self.save_json(self.metrics_dir, self.saved_metrics, "metrics.json")
+        self.save_json(self.metrics_key, self.saved_metrics, "metrics.json")
 
     def add_artifacts(self, artifacts):
         for name, filepath in artifacts:
-            self.save_file(self.artifacts_dir, filepath, name)
+            self.save_file(self.artifacts_key, filepath, name)
             self.run_entry["artifacts"].append(name)
-        self.save_json(self.runs_dir, self.run_entry, "run.json")
+        self.save_json(self.runs_key, self.run_entry, "run.json")
 
     def _emit_heartbeat(self):
         self.get_captured_out()
@@ -116,14 +124,13 @@ class StepTracker:
         self.run_entry["heartbeat"] = beat_time.isoformat()
         self.run_entry["captured_out"] = self.get_captured_out()
         self.run_entry["result"] = self.result
-        self.save_json(self.runs_dir, self.run_entry, "run.json")
+        self.save_json(self.runs_key, self.run_entry, "run.json")
 
     def put_data(self, key, binary_data):
         self.s3.Object(self.bucket_name, key).put(Body=binary_data)
 
     def save_json(self, table_dir, obj, filename):
         key = s3_join(table_dir, filename)
-        print("save_json", key)
         self.put_data(key, json.dumps(flatten(obj), sort_keys=True, indent=2))
 
     def save_file(self, file_save_dir, filename, target_name=None):
@@ -136,7 +143,7 @@ class StepTracker:
         source_info = []
         for s, m in ex_info["sources"]:
             abspath = os.path.join(base_dir, s)
-            store_path, md5sum = self.find_or_save(abspath, self.source_dir)
+            store_path, md5sum = self.find_or_save(abspath, self.source_key)
             source_info.append(
                 [s, os.path.relpath(store_path, self.experiments_key_prefix)]
             )
@@ -148,30 +155,26 @@ class StepTracker:
         store_name = source_name + "_" + md5sum + ext
         store_path = s3_join(store_dir, store_name)
         if len(list_s3_subdirs(self.s3, self.bucket_name, prefix=store_path)) == 0:
-            self.save_file(self.source_dir, filename, store_path)
+            self.save_file(self.source_key, filename, store_path)
         return store_path, md5sum
 
-    def init_dirs(self):
-        self.runs_dir = s3_join(self.exp_base_key, "runs")
-        self.metrics_dir = s3_join(self.exp_base_key, "metrics")
-        self.artifacts_dir = s3_join(self.exp_base_key, "artifacts")
-        self.resource_dir = s3_join(self.exp_base_key, "resources")
-        self.source_dir = s3_join(self.exp_base_key, "sources")
+    def init_keys(self):
+        self.runs_key = s3_join(self.exp_base_key, "runs")
+        self.metrics_key = s3_join(self.exp_base_key, "metrics")
+        self.artifacts_key = s3_join(self.exp_base_key, "artifacts")
+        self.resource_key = s3_join(self.exp_base_key, "resources")
+        self.source_key = s3_join(self.exp_base_key, "sources")
 
-        self.dirs = (
-            self.runs_dir,
-            self.metrics_dir,
-            self.artifacts_dir,
-            self.resource_dir,
-            self.source_dir,
+        self.keys = (
+            self.runs_key,
+            self.metrics_key,
+            self.artifacts_key,
+            self.resource_key,
+            self.source_key,
         )
-#         for dir_to_check in self.dirs:
-#             if objects_exist_in_dir(self.s3, self.bucket_name, dir_to_check):
-#                 raise FileExistsError(
-#                     "S3 dir at {}/{} already exists; check your run_id is unique".format(
-#                         self.bucket_name, dir_to_check
-#                     )
-#                 )
+        for key_to_check in self.keys:
+            if objects_exist_in_dir(self.s3, self.bucket_name, key_to_check):
+                raise FileExistsError(f"S3 dir at {self.bucket_name}/{key_to_check} already exists; check your run_id is unique")
 
 # Cell
 
