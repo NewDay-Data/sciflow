@@ -7,33 +7,30 @@ __all__ = ['save_json', 'tracking_started', 'tracking_interrupted', 'tracking_fa
 
 
 import datetime
-from datetime import timedelta
 import json
 import socket
+import tempfile
 import time
 import uuid
 from pathlib import Path
-import tempfile
+import traceback as tb
 
-import pandas as pd
 import boto3
-from botocore.exceptions import ClientError
 import pandas as pd
 from sacred import metrics_logger
 from sacred.host_info import get_host_info
 from sacred.serializer import flatten
 from sacred.stdout_capturing import get_stdcapturer
 from sacred.utils import IntervalTimer
-from ..utils import prepare_env
 
 from ..s3_utils import (
     delete_dir,
     list_bucket,
-    objects_exist_in_dir,
+    load_json,
     put_data,
     s3_join,
-    load_json
 )
+from ..utils import prepare_env
 
 # Cell
 
@@ -82,12 +79,16 @@ def tracking_started(s3_res, bucket_name, flow_base_key, flow_run_id):
 # Cell
 
 
-def _tracking_event(s3_res, bucket_name, flow_base_key, flow_run_id, event_status):
+def _tracking_event(s3_res, bucket_name, flow_base_key, flow_run_id, event_status, except_info = None):
     run_entry_key = s3_join(flow_base_key, flow_run_id, "experiment", "runs")
     run_entry = load_json(s3_res, bucket_name, s3_join(run_entry_key, "run.json"))
     run_entry["status"] = event_status
     run_entry["stop_time"] = time.time()
-    run_entry["elapsed_time"] = round(run_entry["stop_time"] - run_entry["start_time"], 2)
+    run_entry["elapsed_time"] = round(
+        run_entry["stop_time"] - run_entry["start_time"], 2
+    )
+    if except_info is not None:
+        run_entry["fail_trace"] = tb.format_exception(except_info["exc_type"], except_info["exc_value"], except_info["trace"])
     save_json(s3_res, bucket_name, run_entry_key, "run.json", run_entry)
 
 # Cell
@@ -100,8 +101,8 @@ def tracking_interrupted(s3_res, bucket_name, flow_base_key, flow_run_id):
 # Cell
 
 
-def tracking_failed(s3_res, bucket_name, flow_base_key, flow_run_id):
-    _tracking_event(s3_res, bucket_name, flow_base_key, flow_run_id, "FAILED")
+def tracking_failed(s3_res, bucket_name, flow_base_key, flow_run_id, except_info):
+    _tracking_event(s3_res, bucket_name, flow_base_key, flow_run_id, "FAILED", except_info)
     print(f"Flow tracking failed: {flow_run_id}")
 
 # Cell
@@ -139,7 +140,11 @@ class StepTracker(SciflowTracker):
         self.info = {}
         self.result = None
 
-        self.flow_start_run_entry = load_json(s3_res, bucket_name, s3_join(self.exp_base_key, "runs", "flow_start_run.json"))
+        self.flow_start_run_entry = load_json(
+            s3_res,
+            bucket_name,
+            s3_join(self.exp_base_key, "runs", "flow_start_run.json"),
+        )
         self.run_entry = self.flow_start_run_entry
         self.run_entry["all_hosts"][socket.gethostname()] = get_host_info()
 
@@ -216,7 +221,11 @@ class StepTracker(SciflowTracker):
             self.s3_res, self.bucket_name, self.runs_key, "run.json", self.run_entry
         )
         save_json(
-            self.s3_res, self.bucket_name, self.runs_key, f"step_{self.step_name}.json", self.run_entry
+            self.s3_res,
+            self.bucket_name,
+            self.runs_key,
+            f"step_{self.step_name}.json",
+            self.run_entry,
         )
 
     def _emit_heartbeat(self):
@@ -229,18 +238,28 @@ class StepTracker(SciflowTracker):
             self.s3_res, self.bucket_name, self.runs_key, "run.json", self.run_entry
         )
         save_json(
-            self.s3_res, self.bucket_name, self.runs_key, f"step_{self.step_name}.json", self.run_entry
+            self.s3_res,
+            self.bucket_name,
+            self.runs_key,
+            f"step_{self.step_name}.json",
+            self.run_entry,
         )
 
-    def complete_step_tracking(self):
+    def complete_step_tracking(self, status = "COMPLETED", except_info = None):
         self.run_entry["captured_out"] = self.get_captured_out()
         self.run_entry["result"] = self.result
         save_json(
             self.s3_res, self.bucket_name, self.runs_key, "run.json", self.run_entry
         )
-        self.run_entry["status"] = "COMPLETED"
+        self.run_entry["status"] = status
+        if except_info is not None:
+            self.run_entry["fail_trace"] = tb.format_exception(except_info["exc_type"], except_info["exc_value"], except_info["trace"])
         save_json(
-            self.s3_res, self.bucket_name, self.runs_key, f"step_{self.step_name}.json", self.run_entry
+            self.s3_res,
+            self.bucket_name,
+            self.runs_key,
+            f"step_{self.step_name}.json",
+            self.run_entry,
         )
 
     def save_file(self, file_save_dir, filename, target_name=None):
@@ -262,3 +281,8 @@ class StepTracker(SciflowTracker):
             self.resource_key,
             self.source_key,
         )
+
+    def finish(self, status = "COMPLETED", except_info = None):
+        self.stop_heartbeat()
+        self.get_captured_out()
+        self.complete_step_tracking(status)

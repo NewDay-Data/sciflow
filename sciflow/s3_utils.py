@@ -5,12 +5,12 @@ __all__ = ['is_valid_bucket', 's3_join', 'objects_exist_in_dir', 'delete_dir', '
 
 # Cell
 
+import json
 import os
 import re
 import socket
 import uuid
 from pathlib import Path
-import json
 
 import boto3
 from botocore.client import Config
@@ -109,7 +109,7 @@ def put_data(s3_res, bucket_name, key, binary_data):
 
 def load_json(s3_res, bucket_name, key):
     obj = s3_res.Object(bucket_name, key)
-    return json.load(obj.get()['Body'])
+    return json.load(obj.get()["Body"])
 
 # Cell
 
