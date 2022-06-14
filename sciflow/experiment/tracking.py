@@ -7,13 +7,12 @@ __all__ = ['save_json', 'FlowTracker', 'StepTracker']
 
 import datetime
 import json
-import socket
+import sys
 import tempfile
 import time
 import traceback as tb
 import uuid
 from pathlib import Path
-import sys
 
 import boto3
 import pandas as pd
@@ -23,11 +22,12 @@ from sacred.serializer import flatten
 from sacred.stdout_capturing import get_stdcapturer
 from sacred.utils import IntervalTimer
 
-from ..s3_utils import delete_dir, list_bucket, load_json, put_data, s3_join
+from ..s3_utils import list_bucket, load_json, put_data, s3_join
 from ..utils import prepare_env
 
 # Cell
 # TODO replace the sacred flatten function and mvoe to s3_utils - needs a jsonpickle serialiser
+
 
 def save_json(s3_res, bucket_name, key, filename, obj):
     key = s3_join(key, filename)
@@ -37,16 +37,19 @@ def save_json(s3_res, bucket_name, key, filename, obj):
 
 # Cell
 
+
 class FlowTracker:
-    def __init__(self, bucket_name, flow_base_key, flow_run_id, steps, region = "eu-west-1"):
+    def __init__(
+        self, bucket_name, flow_base_key, flow_run_id, steps, region="eu-west-1"
+    ):
         self.bucket_name = bucket_name
         self.flow_base_key = flow_base_key
         self.flow_run_id = flow_run_id
         self.steps = steps
 
         if region is not None:
-                self.region = region
-                self.s3_res = boto3.resource("s3", region_name=region)
+            self.region = region
+            self.s3_res = boto3.resource("s3", region_name=region)
         else:
             session = boto3.session.Session()
             if session.region_name is not None:
@@ -59,9 +62,7 @@ class FlowTracker:
                 )
 
         self.run_entry_key = s3_join(flow_base_key, flow_run_id, "experiment", "runs")
-        self.metrics_table_key = s3_join(flow_base_key, "metrics", flow_run_id)
-        self.runs_table_key = s3_join(flow_base_key, "runs", flow_run_id)
-        self.artifacts_table_key = s3_join(flow_base_key, "artifacts", flow_run_id)
+        self.runs_table_key = s3_join(flow_base_key, "experiments", "runs", flow_run_id)
 
     def start(self, params=None):
         host_info = get_host_info()
@@ -84,7 +85,9 @@ class FlowTracker:
         }
 
         save_json(s3_res, bucket_name, self.run_entry_key, "run.json", run_entry)
-        save_json(s3_res, bucket_name, self.run_entry_key, "flow_start_run.json", run_entry)
+        save_json(
+            s3_res, bucket_name, self.run_entry_key, "flow_start_run.json", run_entry
+        )
         save_json(s3_res, bucket_name, self.runs_table_key, "run.json", run_entry)
         print(f"Started tracking flow: {flow_run_id}")
 
@@ -101,7 +104,9 @@ class FlowTracker:
         print(f"Flow tracking completed: {flow_run_id}")
 
     def _tracking_event(self, event_status, except_info=None):
-        run_entry = load_json(self.s3_res, self.bucket_name, s3_join(self.run_entry_key, "run.json"))
+        run_entry = load_json(
+            self.s3_res, self.bucket_name, s3_join(self.run_entry_key, "run.json")
+        )
         run_entry["status"] = event_status
         run_entry["stop_time"] = time.time()
         run_entry["elapsed_time"] = round(
@@ -121,9 +126,15 @@ class FlowTracker:
         captured_out = ""
         step_entries = {}
         for step in steps:
-            step_entry = load_json(self.s3_res, self.bucket_name, s3_join(self.run_entry_key, f"step_{step}.json"))
+            step_entry = load_json(
+                self.s3_res,
+                self.bucket_name,
+                s3_join(self.run_entry_key, f"step_{step}.json"),
+            )
             all_hosts[step] = step_entry["host"]
-            step_out = "" if step_entry["captured_out"] is None else step_entry["captured_out"]
+            step_out = (
+                "" if step_entry["captured_out"] is None else step_entry["captured_out"]
+            )
             captured_out += f"******BEGIN step: {step}******\n"
             captured_out += step_out
             captured_out += f"******END step: {step}******\n"
@@ -234,10 +245,18 @@ class StepTracker(SciflowTracker):
             "metrics.json",
             self.saved_metrics,
         )
+        save_json(
+            self.s3_res,
+            self.bucket_name,
+            self.metrics_table_key,
+            "metrics.json",
+            self.saved_metrics,
+        )
 
     def add_artifact(self, artifact_path):
         name = Path(artifact_path).name
         self.save_file(self.artifacts_key, artifact_path, name)
+        self.save_file(self.artifacts_table_key, artifact_path, name)
         self.run_entry["artifacts"].append(name)
         save_json(
             self.s3_res, self.bucket_name, self.runs_key, "run.json", self.run_entry
@@ -304,6 +323,12 @@ class StepTracker(SciflowTracker):
         self.artifacts_key = s3_join(self.exp_base_key, "artifacts")
         self.resource_key = s3_join(self.exp_base_key, "resources")
         self.source_key = s3_join(self.exp_base_key, "sources")
+        self.metrics_table_key = s3_join(
+            self.flow_base_key, "experiments", "metrics", flow_run_id
+        )
+        self.artifacts_table_key = s3_join(
+            self.flow_base_key, "experiments", "artifacts", flow_run_id
+        )
 
         self.keys = (
             self.runs_key,
