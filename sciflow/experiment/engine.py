@@ -6,20 +6,22 @@ __all__ = ['MAX_CACHE_SIZE', 'ExperimentEngine']
 
 import json
 import os
-import uuid
 from functools import lru_cache
 from typing import Tuple
+import datetime
+import uuid
+import tempfile
 
-import boto3
 import numpy as np
-import pandas as pd
-from pandas.io.sql import DatabaseError
+import boto3
 from tinydb import Query, TinyDB
 from tinydb.storages import MemoryStorage
+from pandas.io.sql import DatabaseError
 
-from .lake_experiment import CSVArtifact, LakeExperiment
-from ..s3_utils import delete_dir
+from .lake_experiment import LakeExperiment, Artifact, CSVArtifact, ImageArtifact
 from ..utils import odbc_connect, prepare_env, query
+from .tracking import FlowTracker, StepTracker
+from .lake_experiment import create_experiment_test_data
 
 MAX_CACHE_SIZE = 32
 
@@ -27,13 +29,13 @@ MAX_CACHE_SIZE = 32
 class ExperimentEngine:
     def __init__(
         self,
-        project,
-        experiments_key_prefix=None,
+        base_key,
+        experiments_key=None,
         connection=None,
         bucket_name=None,
         bucket_table_alias=None,
     ):
-        self.project = '"' + project + '"'
+        self.base_key = '"' + base_key + '"'
         self.connection = odbc_connect() if connection is None else connection
         self.bucket_name = (
             os.environ["SCIFLOW_BUCKET"] if bucket_name is None else bucket_name
@@ -43,36 +45,26 @@ class ExperimentEngine:
             if bucket_table_alias is None
             else bucket_table_alias
         )
-        self.experiments_key_prefix = (
-            f"{project}/experiments"
-            if experiments_key_prefix is None
-            else experiments_key_prefix
+        self.experiments_key = (
+            f"{base_key}/experiments"
+            if experiments_key is None
+            else experiments_key
         )
-        table_path = f"{self.project}.experiments"
+        table_path = f"{self.base_key}.experiments"
         self.table_context = f"{self.bucket_table_alias}.{table_path}"
-        self.remote_path = (
-            f"{self.bucket_name}/{self.experiments_key_prefix}"
-        )
+        self.remote_path = f"{self.bucket_name}/{self.experiments_key}"
         self.lake_table = f"{self.table_context}"
 
-        print(self.bucket_table_alias)
-        print(self.experiments_key_prefix)
-        print(table_path)
-        print(self.table_context)
-        print(self.remote_path)
-        print(self.lake_table)
-
-
-    @lru_cache(maxsize=MAX_CACHE_SIZE)
+#    @lru_cache(maxsize=MAX_CACHE_SIZE)
     def _find(
         self,
         experiment_ids=None,
         experiment_id: str = None,
+        experiment_name: str = None,
         order_by: str = None,
         limit: int = None,
     ) -> LakeExperiment:
         table_name = f"{self.table_context}.runs"
-        print("_find", table_name)
         # TODO Dremio Specific code in utils.py
         data = query(self.connection, f"ALTER TABLE {table_name} REFRESH METADATA")
 
@@ -83,7 +75,10 @@ class ExperimentEngine:
                 f" where dir0 IN {tuple('{}'.format(x) for x in experiment_ids)}"
             )
         if experiment_id:
-            query_stmt += f" where dir0 = '{experiment_id}'"
+            query_stmt += f" where dir0 = '{str(experiment_id)}'"
+        # TODO add find by name
+#         elif experiment_name:
+#             query_stmt += f" where name = '{experiment_name}'"
         if order_by:
             query_stmt += f" order by {order_by} desc"
         if limit:
@@ -92,40 +87,40 @@ class ExperimentEngine:
         experiments = [
             LakeExperiment(
                 self.bucket_name,
-                self.experiments_key_prefix,
-                experiment_name,
+                self.experiments_key,
                 ex_id,
                 data.iloc[i, :].to_dict()["start_time"],
                 data.iloc[i, :].to_dict(),
+                experiment_name
             )
             for i, ex_id in enumerate(data.dir0.tolist())
-        ]
+        ] # bucket_name, base_key, experiment_id, start_time, data, name
         return experiments
 
-    @lru_cache(maxsize=MAX_CACHE_SIZE)
+#    @lru_cache(maxsize=MAX_CACHE_SIZE)
     def find_by_id(self, experiment_id):
-        experiments = self._find(experiment_id=experiment_id)
+        experiments = self._find(experiment_id=str(experiment_id))
         return None if len(experiments) == 0 else experiments[0]
 
-    @lru_cache(maxsize=MAX_CACHE_SIZE)
+#    @lru_cache(maxsize=MAX_CACHE_SIZE)
     def find_by_ids(self, experiment_ids: Tuple[str]):
         if len(experiment_ids) == 1:
             raise ValueError("Use find_by_id for a single experiment")
         return self._find(experiment_ids=experiment_ids)
 
-    @lru_cache(maxsize=MAX_CACHE_SIZE)
+#    @lru_cache(maxsize=MAX_CACHE_SIZE)
     def find_latest(self, n=5):
         return self._find(order_by="start_time", limit=n)
 
-    @lru_cache(maxsize=MAX_CACHE_SIZE)
+#    @lru_cache(maxsize=MAX_CACHE_SIZE)
     def find_all(self):
         return self._find()
 
-    @lru_cache(maxsize=MAX_CACHE_SIZE)
-    def find_by_name(self, experiment_name):
+#    @lru_cache(maxsize=MAX_CACHE_SIZE)
+    def find_by_name(self, name):
         result = None
         try:
-            result = self._find(experiment_name=experiment_name)
+            result = self._find(experiment_name=name)
         except PermissionError:
             print(f"File not found or access not granted; check path information")
         return result
@@ -163,7 +158,7 @@ class ExperimentEngine:
 
     def __repr__(self):
         return (
-            f"Project: {self.project}\n"
+            f"Base Key: {self.base_key}\n"
             f"Remote Path: {self.remote_path}\n"
             f"Lake Table: {self.lake_table}"
         )
