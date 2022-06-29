@@ -4,17 +4,18 @@ __all__ = ['file_to_mime_type_map', 'Artifact', 'ImageArtifact', 'MP4Artifact', 
            'PDFArtifact', 'content_type_to_artifact_cls', 'LakeExperiment', 'create_experiment_test_data']
 
 # Cell
+import datetime
+import json
+
+# export
 import os
-from typing import Dict
 import pickle
+import tempfile
+import uuid
 import warnings
 from copy import copy
-from typing import Set
-import datetime
-import uuid
-import tempfile
 from pathlib import Path
-import json
+from typing import Dict, Set
 
 import boto3
 import pandas as pd
@@ -22,7 +23,7 @@ from IPython import display
 from IPython.display import HTML, IFrame
 from pyrsistent import freeze, thaw
 
-from ..s3_utils import S3File, s3_join, load_json, put_data
+from ..s3_utils import S3File, load_json, put_data, s3_join
 from ..utils import prepare_env
 
 # Cell
@@ -174,7 +175,6 @@ class PDFArtifact(Artifact):
         return IFrame(self._make_filename(), width=600, height=300)
 
 
-
 content_type_to_artifact_cls = {}
 for cls in copy(locals()).values():
     if isinstance(cls, type) and issubclass(cls, Artifact):
@@ -186,7 +186,7 @@ for cls in copy(locals()).values():
 
 class LakeExperiment:
     def __init__(
-        self, bucket_name, base_key, experiment_id, start_time, data, name = None
+        self, bucket_name, base_key, experiment_id, start_time, data, name=None
     ):
         self.bucket_name = bucket_name
         self.base_key = base_key
@@ -196,7 +196,7 @@ class LakeExperiment:
         self.start_time = start_time
         self._data = freeze(data)
         # TODO is a name needed?
-        #self.name = self.experiment_id if name is None else name
+        # self.name = self.experiment_id if name is None else name
         self.name = name
         self.s3_res = boto3.resource("s3")
         self.bucket = self.s3_res.Bucket(self.bucket_name)
@@ -225,7 +225,9 @@ class LakeExperiment:
         ]
 
         for artifact_key in artifact_keys:
-            s3_object = self.s3_res.Object(bucket_name=self.bucket_name, key=artifact_key)
+            s3_object = self.s3_res.Object(
+                bucket_name=self.bucket_name, key=artifact_key
+            )
             artifact_file = S3File(s3_object)
             name = os.path.basename(artifact_key)
 
@@ -269,7 +271,9 @@ class LakeExperiment:
 # Cell
 
 
-def create_experiment_test_data(s3_res, s3_client, bucket_name, base_key, experiment_id):
+def create_experiment_test_data(
+    s3_res, s3_client, bucket_name, base_key, experiment_id
+):
     metrics_key = f"{base_key}/experiments/metrics"
     artifacts_key = f"{base_key}/experiments/artifacts"
     runs_key = f"{base_key}/experiments/runs"
@@ -285,61 +289,70 @@ def create_experiment_test_data(s3_res, s3_client, bucket_name, base_key, experi
         pickle_path = f"{temp_dir}/testfile.pkl"
         df.to_pickle(pickle_path)
         for artifact_path in (csv_path, pdf_path, pickle_path):
-            s3_client.upload_file(artifact_path, bucket_name, s3_join(artifacts_key, experiment_id, Path(artifact_path).name))
+            s3_client.upload_file(
+                artifact_path,
+                bucket_name,
+                s3_join(artifacts_key, experiment_id, Path(artifact_path).name),
+            )
 
     metrics = {
-      "f1": {
-        "steps": [
-          0,
-          1,
-        ],
-        "timestamps": [
-          "2022-06-09T19:02:33.778171",
-          "2022-06-09T19:02:34.014545",
-        ],
-        "values": [
-          0.37,
-          0.45
-        ]
-      },
+        "f1": {
+            "steps": [
+                0,
+                1,
+            ],
+            "timestamps": [
+                "2022-06-09T19:02:33.778171",
+                "2022-06-09T19:02:34.014545",
+            ],
+            "values": [0.37, 0.45],
+        },
         "precision": {
-        "steps": [
-          0,
-          1,
-          2,
-        ],
-        "timestamps": [
-          "2022-06-09T19:02:33.778171",
-          "2022-06-09T19:02:34.014545",
-          "2022-06-09T19:02:34.014545"
-        ],
-        "values": [
-          0.37,
-          0.45,
-          0.89
-        ]
-      }
+            "steps": [
+                0,
+                1,
+                2,
+            ],
+            "timestamps": [
+                "2022-06-09T19:02:33.778171",
+                "2022-06-09T19:02:34.014545",
+                "2022-06-09T19:02:34.014545",
+            ],
+            "values": [0.37, 0.45, 0.89],
+        },
     }
 
-    put_data(s3_res, bucket_name, s3_join(metrics_key, experiment_id, "metrics.json"), json.dumps(metrics))
+    put_data(
+        s3_res,
+        bucket_name,
+        s3_join(metrics_key, experiment_id, "metrics.json"),
+        json.dumps(metrics),
+    )
 
-    experiment_data = {'meta': '{ }',
-     'steps': '[ "experiment-test" ]',
-     'start_time': 1654801353.1519804,
-     'heartbeat': None,
-     'status': 'COMPLETED',
-     'host': '{\n  "ENV" : { },\n  "cpu" : "777 CPU @ 9.99GHz",\n  "hostname" : "sciflow",\n  "os" : [ "Linux", "Linux-5.555-555" ],\n  "python_version" : "3.9.0"\n}',
-     'dir0': 'sample_flow_instance_3eadd8',
-     'stop_time': 1654801361.0863302,
-     'captured_out': '******BEGIN step: experiment-test******\n******END step: experiment-test******\n',
-     'resources': '[ ]',
-     'artifacts': '[ "testfile.csv", "testfile.pdf", "testfile.pkl" ]',
-     'elapsed_time': 7.93,
-     'info': '{ }',
-     'all_hosts': '{\n  "experiment-test" : {\n    "ENV" : { },\n    "cpu" : "777 CPU @ 9.99GHz",\n    "hostname" : "sciflow",\n    "os" : [ "Linux", "Linux-5.555-555" ],\n    "python_version" : "3.9.0"\n  }\n}',
-     'experiment': '{ }',
-     'experiment_id': 'sample_flow_instance_3eadd8'}
+    experiment_data = {
+        "meta": "{ }",
+        "steps": '[ "experiment-test" ]',
+        "start_time": 1654801353.1519804,
+        "heartbeat": None,
+        "status": "COMPLETED",
+        "host": '{\n  "ENV" : { },\n  "cpu" : "777 CPU @ 9.99GHz",\n  "hostname" : "sciflow",\n  "os" : [ "Linux", "Linux-5.555-555" ],\n  "python_version" : "3.9.0"\n}',
+        "dir0": "sample_flow_instance_3eadd8",
+        "stop_time": 1654801361.0863302,
+        "captured_out": "******BEGIN step: experiment-test******\n******END step: experiment-test******\n",
+        "resources": "[ ]",
+        "artifacts": '[ "testfile.csv", "testfile.pdf", "testfile.pkl" ]',
+        "elapsed_time": 7.93,
+        "info": "{ }",
+        "all_hosts": '{\n  "experiment-test" : {\n    "ENV" : { },\n    "cpu" : "777 CPU @ 9.99GHz",\n    "hostname" : "sciflow",\n    "os" : [ "Linux", "Linux-5.555-555" ],\n    "python_version" : "3.9.0"\n  }\n}',
+        "experiment": "{ }",
+        "experiment_id": "sample_flow_instance_3eadd8",
+    }
 
-    put_data(s3_res, bucket_name, s3_join(runs_key, experiment_id, "run.json"), json.dumps(experiment_data))
+    put_data(
+        s3_res,
+        bucket_name,
+        s3_join(runs_key, experiment_id, "run.json"),
+        json.dumps(experiment_data),
+    )
 
     return experiment_data

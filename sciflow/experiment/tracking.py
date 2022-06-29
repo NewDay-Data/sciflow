@@ -22,7 +22,7 @@ from sacred.serializer import flatten
 from sacred.stdout_capturing import get_stdcapturer
 from sacred.utils import IntervalTimer
 
-from ..s3_utils import list_bucket, load_json, put_data, s3_join, delete_dir
+from ..s3_utils import delete_dir, list_bucket, load_json, put_data, s3_join
 from ..utils import prepare_env
 
 # Cell
@@ -40,12 +40,21 @@ def save_json(s3_res, bucket_name, key, filename, obj):
 
 class FlowTracker:
     def __init__(
-        self, bucket_name, flow_base_key, flow_run_id, steps, region="eu-west-1"
+        self,
+        bucket_name,
+        flow_base_key,
+        flow_run_id,
+        steps,
+        params=None,
+        run_name=None,
+        region="eu-west-1",
     ):
         self.bucket_name = bucket_name
         self.flow_base_key = flow_base_key
         self.flow_run_id = flow_run_id
         self.steps = steps
+        self.params = params
+        self.run_name = run_name
 
         if region is not None:
             self.region = region
@@ -68,12 +77,13 @@ class FlowTracker:
         host_info = get_host_info()
         run_entry = {
             "experiment_id": self.flow_run_id,
-            "experiment": {},
+            "experiment_name": self.run_name,
+            "experiment": {"name": self.run_name},
             "format": None,
             "command": None,
             "host": host_info,
-            "start_time": time.time(),
-            "config": params,
+            "start_time": round(time.time()),
+            "config": params if params is not None else {},
             "meta": {},
             "status": "RUNNING",
             "resources": [],
@@ -84,11 +94,28 @@ class FlowTracker:
             "steps": self.steps,
         }
 
-        save_json(self.s3_res, self.bucket_name, self.run_entry_key, "run.json", run_entry)
         save_json(
-            self.s3_res, self.bucket_name, self.run_entry_key, "flow_start_run.json", run_entry
+            self.s3_res, self.bucket_name, self.run_entry_key, "run.json", run_entry
         )
-        save_json(self.s3_res, self.bucket_name, self.runs_table_key, "run.json", run_entry)
+        save_json(
+            self.s3_res,
+            self.bucket_name,
+            self.run_entry_key,
+            "flow_start_run.json",
+            run_entry,
+        )
+        save_json(
+            self.s3_res, self.bucket_name, self.runs_table_key, "run.json", run_entry
+        )
+        # Create each step entry at flow start - in case of step failure
+        for step in self.steps:
+            save_json(
+                self.s3_res,
+                self.bucket_name,
+                self.run_entry_key,
+                f"step_{step}.json",
+                run_entry
+            )
         print(f"Started tracking flow: {self.flow_run_id}")
 
     def interrupted(self):
@@ -108,7 +135,7 @@ class FlowTracker:
             self.s3_res, self.bucket_name, s3_join(self.run_entry_key, "run.json")
         )
         run_entry["status"] = event_status
-        run_entry["stop_time"] = time.time()
+        run_entry["stop_time"] = round(time.time())
         run_entry["elapsed_time"] = round(
             run_entry["stop_time"] - run_entry["start_time"], 2
         )
@@ -118,14 +145,19 @@ class FlowTracker:
             )
 
         run_entry = self._merge_step_entries(run_entry)
-        save_json(self.s3_res, self.bucket_name, self.run_entry_key, "run.json", run_entry)
-        save_json(self.s3_res, self.bucket_name, self.runs_table_key, "run.json", run_entry)
+        save_json(
+            self.s3_res, self.bucket_name, self.run_entry_key, "run.json", run_entry
+        )
+        save_json(
+            self.s3_res, self.bucket_name, self.runs_table_key, "run.json", run_entry
+        )
 
     def _merge_step_entries(self, run_entry):
         all_hosts = {}
         captured_out = ""
         step_entries = {}
         for step in self.steps:
+            load_key = s3_join(self.run_entry_key, f"step_{step}.json")
             step_entry = load_json(
                 self.s3_res,
                 self.bucket_name,
@@ -208,7 +240,7 @@ class StepTracker(SciflowTracker):
         self.saved_metrics = {}
         self.info = {}
         self.result = None
-        self.start_time = time.time()
+        self.start_time = round(time.time())
 
         if region is not None:
             self.region = region
@@ -230,8 +262,8 @@ class StepTracker(SciflowTracker):
             s3_join(self.exp_base_key, "runs", "flow_start_run.json"),
         )
         self.run_entry = self.flow_start_run_entry
-
         self.init_keys()
+
 
     def start_heartbeat(self, beat_interval=10.0):
         print("Starting Heartbeat")
@@ -253,7 +285,9 @@ class StepTracker(SciflowTracker):
 
     def get_captured_out(self):
         if self._output_file is None:
-            raise IOError("Attempting to get captured out when capturing has not been started. Remember to wrap tracked statements in 'with tracker.capture_out() as tracker._output_file:'")
+            raise IOError(
+                "Attempting to get captured out when capturing has not been started. Remember to wrap tracked statements in 'with tracker.capture_out() as tracker._output_file:'"
+            )
         if self._output_file.closed:
             return
         text = self._output_file.get()
@@ -310,7 +344,6 @@ class StepTracker(SciflowTracker):
     def _emit_heartbeat(self):
         beat_time = datetime.datetime.utcnow().isoformat()
         self.run_entry["heartbeat"] = beat_time
-        print(f"Emitted heartbeat at: {beat_time}")
         self.run_entry["captured_out"] = self.get_captured_out()
         self.run_entry["result"] = self.result
         save_json(
@@ -333,7 +366,7 @@ class StepTracker(SciflowTracker):
             self.s3_res, self.bucket_name, self.runs_key, "run.json", self.run_entry
         )
         self.run_entry["status"] = status
-        self.run_entry["stop_time"] = time.time()
+        self.run_entry["stop_time"] = round(time.time())
         self.run_entry["elapsed_time"] = round(
             self.run_entry["stop_time"] - self.start_time, 2
         )

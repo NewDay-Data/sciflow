@@ -4,24 +4,26 @@ __all__ = ['MAX_CACHE_SIZE', 'ExperimentEngine']
 
 # Cell
 
+import datetime
 import json
 import os
-from functools import lru_cache
-from typing import Tuple
-import datetime
-import uuid
 import tempfile
+import uuid
+from typing import Tuple
 
-import numpy as np
 import boto3
+import numpy as np
+from pandas.io.sql import DatabaseError
 from tinydb import Query, TinyDB
 from tinydb.storages import MemoryStorage
-from pandas.io.sql import DatabaseError
 
-from .lake_experiment import LakeExperiment, Artifact, CSVArtifact, ImageArtifact
-from ..utils import odbc_connect, prepare_env, query
+from .lake_experiment import (
+    CSVArtifact,
+    ImageArtifact,
+    LakeExperiment,
+)
 from .tracking import FlowTracker, StepTracker
-from .lake_experiment import create_experiment_test_data
+from ..utils import odbc_connect, prepare_env, query
 
 MAX_CACHE_SIZE = 32
 
@@ -46,16 +48,14 @@ class ExperimentEngine:
             else bucket_table_alias
         )
         self.experiments_key = (
-            f"{base_key}/experiments"
-            if experiments_key is None
-            else experiments_key
+            f"{base_key}/experiments" if experiments_key is None else experiments_key
         )
         table_path = f"{self.base_key}.experiments"
         self.table_context = f"{self.bucket_table_alias}.{table_path}"
         self.remote_path = f"{self.bucket_name}/{self.experiments_key}"
         self.lake_table = f"{self.table_context}"
 
-#    @lru_cache(maxsize=MAX_CACHE_SIZE)
+    #    @lru_cache(maxsize=MAX_CACHE_SIZE)
     def _find(
         self,
         experiment_ids=None,
@@ -76,9 +76,8 @@ class ExperimentEngine:
             )
         if experiment_id:
             query_stmt += f" where dir0 = '{str(experiment_id)}'"
-        # TODO add find by name
-#         elif experiment_name:
-#             query_stmt += f" where name = '{experiment_name}'"
+        elif experiment_name:
+            query_stmt += f" where experiment_name = '{experiment_name}'"
         if order_by:
             query_stmt += f" order by {order_by} desc"
         if limit:
@@ -91,32 +90,32 @@ class ExperimentEngine:
                 ex_id,
                 data.iloc[i, :].to_dict()["start_time"],
                 data.iloc[i, :].to_dict(),
-                experiment_name
+                experiment_name,
             )
             for i, ex_id in enumerate(data.dir0.tolist())
-        ] # bucket_name, base_key, experiment_id, start_time, data, name
+        ]  # bucket_name, base_key, experiment_id, start_time, data, name
         return experiments
 
-#    @lru_cache(maxsize=MAX_CACHE_SIZE)
+    #    @lru_cache(maxsize=MAX_CACHE_SIZE)
     def find_by_id(self, experiment_id):
         experiments = self._find(experiment_id=str(experiment_id))
         return None if len(experiments) == 0 else experiments[0]
 
-#    @lru_cache(maxsize=MAX_CACHE_SIZE)
+    #    @lru_cache(maxsize=MAX_CACHE_SIZE)
     def find_by_ids(self, experiment_ids: Tuple[str]):
         if len(experiment_ids) == 1:
             raise ValueError("Use find_by_id for a single experiment")
         return self._find(experiment_ids=experiment_ids)
 
-#    @lru_cache(maxsize=MAX_CACHE_SIZE)
+    #    @lru_cache(maxsize=MAX_CACHE_SIZE)
     def find_latest(self, n=5):
         return self._find(order_by="start_time", limit=n)
 
-#    @lru_cache(maxsize=MAX_CACHE_SIZE)
+    #    @lru_cache(maxsize=MAX_CACHE_SIZE)
     def find_all(self):
         return self._find()
 
-#    @lru_cache(maxsize=MAX_CACHE_SIZE)
+    #    @lru_cache(maxsize=MAX_CACHE_SIZE)
     def find_by_name(self, name):
         result = None
         try:
