@@ -5,14 +5,15 @@ __all__ = ['something', 'traffic_percent', 'workers', 'model_level', 'min_date',
 
 # Cell
 
+import tempfile
+
 import numpy as np
 import pandas as pd
-import tempfile
 
 # step:something
 
 
-def something(tracker = None):
+def something(tracker=None):
     message = "The first step"
     print(f"{message}")
     if tracker:
@@ -74,10 +75,21 @@ def get_utterances(model_level=None, min_date=None, traffic_percent=100):
 # step:preprocess
 
 
-def preprocess(message, model_level=None, min_date=None, traffic_percent=100):
+def preprocess(message, model_level=None, min_date=None, traffic_percent=100, tracker=None):
     print(f"I captialised the message: {message.upper()}")
     data = get_utterances(model_level, min_date, traffic_percent)
     documents = data.tolist()
+    if tracker:
+        with tempfile.TemporaryDirectory() as temp_dir:
+            tracker.log_metric("roc", 0.9, 0)
+            csv_path = f"{temp_dir}/preprocess.csv"
+            df = pd.DataFrame({"a": [1, 2, 3], "b": ["a", "b", "c"]})
+            df.to_csv(csv_path)
+            tracker.add_artifact(csv_path)
+            fig = df.a.plot.hist().figure
+            png_path = f"{temp_dir}/preprocess.png"
+            fig.savefig(png_path)
+            tracker.add_artifact(png_path)
     results = {"documents": documents}
     return results
 
@@ -107,8 +119,19 @@ class Topics:
 # step:fit
 
 
-def fit(documents, workers=workers):
+def fit(documents, workers=workers, tracker=None):
     model = Topics(documents, workers=workers)
+    if tracker:
+        with tempfile.TemporaryDirectory() as temp_dir:
+            tracker.log_metric("roc", 0.9, 0)
+            csv_path = f"{temp_dir}/fit.csv"
+            df = pd.DataFrame({"a": [1, 2, 3], "b": ["a", "b", "c"]})
+            df.to_csv(csv_path)
+            tracker.add_artifact(csv_path)
+            fig = df.a.plot.hist().figure
+            png_path = f"{temp_dir}/fit.png"
+            fig.savefig(png_path)
+            tracker.add_artifact(png_path)
     results = {"model": model}
     return results
 

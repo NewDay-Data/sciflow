@@ -13,7 +13,7 @@ some_param = 2
 # step:first
 
 
-def first(some_param: int, tracker):
+def first(some_param: int):
     print(some_param)
     another_int = some_param + 5
     results = {"another_int": another_int}

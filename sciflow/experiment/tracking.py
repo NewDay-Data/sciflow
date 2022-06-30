@@ -114,7 +114,7 @@ class FlowTracker:
                 self.bucket_name,
                 self.run_entry_key,
                 f"step_{step}.json",
-                run_entry
+                run_entry,
             )
         print(f"Started tracking flow: {self.flow_run_id}")
 
@@ -157,7 +157,7 @@ class FlowTracker:
         captured_out = ""
         step_entries = {}
         for step in self.steps:
-            load_key = s3_join(self.run_entry_key, f"step_{step}.json")
+            s3_join(self.run_entry_key, f"step_{step}.json")
             step_entry = load_json(
                 self.s3_res,
                 self.bucket_name,
@@ -263,7 +263,6 @@ class StepTracker(SciflowTracker):
         )
         self.run_entry = self.flow_start_run_entry
         self.init_keys()
-
 
     def start_heartbeat(self, beat_interval=10.0):
         print("Starting Heartbeat")
