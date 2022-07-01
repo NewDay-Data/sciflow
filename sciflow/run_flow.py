@@ -301,7 +301,7 @@ def sciflow_check_sagemaker_flows():
 
 @call_parse
 def sciflow_run_metaflows():
-    check_call_flows(get_config(), flow_command="--no-pylint run")
+    check_call_flows(get_config(), flow_command="run")
 
 # Cell
 

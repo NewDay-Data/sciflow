@@ -98,7 +98,7 @@ def write_module_to_file(
         has_mf_param = any((p.has_metaflow_param for p in param_meta.values()))
         has_json_param = any((p.is_json_type for p in param_meta.values()))
         mf_params_import = "from metaflow import FlowSpec, step, current"
-        if has_mf_param:
+        if has_mf_param or track_experiment:
             mf_params_import += ", Parameter"
         if has_json_param:
             mf_params_import += ", JSONType"
@@ -203,8 +203,8 @@ def write_steps(flow_file, steps, orig_step_names, param_meta, ind, track_experi
                         )
                     flow_file.write(f"{ind}{ind}results = {orig_step_names[i]}({flow_step_args})\n")
                     write_track_capture(flow_file, ind, 2)
-            if i < len(steps):
-                next_step = "end" if i == len(steps) - 1 else steps[i + 1].name
+            if i < len(steps) - 1:
+                next_step = steps[i + 1].name
                 flow_file.write(f"{ind}{ind}self.next(self.{next_step})\n")
             flow_file.write("\n")
 
@@ -325,7 +325,7 @@ if __name__ == "__main__":
                 print(f"Flow failed: {{flow_run_id}}")
 
             flow_tracker.completed()"""
-    shutil.copyfile(flow_path, str(flow_path).replace(flow_base_key, f"_{flow_base_key}"))
+    shutil.copyfile(flow_path, str(flow_path).replace(flow_base_key, f"_sciflow_{flow_base_key}"))
     with open(flow_path, "w") as wrapper_file:
         wrapper_file.write(wrapper_body)
 
@@ -346,5 +346,5 @@ def generate_flows(config=None, track_experiment=True):
 
 
 @call_parse
-def sciflow_metaflow(track: Param("Track flows as sacred experiments", bool) = True):
+def sciflow_metaflow(track: Param("Track flows as experiments", bool) = True):
     generate_flows(get_config(), track)

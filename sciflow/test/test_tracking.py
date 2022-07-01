@@ -75,7 +75,9 @@ def get_utterances(model_level=None, min_date=None, traffic_percent=100):
 # step:preprocess
 
 
-def preprocess(message, model_level=None, min_date=None, traffic_percent=100, tracker=None):
+def preprocess(
+    message, model_level=None, min_date=None, traffic_percent=100, tracker=None
+):
     print(f"I captialised the message: {message.upper()}")
     data = get_utterances(model_level, min_date, traffic_percent)
     documents = data.tolist()
