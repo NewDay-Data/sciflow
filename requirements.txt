@@ -66,7 +66,7 @@ networkx == 2.6.3
 # sciflow/test/test_clustering.py: 15
 # sciflow/test/test_clustering_no_params.py: 15
 # sciflow/test/test_data_handling.py: 11
-numpy == 1.21.5
+numpy == 1.22.0
 
 # sciflow/.ipynb_checkpoints/utils-checkpoint.py: 13
 # sciflow/data_handler.py: 16

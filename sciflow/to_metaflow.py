@@ -8,9 +8,9 @@ __all__ = ['rename_steps_for_metaflow', 'nb_to_metaflow', 'write_module_to_file'
 
 
 import os
+import shutil
 from pathlib import Path, PosixPath
 from typing import Iterable
-import shutil
 
 import numpy as np
 from fastcore.script import Param, call_parse
@@ -68,7 +68,9 @@ def nb_to_metaflow(nb_path: Path, flow_path: Path, silent=True, track_experiment
         track_experiment,
     )
     if track_experiment:
-        write_cli_wrapper(flow_path, extract_module_only(module_name), [s.name for s in steps])
+        write_cli_wrapper(
+            flow_path, extract_module_only(module_name), [s.name for s in steps]
+        )
     if not silent:
         print(
             f"Converted {nb_name} to {flow_class_name} in: {os.path.basename(flow_path)}"
@@ -178,7 +180,13 @@ def write_steps(flow_file, steps, orig_step_names, param_meta, ind, track_experi
                 step_func_call_text = f"{orig_step_names[i]}({flow_step_args})"
 
                 write_track_internal_helper(
-                    flow_file, ind, steps, orig_step_names[i], step_func_call_text.replace("self.tracker", "tracker"), i
+                    flow_file,
+                    ind,
+                    param_meta,
+                    steps,
+                    orig_step_names[i],
+                    step_func_call_text.replace("self.tracker", "tracker"),
+                    i,
                 )
         else:
             flow_file.write(f"{ind}@step\n")
@@ -201,8 +209,13 @@ def write_steps(flow_file, steps, orig_step_names, param_meta, ind, track_experi
                         raise ValueError(
                             f"[{os.path.basename(flow_file.name)}] step return variable {step.return_stmt} shadows a parameter name - parameters must be unique"
                         )
-                    flow_file.write(f"{ind}{ind}results = {orig_step_names[i]}({flow_step_args})\n")
+                    flow_file.write(
+                        f"{ind}{ind}results = {orig_step_names[i]}({flow_step_args})\n"
+                    )
                     write_track_capture(flow_file, ind, 2)
+            else:
+                flow_file.write(f"{ind}{ind}pass\n")
+                flow_file.write("\n")
             if i < len(steps) - 1:
                 next_step = steps[i + 1].name
                 flow_file.write(f"{ind}{ind}self.next(self.{next_step})\n")
@@ -225,7 +238,7 @@ def write_track_capture(flow_file, ind, num_indents):
 
 
 def write_track_internal_helper(
-    flow_file, ind, steps, orig_step_name, step_func_call_text, i
+    flow_file, ind, param_meta, steps, orig_step_name, step_func_call_text, i
 ):
     step = steps[i]
     flow_file.write(f"{ind}def _{step.name}(self):\n")
@@ -325,7 +338,9 @@ if __name__ == "__main__":
                 print(f"Flow failed: {{flow_run_id}}")
 
             flow_tracker.completed()"""
-    shutil.copyfile(flow_path, str(flow_path).replace(flow_base_key, f"_sciflow_{flow_base_key}"))
+    shutil.copyfile(
+        flow_path, str(flow_path).replace(flow_base_key, f"_sciflow_{flow_base_key}")
+    )
     with open(flow_path, "w") as wrapper_file:
         wrapper_file.write(wrapper_body)
 
@@ -346,5 +361,6 @@ def generate_flows(config=None, track_experiment=True):
 
 
 @call_parse
-def sciflow_metaflow(track: Param("Track flows as experiments", bool) = True):
+def sciflow_metaflow(track: Param("Track flows as experiments", type=bool)):
+    print(f"Converting flows to metaflow (experiment tracking = {track})")
     generate_flows(get_config(), track)
