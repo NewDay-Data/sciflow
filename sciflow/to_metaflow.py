@@ -299,48 +299,72 @@ def write_cli_wrapper(flow_path, flow_base_key, steps):
         wrapper_file.write("# coding=utf-8\n")
         wrapper_file.write("import os\n")
         wrapper_file.write("from datetime import datetime\n")
-        wrapper_file.write("from sciflow.experiment.tracking import FlowTracker, StepTracker\n")
+        wrapper_file.write(
+            "from sciflow.experiment.tracking import FlowTracker, StepTracker\n"
+        )
         wrapper_file.write("from sciflow.run_flow import run_shell_cmd\n")
         wrapper_file.write("import sys\n")
         wrapper_file.write("import tempfile\n")
         wrapper_file.write("\n")
         wrapper_file.write("\n")
-        wrapper_file.write("if __name__ == \"__main__\":\n")
-        wrapper_file.write(f"{ind}wrapped_module = \"_sciflow_{flow_path.name}\"\n")
+        wrapper_file.write('if __name__ == "__main__":\n')
+        wrapper_file.write(f'{ind}wrapped_module = "_sciflow_{flow_path.name}"\n')
         wrapper_file.write(f"{ind}if len(sys.argv) == 1:\n")
-        wrapper_file.write(f"{ind}{ind}cmd = f\"python {{wrapped_module}} show\"\n")
+        wrapper_file.write(f'{ind}{ind}cmd = f"python {{wrapped_module}} show"\n')
         wrapper_file.write(f"{ind}{ind}pipe, output = run_shell_cmd(cmd)\n")
         wrapper_file.write(f"{ind}{ind}print(output)\n")
         wrapper_file.write(f"{ind}else:\n")
-        wrapper_file.write(f"{ind}{ind}if \"show\" in sys.argv or \"help\" in sys.argv[1]:\n")
-        wrapper_file.write(f"{ind}{ind}{ind}full_cmd = \" \".join(sys.argv)\n")
-        wrapper_file.write(f"{ind}{ind}{ind}cmd = f\"python {{full_cmd.replace(sys.argv[0], wrapped_module)}}\"\n")
+        wrapper_file.write(
+            f'{ind}{ind}if "show" in sys.argv or "help" in sys.argv[1]:\n'
+        )
+        wrapper_file.write(f'{ind}{ind}{ind}full_cmd = " ".join(sys.argv)\n')
+        wrapper_file.write(
+            f'{ind}{ind}{ind}cmd = f"python {{full_cmd.replace(sys.argv[0], wrapped_module)}}"\n'
+        )
         wrapper_file.write(f"{ind}{ind}{ind}pipe, output = run_shell_cmd(cmd)\n")
         wrapper_file.write(f"{ind}{ind}{ind}print(output)\n")
-        wrapper_file.write(f"{ind}{ind}elif \"run\" in sys.argv[1]:\n")
-        wrapper_file.write(f"{ind}{ind}{ind}bucket_name = os.environ['SCIFLOW_BUCKET']\n")
-        wrapper_file.write(f"{ind}{ind}{ind}run_timestamp = datetime.today().__str__().replace(':', '-').replace('.', '-').replace(' ', '-')[:-3]\n")
-        wrapper_file.write(f"{ind}{ind}{ind}flow_base_key = \"{flow_base_key}\"\n")
-        wrapper_file.write(f"{ind}{ind}{ind}flow_run_id = f\"flow-{{run_timestamp}}\"\n")
+        wrapper_file.write(f'{ind}{ind}elif "run" in sys.argv[1]:\n')
+        wrapper_file.write(
+            f"{ind}{ind}{ind}bucket_name = os.environ['SCIFLOW_BUCKET']\n"
+        )
+        wrapper_file.write(
+            f"{ind}{ind}{ind}run_timestamp = datetime.today().__str__().replace(':', '-').replace('.', '-').replace(' ', '-')[:-3]\n"
+        )
+        wrapper_file.write(f'{ind}{ind}{ind}flow_base_key = "{flow_base_key}"\n')
+        wrapper_file.write(f'{ind}{ind}{ind}flow_run_id = f"flow-{{run_timestamp}}"\n')
         wrapper_file.write(f"{ind}{ind}{ind}steps = {steps}\n\n")
-        wrapper_file.write(f"{ind}{ind}{ind}flow_tracker = FlowTracker(os.environ['SCIFLOW_BUCKET'], flow_base_key, flow_run_id, steps)\n")
+        wrapper_file.write(
+            f"{ind}{ind}{ind}flow_tracker = FlowTracker(os.environ['SCIFLOW_BUCKET'], flow_base_key, flow_run_id, steps)\n"
+        )
         wrapper_file.write(f"{ind}{ind}{ind}flow_tracker.start()\n")
         wrapper_file.write(f"{ind}{ind}{ind}\n")
         wrapper_file.write(f"{ind}{ind}{ind}try:\n")
-        wrapper_file.write(f"{ind}{ind}{ind}{ind}sys.argv[1] = \"--no-pylint run\"\n")
-        wrapper_file.write(f"{ind}{ind}{ind}{ind}full_cmd = \" \".join(sys.argv)\n")
-        wrapper_file.write(f"{ind}{ind}{ind}{ind}full_cmd += f\" --bucket_name {{bucket_name}} --flow_base_key {{flow_base_key}} --flow_run_id {{flow_run_id}}\"\n")
-        wrapper_file.write(f"{ind}{ind}{ind}{ind}cmd = f\"python {{full_cmd.replace(sys.argv[0], wrapped_module)}}\"\n")
+        wrapper_file.write(f'{ind}{ind}{ind}{ind}sys.argv[1] = "--no-pylint run"\n')
+        wrapper_file.write(f'{ind}{ind}{ind}{ind}full_cmd = " ".join(sys.argv)\n')
+        wrapper_file.write(
+            f'{ind}{ind}{ind}{ind}full_cmd += f" --bucket_name {{bucket_name}} --flow_base_key {{flow_base_key}} --flow_run_id {{flow_run_id}}"\n'
+        )
+        wrapper_file.write(
+            f'{ind}{ind}{ind}{ind}cmd = f"python {{full_cmd.replace(sys.argv[0], wrapped_module)}}"\n'
+        )
         wrapper_file.write(f"{ind}{ind}{ind}{ind}pipe, output = run_shell_cmd(cmd)\n")
         wrapper_file.write(f"{ind}{ind}{ind}{ind}print(output)\n")
         wrapper_file.write(f"{ind}{ind}{ind}except (KeyboardInterrupt):\n")
         wrapper_file.write(f"{ind}{ind}{ind}{ind}flow_tracker.interrupted()\n")
-        wrapper_file.write(f"{ind}{ind}{ind}{ind}print(f\"Flow interrupted by user: {{flow_run_id}}\")\n")
+        wrapper_file.write(
+            f'{ind}{ind}{ind}{ind}print(f"Flow interrupted by user: {{flow_run_id}}")\n'
+        )
         wrapper_file.write(f"{ind}{ind}{ind}except BaseException:\n")
-        wrapper_file.write(f"{ind}{ind}{ind}{ind}exc_type, exc_value, trace = sys.exc_info()\n")
-        wrapper_file.write(f"{ind}{ind}{ind}{ind}except_info = {{\"exc_type\": exc_type, \"exc_value\": exc_value, \"trace\": trace}}\n")
+        wrapper_file.write(
+            f"{ind}{ind}{ind}{ind}exc_type, exc_value, trace = sys.exc_info()\n"
+        )
+        wrapper_file.write(
+            f'{ind}{ind}{ind}{ind}except_info = {{"exc_type": exc_type, "exc_value": exc_value, "trace": trace}}\n'
+        )
         wrapper_file.write(f"{ind}{ind}{ind}{ind}flow_tracker.failed(except_info)\n")
-        wrapper_file.write(f"{ind}{ind}{ind}{ind}print(f\"Flow failed: {{flow_run_id}}\")\n")
+        wrapper_file.write(
+            f'{ind}{ind}{ind}{ind}print(f"Flow failed: {{flow_run_id}}")\n'
+        )
         wrapper_file.write(f"{ind}{ind}{ind}flow_tracker.completed()\n")
 
 # Cell
@@ -360,6 +384,6 @@ def generate_flows(config=None, track_experiment=True):
 
 
 @call_parse
-def sciflow_metaflow(track: Param("Track flows as experiments", default = True)):
+def sciflow_metaflow(track: Param("Track flows as experiments", default=True)):
     print(f"Converting flows to metaflow (experiment tracking = {track})")
     generate_flows(get_config(), track)

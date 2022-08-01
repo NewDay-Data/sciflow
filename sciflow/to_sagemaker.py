@@ -957,6 +957,6 @@ def generate_flows(track_experiment=True):
 
 
 @call_parse
-def sciflow_sagemaker(track: Param("Track flows as experiments", bool) = True):
+def sciflow_sagemaker(track: Param("Track flows as experiments", default = True)):
     print(f"Converting flows to sagemaker pipelines (experiment tracking = {track})")
     generate_flows(track)
