@@ -10,12 +10,15 @@ import tempfile
 import numpy as np
 import pandas as pd
 
+from ..experiment.tracking import MockTracker, SciFlowTracker
+
 # step:something
 
 
-def something(tracker=None):
+def something(tracker: SciFlowTracker = None):
     message = "The first step"
     print(f"{message}")
+    print(f"something tracker: {tracker}")
     if tracker:
         with tempfile.TemporaryDirectory() as temp_dir:
             tracker.log_metric("auroc", 0.5, 0)
@@ -76,11 +79,16 @@ def get_utterances(model_level=None, min_date=None, traffic_percent=100):
 
 
 def preprocess(
-    message, model_level=None, min_date=None, traffic_percent=100, tracker=None
+    message,
+    model_level=None,
+    min_date=None,
+    traffic_percent=100,
+    tracker: SciFlowTracker = None,
 ):
     print(f"I captialised the message: {message.upper()}")
     data = get_utterances(model_level, min_date, traffic_percent)
     documents = data.tolist()
+    print(f"Preprocess tracker: {tracker}")
     if tracker:
         with tempfile.TemporaryDirectory() as temp_dir:
             tracker.log_metric("roc", 0.9, 0)
@@ -121,8 +129,9 @@ class Topics:
 # step:fit
 
 
-def fit(documents, workers=workers, tracker=None):
+def fit(documents, workers=workers, tracker: SciFlowTracker = None):
     model = Topics(documents, workers=workers)
+    print(f"Fit tracker: {tracker}")
     if tracker:
         with tempfile.TemporaryDirectory() as temp_dir:
             tracker.log_metric("roc", 0.9, 0)

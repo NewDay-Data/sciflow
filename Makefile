@@ -43,6 +43,7 @@ build:
 	sciflow_build_lib && \
 	nbdev_test_nbs --pause=3 && \
 	sciflow_tidy && \
+	sciflow_lint && \
 	sciflow_metaflow && \
 	sciflow_sagemaker && \
 	sciflow_check_metaflows && \
@@ -60,6 +61,7 @@ precommit:
 	nbdev_test_nbs --pause=3 && \
 	sciflow_tidy && \
 	sciflow_clean && \
+	sciflow_lint && \
 	sciflow_metaflow && \
 	sciflow_sagemaker && \
 	sciflow_check_metaflows && \

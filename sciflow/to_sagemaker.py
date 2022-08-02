@@ -65,7 +65,7 @@ def nb_to_sagemaker_pipeline(
             track_experiment,
         )
     except ValueError as ve:
-        print(f"Sagemaker conversion failed for {nb_name}, \nReason: {ve}")
+        print(f"Sagemaker conversion failed for {nb_name}, Reason: {ve}")
         return
     if not silent:
         print(
@@ -375,7 +375,7 @@ def write_params(flow_file, param_meta, ind):
             )
         else:
             raise ValueError(
-                f"Unsupported parameter type for sagemaker pipeline: {param_meta[param]}"
+                f"Unsupported parameter type for sagemaker pipeline: {param_meta[param].instance_type}"
             )
 
 # Cell
@@ -405,11 +405,11 @@ def extract_step_vars(step, param_names, processing_flow_scope, train_flow_scope
         step_proc_vars = [a for a in args if a in processing_flow_scope]
         step_train_vars = [a for a in args if a in train_flow_scope]
         unscoped_vars = set(args).difference(
-            set(step_input + step_proc_vars + step_train_vars)
+            set(step_input + step_proc_vars + step_train_vars + ["tracker"])
         )
         if len(unscoped_vars) > 0:
             raise ValueError(
-                f'Step: {step.name} depends on variable(s), "{unscoped_vars}", which are not in the flow scope'
+                f'Step: {step.name} depends on variable(s) not in flow scope: "{unscoped_vars}"'
             )
         result = {
             "step_input": step_input,
@@ -866,8 +866,6 @@ def generate_sagemaker_modules(
             sm_module_file.write(f'if __name__ == "__main__":\n')
             sm_module_file.write(f"{ind}args = parse_args()\n")
             sm_module_file.write(f"{ind}main(**vars(args))\n")
-            # write to flow path/step
-        print(f"Created sagemaker module: {sm_module_path.name}")
 
 # Cell
 
@@ -957,6 +955,6 @@ def generate_flows(track_experiment=True):
 
 
 @call_parse
-def sciflow_sagemaker(track: Param("Track flows as experiments", default = True)):
+def sciflow_sagemaker(track: Param("Track flows as experiments", default=True)):
     print(f"Converting flows to sagemaker pipelines (experiment tracking = {track})")
     generate_flows(track)
