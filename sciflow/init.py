@@ -9,6 +9,8 @@ from pathlib import Path
 
 from fastcore.script import Param, call_parse
 
+from .utils import prepare_env
+
 # Cell
 
 env_file_blank = """export USER=
@@ -104,3 +106,5 @@ def sciflow_init(
 
     # Add project root to PYTHONPATH environment variable
     write_edited_pythonpath(project_root, sciflow_dir)
+
+    prepare_env()

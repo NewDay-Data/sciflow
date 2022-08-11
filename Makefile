@@ -44,13 +44,17 @@ build:
 	nbdev_test_nbs --pause=3 && \
 	sciflow_tidy && \
 	sciflow_lint && \
+	echo "Build completed"
+    
+convert: build
+	source "$${HOME}/.sciflow/env" && \
 	sciflow_metaflow && \
 	sciflow_sagemaker && \
 	sciflow_check_metaflows && \
 	sciflow_check_sagemaker_flows && \
 	echo "Build completed"
     
-run: build
+run: convert
 	source "$${HOME}/.sciflow/env" && \
 	sciflow_run_metaflows && \
 	echo "Flow run checks completed"

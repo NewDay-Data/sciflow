@@ -6,16 +6,6 @@ index = {"generate_msg": "01_hello_nbdev.ipynb",
          "first": "02_hello_sciflow.ipynb",
          "traffic_percent": "tidying_notebooks.ipynb",
          "second": "02_hello_sciflow.ipynb",
-         "logger": "abalone.ipynb",
-         "bucket": "abalone.ipynb",
-         "dataset_key_prefix": "abalone.ipynb",
-         "data_path": "abalone.ipynb",
-         "hyperparameters": "abalone.ipynb",
-         "model_dir": "abalone.ipynb",
-         "preprocess": "abalone.ipynb",
-         "plot_perm_importances": "abalone.ipynb",
-         "fit": "abalone.ipynb",
-         "evaluation": "abalone.ipynb",
          "workers": "tidying_notebooks.ipynb",
          "model_level": "tidying_notebooks.ipynb",
          "min_date": "tidying_notebooks.ipynb",
@@ -24,10 +14,9 @@ index = {"generate_msg": "01_hello_nbdev.ipynb",
 
 modules = ["hello_nbdev.py",
            "hello_sciflow.py",
-           "abalone.py",
            "tidying_notebooks.py"]
 
-doc_url = "https://newdaytechnology.github.io/sciflow/"
+doc_url = "https://newdaytechnology.github.io/sciflow_examples/"
 
 git_url = "https://github.com/newdaytechnology/sciflow/tree/{branch}/"
 

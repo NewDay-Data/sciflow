@@ -308,7 +308,9 @@ def write_cli_wrapper(flow_path, flow_base_key, steps):
         wrapper_file.write("\n")
         wrapper_file.write("\n")
         wrapper_file.write('if __name__ == "__main__":\n')
-        wrapper_file.write(f'{ind}wrapped_module = "_sciflow_{flow_path.name}"\n')
+        wrapper_file.write(
+            f'{ind}wrapped_module = "{str(flow_path).replace(flow_path.name, f"_sciflow_{flow_path.name}")}"\n'
+        )
         wrapper_file.write(f"{ind}if len(sys.argv) == 1:\n")
         wrapper_file.write(f'{ind}{ind}cmd = f"python {{wrapped_module}} show"\n')
         wrapper_file.write(f"{ind}{ind}pipe, output = run_shell_cmd(cmd)\n")
