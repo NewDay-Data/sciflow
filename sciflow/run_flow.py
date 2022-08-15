@@ -30,7 +30,7 @@ def check_is_init():
 
     if root_path not in sys.path:
         # TODO change to SciflowError
-        raise ValueError("Sciflow project is not in path; have you run sciflow_init?")
+        raise ValueError("Project is not in path; have you run sciflow_init?")
 
 # Cell
 

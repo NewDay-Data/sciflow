@@ -4,13 +4,13 @@ __all__ = ["index", "modules", "custom_doc_links", "git_url"]
 
 index = {"generate_msg": "01_hello_nbdev.ipynb",
          "first": "02_hello_sciflow.ipynb",
-         "traffic_percent": "tidying_notebooks.ipynb",
+         "traffic_percent": "04_notebook_quality.ipynb",
          "second": "02_hello_sciflow.ipynb",
-         "workers": "tidying_notebooks.ipynb",
-         "model_level": "tidying_notebooks.ipynb",
-         "min_date": "tidying_notebooks.ipynb",
-         "some_func": "tidying_notebooks.ipynb",
-         "get_traffic_text": "tidying_notebooks.ipynb"}
+         "workers": "04_notebook_quality.ipynb",
+         "model_level": "04_notebook_quality.ipynb",
+         "min_date": "04_notebook_quality.ipynb",
+         "some_func": "04_notebook_quality.ipynb",
+         "get_traffic_text": "04_notebook_quality.ipynb"}
 
 modules = ["hello_nbdev.py",
            "hello_sciflow.py",

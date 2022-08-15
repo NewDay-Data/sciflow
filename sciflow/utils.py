@@ -9,6 +9,7 @@ import _ast
 import ast
 import os
 import subprocess
+import sys
 from pathlib import Path
 
 import nbformat
@@ -96,6 +97,10 @@ def prepare_env(env_file_path: str = None):
         for line in env_file.readlines():
             key, value = line.strip().split("=", 1)
             os.environ[key.replace("export ", "")] = value
+        python_path = [
+            p for p in os.environ["PYTHONPATH"].split(":") if p != "$PYTHONPATH"
+        ]
+        sys.path.extend(python_path)
 
 # Cell
 
