@@ -10,6 +10,7 @@ import os
 import tempfile
 import uuid
 from typing import Tuple
+from functools import lru_cache
 
 import boto3
 import numpy as np
@@ -55,7 +56,7 @@ class ExperimentEngine:
         self.remote_path = f"{self.bucket_name}/{self.experiments_key}"
         self.lake_table = f"{self.table_context}"
 
-    #    @lru_cache(maxsize=MAX_CACHE_SIZE)
+    @lru_cache(maxsize=MAX_CACHE_SIZE)
     def _find(
         self,
         experiment_ids=None,
@@ -96,26 +97,26 @@ class ExperimentEngine:
         ]  # bucket_name, base_key, experiment_id, start_time, data, name
         return experiments
 
-    #    @lru_cache(maxsize=MAX_CACHE_SIZE)
+    @lru_cache(maxsize=MAX_CACHE_SIZE)
     def find_by_id(self, experiment_id):
         experiments = self._find(experiment_id=str(experiment_id))
         return None if len(experiments) == 0 else experiments[0]
 
-    #    @lru_cache(maxsize=MAX_CACHE_SIZE)
+    @lru_cache(maxsize=MAX_CACHE_SIZE)
     def find_by_ids(self, experiment_ids: Tuple[str]):
         if len(experiment_ids) == 1:
             raise ValueError("Use find_by_id for a single experiment")
         return self._find(experiment_ids=experiment_ids)
 
-    #    @lru_cache(maxsize=MAX_CACHE_SIZE)
+    @lru_cache(maxsize=MAX_CACHE_SIZE)
     def find_latest(self, n=5):
         return self._find(order_by="start_time", limit=n)
 
-    #    @lru_cache(maxsize=MAX_CACHE_SIZE)
+    @lru_cache(maxsize=MAX_CACHE_SIZE)
     def find_all(self):
         return self._find()
 
-    #    @lru_cache(maxsize=MAX_CACHE_SIZE)
+    @lru_cache(maxsize=MAX_CACHE_SIZE)
     def find_by_name(self, name):
         result = None
         try:

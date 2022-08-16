@@ -1,7 +1,3 @@
-```python
-# hide
-```
-
 # Sciflow 🔬
 ***Iterate from idea to impact***
 

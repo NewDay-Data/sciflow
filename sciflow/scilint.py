@@ -221,7 +221,7 @@ def format_quality_warning(metric, warning_data, warn_thresh, direction):
 
 def lint_nbs(
     tpf_warn_thresh=1,
-    ifp_warn_thresh=10,
+    ifp_warn_thresh=20,
     mcp_warn_thresh=5,
     tcl_warn_thresh=20000,
     rounding_precision=3,
@@ -239,7 +239,6 @@ def lint_nbs(
     nb_names = []
     for nb_path in nb_paths:
         nb_names.append(nb_path.stem)
-        print(nb_path)
         results.append(lint_nb(nb_path))
     lint_report = pd.DataFrame.from_records(
         data=results, index=nb_names, columns=lt_metric_cols + gt_metric_cols
