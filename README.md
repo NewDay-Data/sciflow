@@ -6,6 +6,25 @@ This library **bridges the gap between research and production for Data Science.
 
 Most exploration is only valuable if it can be turned into implemented code validated by users. `sciflow` is a meta-workflow tool that converts your notebook-based workflow to consistent, observable and managed workflows using existing popular workflow frameworks through the use of some simple commands. It mixes the strengths of the notebook environment: flexibility, access to data and constant feedback with the strengths of production-like workflows: resilience and dedicated compute.
 
+## Convert from Notebooks to Managed Worflows
+
+...
+
+## Currently Supported Environments
+
+* AWS
+* *More to follow*
+
+## Currently Supported ML Frameworks
+
+Local
+* Metaflow
+* *More to follow*
+
+Remote
+* Sagemaker
+* *More to follow*
+
 ## Features
 * Separate the aspects of your research that need to be validated in a production environment from your exploration journey.
 * Know that your notebooks are of high quality, consistent style and that they are always in good working order.

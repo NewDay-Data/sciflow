@@ -41,7 +41,7 @@ art_pip: dist
 build:
 	source "$${HOME}/.sciflow/env" && \
 	sciflow_build_lib && \
-	nbdev_test_nbs --pause=3 && \
+	nbdev_test_nbs && \
 	sciflow_tidy && \
 	sciflow_lint && \
 	echo "Build completed"
