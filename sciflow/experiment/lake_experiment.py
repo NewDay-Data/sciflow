@@ -256,6 +256,9 @@ class LakeExperiment:
                 )
         return metrics
 
+    def metrics_as_df(self):
+        return pd.concat(self.metrics.values(), axis=1)
+
     def delete(self, confirmed: bool = False):
         raise NotImplementedError
 

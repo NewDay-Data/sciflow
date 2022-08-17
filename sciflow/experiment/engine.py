@@ -9,8 +9,8 @@ import json
 import os
 import tempfile
 import uuid
-from typing import Tuple
 from functools import lru_cache
+from typing import Tuple
 
 import boto3
 import numpy as np

@@ -16,6 +16,7 @@ from pathlib import Path
 
 import boto3
 import pandas as pd
+from botocore.exceptions import ClientError
 from sacred import metrics_logger
 from sacred.host_info import get_host_info
 from sacred.serializer import flatten
@@ -237,7 +238,6 @@ class StepTracker(SciFlowTracker):
         self._output_file = None
         self._metrics = metrics_logger.MetricsLogger()
         self.captured_out = None
-        self.saved_metrics = {}
         self.info = {}
         self.result = None
         self.start_time = round(time.time())
@@ -255,6 +255,18 @@ class StepTracker(SciFlowTracker):
                     "You must either pass in an AWS region name, or have a "
                     "region name specified in your AWS config file"
                 )
+
+        try:
+            self.saved_metrics = load_json(
+                self.s3_res,
+                bucket_name,
+                s3_join(self.exp_base_key, "metrics", "metrics.json"),
+            )
+        except ClientError as ex:
+            if ex.response["Error"]["Code"] == "NoSuchKey":
+                self.saved_metrics = {}
+            else:
+                raise ex
 
         self.flow_start_run_entry = load_json(
             self.s3_res,
@@ -314,6 +326,14 @@ class StepTracker(SciFlowTracker):
             self.bucket_name,
             self.metrics_key,
             "metrics.json",
+            self.saved_metrics,
+        )
+        # TODO: handle parallel metric producing steps - requires merge of step entries
+        save_json(
+            self.s3_res,
+            self.bucket_name,
+            self.metrics_key,
+            f"step_{self.step_name}_metrics.json",
             self.saved_metrics,
         )
         save_json(

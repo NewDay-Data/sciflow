@@ -5,13 +5,14 @@ __all__ = ['tracker', 'first', 'last']
 # Cell
 
 import datetime
-from pathlib import Path
 import tempfile
+from pathlib import Path
+
 import pandas as pd
 
-from sciflow.run_flow import check_call_flow
 from sciflow.experiment.engine import ExperimentEngine
 from sciflow.experiment.tracking import MockTracker
+from sciflow.run_flow import check_call_flow
 
 # Cell
 
@@ -24,7 +25,7 @@ def first(tracker):
     results = {}
     if tracker:
         with tempfile.TemporaryDirectory() as temp_dir:
-            tracker.log_metric("auroc", 0.5, 0)
+            tracker.log_metric("rmse", 0.5, 0)
             csv_path = f"{temp_dir}/first.csv"
             df = pd.DataFrame({"a": [1, 2, 3], "b": ["a", "b", "c"]})
             df.to_csv(csv_path)
