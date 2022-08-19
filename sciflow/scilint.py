@@ -245,15 +245,21 @@ def lint_nbs(
     ).sort_values(["tests_per_function", "markdown_code_percent"], ascending=False)
 
     # TODO persist to remote storage
+    # needs to be tied to a flow execution rather than a build
+    # what is the best way to do this?
 
     print("\n*********************Begin Scilint Report*********************")
+    issues_raised = False
     for lt_metric_col, lt_metrics_threshold in zip(
         lt_metric_cols, lt_metrics_thresholds
     ):
         metrics_series = lint_report[lt_metric_col]
+        warning_data = metrics_series[metrics_series < lt_metrics_threshold]
+        if len(warning_data) > 0:
+            issues_raised = True
         format_quality_warning(
             lt_metric_col,
-            metrics_series[metrics_series < lt_metrics_threshold],
+            warning_data,
             lt_metrics_threshold,
             direction="<",
         )
@@ -261,12 +267,17 @@ def lint_nbs(
         gt_metric_cols, gt_metrics_thresholds
     ):
         metrics_series = lint_report[gt_metric_col]
+        warning_data = metrics_series[metrics_series > gt_metrics_threshold]
+        if len(warning_data) > 0:
+            issues_raised = True
         format_quality_warning(
             gt_metric_col,
-            metrics_series[metrics_series > gt_metrics_threshold],
+            warning_data,
             gt_metrics_threshold,
             direction=">",
         )
+    if not issues_raised:
+        print("No issues found")
     print("*********************End Scilint Report***********************")
 
     return lint_report

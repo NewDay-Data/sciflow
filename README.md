@@ -2,28 +2,13 @@
 ***Iterate from idea to impact***
 
 
-This library **bridges the gap between research and production for Data Science.** This library takes a different approach to achieve this. The interactive notebook is very well suited to facilitating exploration. However this environment does have some limitations with respect to quality and stability in pratice. 
+This library **bridges the gap between research and production for Data Science.** The interactive notebook is very well suited to facilitating exploration. In practice however this environment does have some limitations with respect to quality and stability. 
 
-Most exploration is only valuable if it can be turned into implemented code validated by users. `sciflow` is a meta-workflow tool that converts your notebook-based workflow to consistent, observable and managed workflows using existing popular workflow frameworks through the use of some simple commands. It mixes the strengths of the notebook environment: flexibility, access to data and constant feedback with the strengths of production-like workflows: resilience and dedicated compute.
+`SciFlow` is a meta-workflow tool that **converts your notebook-based workflow** consistent, observable and managed workflows using existing **popular Data Science worflow frameworks** through the use of some simple commands. It mixes the strengths of the notebook environment: flexibility, access to data and constant feedback with the strengths of production-like workflows: resilience and dedicated compute.
 
 ## Convert from Notebooks to Managed Worflows
 
-...
-
-## Currently Supported Environments
-
-* AWS
-* *More to follow*
-
-## Currently Supported ML Frameworks
-
-Local
-* Metaflow
-* *More to follow*
-
-Remote
-* Sagemaker
-* *More to follow*
+![`SciFlow` 🔬](img/sciflow_banner.PNG)
 
 ## Features
 * Separate the aspects of your research that need to be validated in a production environment from your exploration journey.
@@ -46,6 +31,21 @@ Data Science teams can benefit from:
 * Knowing that research code still has a quality standard
 
 *Note: Sciflow is built using the excellent `nbdev` library (by fastai) and wouldn't be possible without the creation of the literate programming environment made possible by that library.*![image.png](attachment:image.png)
+
+## Currently Supported Environments
+
+* AWS
+* *More to follow*
+
+## Currently Supported ML Frameworks
+
+Local
+* Metaflow
+* *More to follow*
+
+Remote
+* Sagemaker
+* *More to follow*
 
 # Getting Started
 
@@ -121,7 +121,7 @@ You can use the settings.ini fle from `sciflow` as a base to edit and make chang
 # Commands
        
 * sciflow_build_lib
-* nbdev_test_nbs --pause=3
+* nbdev_test_nbs
 * sciflow_tidy
 * sciflow_clean
 * sciflow_lint
@@ -129,3 +129,11 @@ You can use the settings.ini fle from `sciflow` as a base to edit and make chang
 * sciflow_sagemaker
 * sciflow_check_metaflows
 * sciflow_check_sagemaker_flows
+
+# Development
+
+`SciFlow` is written using `nbdev` so the means of editing this library is through the notebooks not the generated modules. The easiest way of developing `nbdev` applications is using editable pip installs:
+
+Run this command from project root: `pip install -e .`
+
+This ensures changes are propagated while developing and along with autoreload means you don't have to re-build all the time.

@@ -211,7 +211,9 @@ def write_pipeline_to_files(
 
         has_sm_param = any((p.has_sagemaker_param for p in param_meta.values()))
         if has_sm_param or len(sm_params) > 0:
-            instance_types = [p.instance_type for p in param_meta.values()] + [type(v) for v in sm_params.values()]
+            instance_types = [p.instance_type for p in param_meta.values()] + [
+                type(v) for v in sm_params.values()
+            ]
             sm_params_import = "from sagemaker.workflow.parameters import "
             if int in instance_types:
                 sm_params_import += "ParameterInteger"

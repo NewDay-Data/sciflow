@@ -38,8 +38,8 @@ dependencies:
   - pyrsistent
   - dvc
   - metaflow
+  - sagemaker
   - tinydb
   - pip
   - pip:
       - sacred
-      - incense

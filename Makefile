@@ -62,7 +62,7 @@ run: convert
 precommit:
 	source "$${HOME}/.sciflow/env" && \
 	sciflow_build_lib && \
-	nbdev_test_nbs --pause=3 && \
+	nbdev_test_nbs && \
 	sciflow_tidy && \
 	sciflow_clean && \
 	sciflow_lint && \
