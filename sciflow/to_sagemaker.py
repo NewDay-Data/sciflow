@@ -739,7 +739,7 @@ def write_steps(
                         flow_file.write(
                             f'{ind}{ind}{ind}{ind}{ind}s3_data=self.{outputs[training_input]}, content_type="text/csv"\n'
                         )
-                    flow_file.write(f"{ind}{ind}{ind}{ind})\n")
+                        flow_file.write(f"{ind}{ind}{ind}{ind}),\n")
                     flow_file.write(f"{ind}{ind}{ind}}}\n")
                 flow_file.write(f"{ind}{ind})\n")
 
@@ -1033,7 +1033,7 @@ def generate_flows(track_experiment=True):
             nb_path,
             get_flow_path(nb_path, flow_provider="sagemaker"),
             silent=False,
-            track_experiment=False,
+            track_experiment=track_experiment,
         )
 
 # Cell

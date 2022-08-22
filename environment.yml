@@ -1,7 +1,4 @@
 name: sciflow
-channels:
-  - https://nexus_eut_svc:AKCp8hzCxcyh1Uh9s4LMNZKmEHY1V4jwUhfqRsEUvdvMNZKhyncwt8MTtzwaq2rZkhx6dxW3e@ndartifactory.jfrog.io/artifactory/api/conda/conda
-  - https://nexus_eut_svc:AKCp8hzCxcyh1Uh9s4LMNZKmEHY1V4jwUhfqRsEUvdvMNZKhyncwt8MTtzwaq2rZkhx6dxW3e@ndartifactory.jfrog.io/artifactory/api/conda/conda-forge
 dependencies:
   - python==3.7.6
   - nbdev
