@@ -53,7 +53,61 @@ As `SciFlow` is built on top of `nbdev` walking through the `nbdev` [tutorial](h
 
 ## Install
 
-* `pip install sciflow`
+* **Note:** Currently only private artifactory repositories or editable pip install are supported. Once some advanced alpha (😊) bugs have been cleared then the project will be released to pypi and public conda channels and install process will be simplified.*
+
+### Editable pip install
+
+The easiest approach is to install `sciflow` as an editable pip install using `pip install -e .` from the `SciFlow` projetc root directory. Activate your conda environment or virtual env before running this command.
+
+### Pip (Artifactory)
+
+Some one-time setup is needed for the install to work.
+
+Create and edit a `~/.pypirc` file:
+
+```
+[distutils]
+index-servers = local
+[local]
+repository: https://[XXX]artifactory.jfrog.io/artifactory/api/pypi/pypi
+username: XXX
+password: XXX
+```
+
+Create and edit a `~/.condarc` file:
+
+```
+remote_connect_timeout_secs: 25.0
+remote_read_timeout_secs: 45.0
+channels:
+  - https://[USER]:[PWD]@[XXX]artifactory.jfrog.io/artifactory/api/conda/conda
+  - https://[USER]:[PWD]@[XXX]artifactory.jfrog.io/artifactory/api/conda/conda-forge
+channel_priority: flexible
+```
+
+Edit your `~/.profile` file:
+
+```
+export ARTIFACTORY_USER=XXX
+export ARTIFACTORY_PASSWORD=XXX
+export ARTIFACTORY_URL=[XXX]artifactory.jfrog.io
+export ARTIFACTORY_CONDA_CHANNEL=conda-local
+export LIB_NAME=sciflow
+export VERSION=1.2.3
+export BUILD_NUMBER=0
+```
+
+Then you should be able to run:
+
+* `pip install sciflow==0.0.1`
+
+and see:
+
+```
+Name: sciflow
+Version: 0.0.1
+Summary: This library bridges the gap between research and production for Data Science.
+```
 
 # How to annotate your workflow
 

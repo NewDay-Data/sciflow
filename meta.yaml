@@ -22,5 +22,11 @@ requirements:
   - pyrsistent==0.18.1
   - sacred==0.8.2
   - tinydb==4.7.0
+  - sagemaker-python-sdk==2.76.0
+  - metaflow==2.5.2
+  - black==22.1.0 
+  - isort==5.10.1
+  - autoflake==1.4
+  - pigar==0.10.0
 source:
   path: /home/sagemaker-user/git/sciflow
