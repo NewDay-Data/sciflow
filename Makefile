@@ -35,6 +35,7 @@ art_conda:
 	rm -rf conda-local-build
 
 art_pip: dist
+	sciflow_prepare && \
 	twine upload --repository local dist/*
     
 build:
