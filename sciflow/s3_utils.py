@@ -16,6 +16,7 @@ import boto3
 from botocore.client import Config
 from botocore.errorfactory import ClientError
 from botocore.exceptions import ConnectTimeoutError
+from nbdev.export import get_config
 
 from .utils import lib_path, prepare_env
 
@@ -116,15 +117,19 @@ def load_json(s3_res, bucket_name, key):
 
 def upload_directory(s3_client, path, bucket_name, prefix):
     for root, dirs, files in os.walk(path):
-        # Ignore non-python source files and IPython checkpoint files
-        for file in [
-            f
-            for f in files
-            if f.split(".")[-1] == "py" and root.find("ipynb_checkpoints") == -1
-        ]:
-            s3_client.upload_file(
-                os.path.join(root, file), bucket_name, f"{prefix}/{file}"
-            )
+        if ".ipynb_checkpoints" not in root and "__pycache__" not in root:
+            # Ignore non-python source files and IPython checkpoint files
+            for file in [
+                f
+                for f in files
+                if f.split(".")[-1] == "py" and root.find("ipynb_checkpoints") == -1
+            ]:
+                if root != path:
+                    sub_dir = Path(root).parts[-1]
+                    upload_key = f"{prefix}/{sub_dir}/{file}"
+                else:
+                    upload_key = f"{prefix}/{file}"
+                s3_client.upload_file(os.path.join(root, file), bucket_name, upload_key)
 
 # Cell
 

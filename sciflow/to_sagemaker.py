@@ -35,6 +35,10 @@ from .utils import (
 
 # Cell
 
+from .to_metaflow import write_track_capture
+
+# Cell
+
 
 def nb_to_sagemaker_pipeline(
     nb_path: Path,
@@ -228,6 +232,8 @@ def write_pipeline_to_files(
             flow_file.write(sm_params_import + "\n")
 
         flow_file.write("from sciflow.s3_utils import upload_directory\n")
+        if track_experiment:
+            flow_file.write("from sciflow.experiment.tracking import FlowTracker\n")
         flow_file.write("\n")
         flow_file.write(
             f"from {fq_module_name} import {', '.join([s.name for s in steps])}\n"
@@ -315,7 +321,7 @@ def write_pipeline_to_files(
         flow_file.write(f"{ind}{ind}return pipeline\n")
         flow_file.write("\n")
 
-        flow_file.write(f"{ind}def init(self):\n")
+        flow_file.write(f"{ind}def __init__(self):\n")
         flow_file.write(f"{ind}{ind}self.bucket = os.environ['SCIFLOW_BUCKET']\n")
         flow_file.write(f"{ind}{ind}self.role = sagemaker.get_execution_role()\n")
         flow_file.write(f"{ind}{ind}self.region = 'eu-west-1'\n")
@@ -324,6 +330,9 @@ def write_pipeline_to_files(
         )
         flow_file.write(
             f"{ind}{ind}self.flow_name = \"{extract_module_only(module_name).replace('_', '-')}\"\n"
+        )
+        flow_file.write(
+            f'{ind}{ind}self.flow_base_key = "{extract_module_only(module_name)}"\n'
         )
         flow_file.write(
             f"{ind}{ind}run_timestamp = datetime.today().__str__().replace(':', '-').replace('.', '-').replace(' ', '-')[:-3]\n"
@@ -366,7 +375,6 @@ def write_pipeline_to_files(
 
         flow_file.write("\n")
         flow_file.write(f"{ind}def show(self):\n")
-        flow_file.write(f"{ind}{ind}self.init()\n")
         flow_file.write(f"{ind}{ind}pipeline = self.get_pipeline()\n")
         flow_file.write(f"{ind}{ind}pipeline.upsert(role_arn=self.role)\n")
         flow_file.write(f"{ind}{ind}description = pipeline.describe()\n")
@@ -380,7 +388,6 @@ def write_pipeline_to_files(
         flow_file.write("\n")
 
         flow_file.write(f"{ind}def run(self):\n")
-        flow_file.write(f"{ind}{ind}self.init()\n")
         flow_file.write(f"{ind}{ind}pipeline = self.get_pipeline()\n")
         flow_file.write(f"{ind}{ind}pipeline.upsert(role_arn=self.role)\n")
         flow_file.write(f"{ind}{ind}execution = pipeline.start()\n")
@@ -399,26 +406,37 @@ def write_pipeline_to_files(
         flow_file.write(f"{ind}{ind}{ind}{pipeline_class_name}().show()\n")
         flow_file.write(f"{ind}{ind}if sys.argv[1] == 'run':\n")
 
+        flow_file.write(f"{ind}{ind}{ind}flow = {pipeline_class_name}()\n")
         if track_experiment:
-            flow_file.write(f"{ind}{ind}{ind}flow_tracker = FlowTracker(os.environ['SCIFLOW_BUCKET'], flow_base_key, flow_run_id, steps)\n")
+            flow_file.write(
+                f"{ind}{ind}{ind}flow_tracker = FlowTracker(os.environ['SCIFLOW_BUCKET'], flow.flow_base_key, flow.flow_run_id, flow.steps)\n"
+            )
             flow_file.write(f"{ind}{ind}{ind}flow_tracker.start()\n\n")
-            flow_file.write(f"{ind}{ind}{ind}try:")
-            flow_file.write(f"{ind}{ind}{ind}{ind}flow = {pipeline_class_name}()\n")
+            flow_file.write(f"{ind}{ind}{ind}try:\n")
+
             flow_file.write(f"{ind}{ind}{ind}{ind}if len(sys.argv[2:]) > 0:\n")
             flow_file.write(f"{ind}{ind}{ind}{ind}{ind}args = sys.argv[2:]\n")
             flow_file.write(
                 f"{ind}{ind}{ind}{ind}{ind}flow.args = dict(list(zip(args, args[1:]))[::2])\n"
             )
             flow_file.write(f"{ind}{ind}{ind}{ind}flow.run()\n")
-            flow_file.write(f"{ind}{ind}{ind}{ind}except (KeyboardInterrupt):\n")
-            flow_file.write(f"{ind}{ind}{ind}{ind}{ind}flow_tracker.interrupted()\n")
-            flow_file.write(f"{ind}{ind}{ind}{ind}{ind}print(f\"Flow interrupted by user: {{flow_run_id}}\")\n")
-            flow_file.write(f"{ind}{ind}{ind}{ind}except BaseException:\n")
-            flow_file.write(f"{ind}{ind}{ind}{ind}{ind}exc_type, exc_value, trace = sys.exc_info()\n")
-            flow_file.write(f"{ind}{ind}{ind}{ind}{ind}except_info = {{\"exc_type\": exc_type, \"exc_value\": exc_value, \"trace\": trace}}\n")
-            flow_file.write(f"{ind}{ind}{ind}{ind}{ind}flow_tracker.failed(except_info)\n")
-            flow_file.write(f"{ind}{ind}{ind}{ind}{ind}print(f\"Flow failed: {{flow_run_id}}\")\n")
-            flow_file.write(f"{ind}{ind}{ind}{ind}flow_tracker.completed()\n")
+            flow_file.write(f"{ind}{ind}{ind}except (KeyboardInterrupt):\n")
+            flow_file.write(f"{ind}{ind}{ind}{ind}flow_tracker.interrupted()\n")
+            flow_file.write(
+                f'{ind}{ind}{ind}{ind}print(f"Flow interrupted by user: {{flow.flow_run_id}}")\n'
+            )
+            flow_file.write(f"{ind}{ind}{ind}except BaseException:\n")
+            flow_file.write(
+                f"{ind}{ind}{ind}{ind}exc_type, exc_value, trace = sys.exc_info()\n"
+            )
+            flow_file.write(
+                f'{ind}{ind}{ind}{ind}except_info = {{"exc_type": exc_type, "exc_value": exc_value, "trace": trace}}\n'
+            )
+            flow_file.write(f"{ind}{ind}{ind}{ind}flow_tracker.failed(except_info)\n")
+            flow_file.write(
+                f'{ind}{ind}{ind}{ind}print(f"Flow failed: {{flow.flow_run_id}}")\n'
+            )
+            flow_file.write(f"{ind}{ind}{ind}flow_tracker.completed()\n")
         else:
             flow_file.write(f"{ind}{ind}{ind}flow = {pipeline_class_name}()\n")
             flow_file.write(f"{ind}{ind}{ind}if len(sys.argv[2:]) > 0:\n")
@@ -829,6 +847,8 @@ def generate_sagemaker_modules(
             sm_module_file.write("from pathlib import Path\n")
             sm_module_file.write("import argparse\n")
             sm_module_file.write("import subprocess\n")
+            if track_experiment:
+                sm_module_file.write("import tempfile\n")
             sm_module_file.write("\n")
             write_preamble(step, sm_module_file, ind)
             sm_module_file.write("\n")
@@ -870,6 +890,10 @@ def generate_sagemaker_modules(
                 sm_module_file.write(f"\n")
 
             sm_module_file.write(f"{ind}add_lib_to_pythonpath(lib_name, remote_key)\n")
+            if track_experiment:
+                sm_module_file.write(
+                    f"{ind}from sciflow.experiment.tracking import StepTracker\n"
+                )
             sm_module_file.write("".join([f"{ind}{lr}" for lr in lib_refs]))
 
             if is_processing_step(step):
@@ -922,23 +946,21 @@ def generate_sagemaker_modules(
                         for a in step_func_args
                     ]
                 )
-                step_func_call_text = f"{ind}results = {step.name}({step_func_args})"
+                step_func_call_text = f"results = {step.name}({step_func_args})"
             else:
-                step_func_call_text = f"{ind}results = {step.name}()"
+                step_func_call_text = f"results = {step.name}()"
 
             if track_experiment:
                 write_step_tracker(
-                        sm_module_file,
-                        ind,
-                        param_meta,
-                        steps,
-                        step,
-                        step_func_call_text.replace("self.tracker", "tracker")
+                    sm_module_file,
+                    ind,
+                    param_meta,
+                    steps,
+                    step,
+                    step_func_call_text.replace("self.tracker", "tracker"),
                 )
             else:
-                sm_module_file.write(
-                    f'{ind}{step_func_call_text}\n'
-                )
+                sm_module_file.write(f"{ind}{ind}{step_func_call_text}\n")
 
             if is_processing_step(step):
                 sm_module_file.write(
@@ -970,7 +992,9 @@ def generate_sagemaker_modules(
 # Cell
 
 
-def write_step_tracker(sm_module_file, ind, param_meta, steps, step, step_func_call_text):
+def write_step_tracker(
+    sm_module_file, ind, param_meta, steps, step, step_func_call_text
+):
     sm_module_file.write(f"{ind}tracker = None\n")
     sm_module_file.write(f"{ind}try:\n")
     sm_module_file.write(
@@ -980,6 +1004,7 @@ def write_step_tracker(sm_module_file, ind, param_meta, steps, step, step_func_c
     sm_module_file.write(
         f"{ind}{ind}{ind}with tracker.capture_out() as tracker._output_file:\n"
     )
+    # TODO pass in heartbeat interval
     sm_module_file.write(f"{ind}{ind}{ind}{ind}tracker.start_heartbeat(10.0)\n")
 
     if not step.has_return:
@@ -990,7 +1015,7 @@ def write_step_tracker(sm_module_file, ind, param_meta, steps, step, step_func_c
                 f"[{os.path.basename(flow_file.name)}] step return variable {step.return_stmt} shadows a parameter name - parameters must be unique"
             )
         sm_module_file.write(f"{ind}{ind}{ind}{ind}{step_func_call_text}\n")
-        write_track_capture(sm_module_file, ind, 5)
+        write_track_capture(sm_module_file, ind, 4)
 
     sm_module_file.write(f"{ind}{ind}{ind}{ind}tracker.completed()\n")
     sm_module_file.write(f"{ind}except BaseException:\n")
