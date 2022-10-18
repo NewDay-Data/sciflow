@@ -310,7 +310,7 @@ def write_pipeline_to_files(
         flow_file.write("\n")
 
         flow_file.write(f"{ind}{ind}pipeline = Pipeline(\n")
-        flow_file.write(f"{ind}{ind}{ind}name=self.flow_name,\n")
+        flow_file.write(f"{ind}{ind}{ind}name=self.flow_base_key.replace('_', '-'),\n")
         flow_file.write(f"{ind}{ind}{ind}parameters=[\n")
         for param_name in params.keys():
             flow_file.write(f"{ind}{ind}{ind}{ind}self.{param_name},\n")
@@ -329,9 +329,6 @@ def write_pipeline_to_files(
             f"{ind}{ind}self.sagemaker_session = Session(default_bucket=self.bucket)\n\n"
         )
         flow_file.write(
-            f"{ind}{ind}self.flow_name = \"{extract_module_only(module_name).replace('_', '-')}\"\n"
-        )
-        flow_file.write(
             f'{ind}{ind}self.flow_base_key = "{extract_module_only(module_name)}"\n'
         )
         flow_file.write(
@@ -339,7 +336,7 @@ def write_pipeline_to_files(
         )
         flow_file.write(f'{ind}{ind}self.flow_run_id = f"pipeline-{{run_timestamp}}"\n')
         flow_file.write(
-            f'{ind}{ind}self.s3_prefix = f"{{self.flow_name}}/{{self.flow_run_id}}"\n'
+            f'{ind}{ind}self.s3_prefix = f"{{self.flow_base_key}}/{{self.flow_run_id}}"\n'
         )
         flow_file.write(
             f'{ind}{ind}self.flow_s3_uri = f"s3://{{self.bucket}}/{{self.s3_prefix}}"\n'

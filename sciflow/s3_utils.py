@@ -124,8 +124,9 @@ def upload_directory(s3_client, path, bucket_name, prefix):
                 for f in files
                 if f.split(".")[-1] == "py" and root.find("ipynb_checkpoints") == -1
             ]:
+
                 if root != path:
-                    sub_dir = Path(root).parts[-1]
+                    sub_dir = root.replace(path, '').lstrip('/')
                     upload_key = f"{prefix}/{sub_dir}/{file}"
                 else:
                     upload_key = f"{prefix}/{file}"
@@ -141,8 +142,12 @@ def download_directory(s3_client, s3_res, bucket_name, remote_key, local_dir):
         obj.key for obj in s3_res.Bucket(bucket_name).objects.filter(Prefix=remote_key)
     ]
     for file in all_files:
-        file_name = file.split("/")[-1]
-        s3_client.download_file(bucket_name, file, f"{local_dir}/{file_name}")
+        file_name = file.replace(remote_key, '').lstrip('/')
+        local_path = Path(local_dir, file_name)
+        if not local_path.parent.exists():
+            local_path.parent.mkdir(parents=True)
+        s3_client.download_file(bucket_name, file, f"{local_path}")
+        assert(local_path.exists())
 
 # Cell
 
