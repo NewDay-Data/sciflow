@@ -35,10 +35,6 @@ from .utils import (
 
 # Cell
 
-from .to_metaflow import write_track_capture
-
-# Cell
-
 
 def nb_to_sagemaker_pipeline(
     nb_path: Path,
@@ -628,6 +624,9 @@ def write_steps(
                 f'{ind}{ind}{ind}code = f"{{self.flow_s3_uri}}/code/_sciflow_{module_local_name}_{step.name}.py",\n'
             )
             job_arg_pairs = [
+                ("--bucket_name", "self.bucket"),
+                ("--flow_base_key", "self.flow_base_key"),
+                ("--flow_run_id", "self.flow_run_id"),
                 ("--lib_name", f'"{lib_name}"'),
                 ("--remote_key", "self.lib_code_key"),
             ]
@@ -721,6 +720,9 @@ def write_steps(
                 step_param_meta = {k: param_meta[k] for k in step_vars["step_input"]}
                 steps_param_meta[step.name] = step_param_meta
                 hyper_params = {
+                    "bucket_name": "self.bucket",
+                    "flow_base_key": "self.flow_base_key",
+                    "flow_run_id": "self.flow_run_id",
                     "lib_name": f'"{lib_name}"',
                     "remote_key": "self.lib_code_key",
                 }
@@ -833,6 +835,10 @@ def generate_sagemaker_modules(
             flow_path.parent, "_sciflow_" + flow_path.stem + f"_{step.name}.py"
         )
 
+        main_args = ["lib_name", "remote_key"]
+        if track_experiment:
+            main_args.extend(["bucket_name", "flow_base_key", "flow_run_id"])
+
         with open(sm_module_path, "w") as sm_module_file:
             sm_module_file.write("".join(lines))
             sm_module_file.write("\n\n# SCIFLOW->SAGEMAKER ADAPTER FROM THIS POINT\n")
@@ -853,10 +859,10 @@ def generate_sagemaker_modules(
             if step.name in steps_param_meta and len(steps_param_meta[step.name]) > 0:
                 step_args = list(steps_param_meta[step.name].keys())
                 sm_module_file.write(
-                    f"def main(lib_name, remote_key, {', '.join(step_args)}):\n"
+                    f"def main({', '.join(main_args)}, {', '.join(step_args)}):\n"
                 )
             else:
-                sm_module_file.write(f"def main(lib_name, remote_key):\n")
+                sm_module_file.write(f"def main({', '.join(main_args)}):\n")
             if is_processing_step(step):
                 sm_module_file.write(
                     f'{ind}has_additional_dependencies = Path("/opt/ml/processing/requirements/requirements.txt").exists()\n'
@@ -920,8 +926,6 @@ def generate_sagemaker_modules(
                             f'{ind}{step_proc_var} = load_result("/opt/ml/input/data/{step_proc_var}", "{step_proc_var}")\n'
                         )
 
-            args = ["lib_name", "remote_key"]
-
             step_func_args = []
             if len(steps_vars[step.name]) > 0:
                 step_vars = (
@@ -934,7 +938,7 @@ def generate_sagemaker_modules(
                 step_params = (
                     format_args(steps_param_meta[step.name]).replace(" ", "").split(",")
                 )
-                args.extend(step_args)
+                main_args.extend(step_args)
                 step_func_args.extend(step_params)
             if len(step_func_args) > 0:
                 step_func_args = ",".join(
@@ -975,9 +979,9 @@ def generate_sagemaker_modules(
                 f"{ind}parser.formatter_class = argparse.RawDescriptionHelpFormatter\n"
             )
 
-            for arg in args:
+            for main_arg in main_args:
                 sm_module_file.write(
-                    f'{ind}parser.add_argument(f"--{arg}", required=True)\n'
+                    f'{ind}parser.add_argument(f"--{main_arg}", required=True)\n'
                 )
             sm_module_file.write(f"{ind}return parser.parse_args()")
             sm_module_file.write(f"\n")
@@ -995,7 +999,7 @@ def write_step_tracker(
     sm_module_file.write(f"{ind}tracker = None\n")
     sm_module_file.write(f"{ind}try:\n")
     sm_module_file.write(
-        f'{ind}{ind}tracker = StepTracker(self.bucket_name, self.flow_base_key, self.flow_run_id, "{step.name}")\n'
+        f'{ind}{ind}tracker = StepTracker(bucket_name, flow_base_key, flow_run_id, "{step.name}")\n'
     )
     sm_module_file.write(f"{ind}{ind}with tempfile.TemporaryDirectory() as temp_dir:\n")
     sm_module_file.write(
@@ -1012,7 +1016,6 @@ def write_step_tracker(
                 f"[{os.path.basename(flow_file.name)}] step return variable {step.return_stmt} shadows a parameter name - parameters must be unique"
             )
         sm_module_file.write(f"{ind}{ind}{ind}{ind}{step_func_call_text}\n")
-        write_track_capture(sm_module_file, ind, 4)
 
     sm_module_file.write(f"{ind}{ind}{ind}{ind}tracker.completed()\n")
     sm_module_file.write(f"{ind}except BaseException:\n")
@@ -1026,7 +1029,7 @@ def write_step_tracker(
     sm_module_file.write(
         f'{ind}{ind}{ind}tracker.completed(status="FAILED", except_info=except_info)\n'
     )
-    sm_module_file.write(f"{ind}{ind}raise\n\n")
+    sm_module_file.write(f"{ind}{ind}raise\n")
     sm_module_file.write(f"\n")
 
 # Cell
@@ -1045,9 +1048,12 @@ def write_preamble(step, sm_module_file, ind):
         f"{ind}all_files = [obj.key for obj in s3_res.Bucket(bucket_name).objects.filter(Prefix=remote_key)]\n"
     )
     sm_module_file.write(f"{ind}for file in all_files:\n")
-    sm_module_file.write(f"{ind}{ind}file_name = file.split('/')[-1]\n")
+    sm_module_file.write(f"{ind}{ind}file_name = file.replace(remote_key, '').lstrip('/')\n")
+    sm_module_file.write(f"{ind}{ind}local_path = Path(local_dir, file_name)\n")
+    sm_module_file.write(f"{ind}{ind}if not local_path.parent.exists():\n")
+    sm_module_file.write(f"{ind}{ind}{ind}local_path.parent.mkdir(parents=True)\n")
     sm_module_file.write(
-        f"{ind}{ind}s3_client.download_file(bucket_name, file, f'{{local_dir}}/{{file_name}}')\n"
+        f"{ind}{ind}s3_client.download_file(bucket_name, file, f'{{local_path}}')\n"
     )
     sm_module_file.write("\n")
 
