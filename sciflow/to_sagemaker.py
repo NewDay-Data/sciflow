@@ -1048,7 +1048,9 @@ def write_preamble(step, sm_module_file, ind):
         f"{ind}all_files = [obj.key for obj in s3_res.Bucket(bucket_name).objects.filter(Prefix=remote_key)]\n"
     )
     sm_module_file.write(f"{ind}for file in all_files:\n")
-    sm_module_file.write(f"{ind}{ind}file_name = file.replace(remote_key, '').lstrip('/')\n")
+    sm_module_file.write(
+        f"{ind}{ind}file_name = file.replace(remote_key, '').lstrip('/')\n"
+    )
     sm_module_file.write(f"{ind}{ind}local_path = Path(local_dir, file_name)\n")
     sm_module_file.write(f"{ind}{ind}if not local_path.parent.exists():\n")
     sm_module_file.write(f"{ind}{ind}{ind}local_path.parent.mkdir(parents=True)\n")

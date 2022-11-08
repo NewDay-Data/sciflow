@@ -29,7 +29,7 @@ def check_is_init():
     root_path = str(get_config().path("root_path"))
 
     if root_path not in sys.path:
-        # TODO change to SciflowError
+        print(f"PYTHONPATH={sys.path}")
         raise ValueError("Project is not in path; have you run sciflow_init?")
 
 # Cell

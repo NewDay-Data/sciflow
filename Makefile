@@ -55,8 +55,11 @@ convert: build
 	echo "Build completed"
     
 run: convert
-	source "$${HOME}/.sciflow/env" && \
 	sciflow_run_metaflows && \
+	echo "Flow run checks completed"
+    
+run_all: convert
+	sciflow_run_sagemaker_flows && \
 	echo "Flow run checks completed"
     
 precommit:

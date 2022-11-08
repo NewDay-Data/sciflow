@@ -15,7 +15,7 @@ from ..experiment.tracking import MockTracker, SciFlowTracker
 # step:something
 
 
-def something(tracker: SciFlowTracker = None):
+def something(tracker=None):
     message = "The first step"
     print(f"{message}")
     print(f"something tracker: {tracker}")
@@ -83,7 +83,7 @@ def preprocess(
     model_level=None,
     min_date=None,
     traffic_percent=100,
-    tracker: SciFlowTracker = None,
+    tracker=None,
 ):
     print(f"I captialised the message: {message.upper()}")
     data = get_utterances(model_level, min_date, traffic_percent)
@@ -129,7 +129,7 @@ class Topics:
 # step:fit
 
 
-def fit(documents, workers=workers, tracker: SciFlowTracker = None):
+def fit(documents, workers=workers, tracker = None):
     model = Topics(documents, workers=workers)
     print(f"Fit tracker: {tracker}")
     if tracker:
