@@ -10,7 +10,7 @@ import tempfile
 import numpy as np
 import pandas as pd
 
-from ..experiment.tracking import MockTracker, SciFlowTracker
+from ..experiment.tracking import MockTracker
 
 # step:something
 
@@ -129,7 +129,7 @@ class Topics:
 # step:fit
 
 
-def fit(documents, workers=workers, tracker = None):
+def fit(documents, workers=workers, tracker=None):
     model = Topics(documents, workers=workers)
     print(f"Fit tracker: {tracker}")
     if tracker:

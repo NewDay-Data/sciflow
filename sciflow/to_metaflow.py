@@ -13,7 +13,7 @@ from pathlib import Path, PosixPath
 from typing import Iterable
 
 import numpy as np
-from fastcore.script import Param, call_parse
+from fastcore.script import Param, call_parse, bool_arg
 from nbdev.export import find_default_export, get_config, nbglob, read_nb
 
 from .data_handler import extract_param_meta
@@ -372,7 +372,11 @@ def write_cli_wrapper(flow_path, flow_base_key, steps):
 # Cell
 
 
-def generate_flows(config=None, track_experiment=True):
+def generate_flows(config=None, track_experiment=True, clear_dir=True):
+    if clear_dir:
+        metaflows_dir = Path(get_config().path("flows_path"),
+                             "metaflow")
+        [f.unlink() for f in metaflows_dir.iterdir() if not f.is_dir()]
     nb_paths = nbglob(recursive=True)
     for nb_path in nb_paths:
         nb_to_metaflow(
@@ -386,6 +390,6 @@ def generate_flows(config=None, track_experiment=True):
 
 
 @call_parse
-def sciflow_metaflow(track: Param("Track flows as experiments", default=True)):
+def sciflow_metaflow(track: Param("Track flows as experiments", bool_arg)=True):
     print(f"Converting flows to metaflow (experiment tracking = {track})")
-    generate_flows(get_config(), track)
+    generate_flows(config=get_config(), track_experiment=track)

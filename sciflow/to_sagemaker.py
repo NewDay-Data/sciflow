@@ -13,7 +13,7 @@ import shutil
 from pathlib import Path, PosixPath
 from typing import Iterable
 
-from fastcore.script import Param, call_parse
+from fastcore.script import Param, call_parse, bool_arg
 from nbdev.export import find_default_export, get_config, nbglob, read_nb
 
 from .data_handler import ParamMeta, extract_param_meta
@@ -1111,7 +1111,11 @@ def write_preamble(step, sm_module_file, ind):
 # Cell
 
 
-def generate_flows(track_experiment=True):
+def generate_flows(track_experiment=True, clear_dir=True):
+    if clear_dir:
+        metaflows_dir = Path(get_config().path("flows_path"),
+                             "sagemaker")
+        [f.unlink() for f in metaflows_dir.iterdir() if not f.is_dir()]
     nb_paths = nbglob(recursive=True)
     for nb_path in nb_paths:
         nb_to_sagemaker_pipeline(
@@ -1125,6 +1129,6 @@ def generate_flows(track_experiment=True):
 
 
 @call_parse
-def sciflow_sagemaker(track: Param("Track flows as experiments", default=True)):
+def sciflow_sagemaker(track: Param("Track flows as experiments", bool_arg) = True):
     print(f"Converting flows to sagemaker pipelines (experiment tracking = {track})")
     generate_flows(track)
