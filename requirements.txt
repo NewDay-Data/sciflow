@@ -38,7 +38,7 @@ fastcore == 1.3.27
 
 # sciflow/experiment/.ipynb_checkpoints/lake_experiment-checkpoint.py: 35,36
 # sciflow/experiment/lake_experiment.py: 23
-ipython == 8.0.1
+ipython == 8.10.0
 
 # sciflow/.ipynb_checkpoints/clean-checkpoint.py: 12,13
 # sciflow/.ipynb_checkpoints/packaging-checkpoint.py: 19
