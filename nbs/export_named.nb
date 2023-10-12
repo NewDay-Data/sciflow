@@ -1,0 +1,919 @@
+{
+ "cells": [
+  {
+   "cell_type": "code",
+   "execution_count": 2,
+   "metadata": {
+    "tags": []
+   },
+   "outputs": [],
+   "source": [
+    "# default_exp export_named"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "# Export cells with a name\n",
+    "\n",
+    "> Exporting `nbdev` notebook cells with a name adds the ability to build name pattern based differentiation of downstream activity."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {
+    "tags": []
+   },
+   "outputs": [
+    {
+     "ename": "ImportError",
+     "evalue": "cannot import name 'extra_add' from 'nbdev.export' (/opt/conda/lib/python3.8/site-packages/nbdev/export.py)",
+     "output_type": "error",
+     "traceback": [
+      "\u001b[0;31m---------------------------------------------------------------------------\u001b[0m",
+      "\u001b[0;31mImportError\u001b[0m                               Traceback (most recent call last)",
+      "Cell \u001b[0;32mIn[12], line 11\u001b[0m\n\u001b[1;32m      9\u001b[0m \u001b[38;5;28;01mimport\u001b[39;00m \u001b[38;5;21;01mnbformat\u001b[39;00m\n\u001b[1;32m     10\u001b[0m \u001b[38;5;28;01mfrom\u001b[39;00m \u001b[38;5;21;01mfastcore\u001b[39;00m\u001b[38;5;21;01m.\u001b[39;00m\u001b[38;5;21;01mscript\u001b[39;00m \u001b[38;5;28;01mimport\u001b[39;00m call_parse\n\u001b[0;32m---> 11\u001b[0m \u001b[38;5;28;01mfrom\u001b[39;00m \u001b[38;5;21;01mnbdev\u001b[39;00m\u001b[38;5;21;01m.\u001b[39;00m\u001b[38;5;21;01mexport\u001b[39;00m \u001b[38;5;28;01mimport\u001b[39;00m (\n\u001b[1;32m     12\u001b[0m     extra_add,\n\u001b[1;32m     13\u001b[0m     find_default_export,\n\u001b[1;32m     14\u001b[0m     get_config,\n\u001b[1;32m     15\u001b[0m     get_nbdev_module,\n\u001b[1;32m     16\u001b[0m     notebook2script,\n\u001b[1;32m     17\u001b[0m     read_nb,\n\u001b[1;32m     18\u001b[0m     save_nbdev_module,\n\u001b[1;32m     19\u001b[0m     split_flags_and_code,\n\u001b[1;32m     20\u001b[0m )\n\u001b[1;32m     21\u001b[0m \u001b[38;5;28;01mfrom\u001b[39;00m \u001b[38;5;21;01mnbformat\u001b[39;00m \u001b[38;5;28;01mimport\u001b[39;00m NotebookNode\n",
+      "\u001b[0;31mImportError\u001b[0m: cannot import name 'extra_add' from 'nbdev.export' (/opt/conda/lib/python3.8/site-packages/nbdev/export.py)"
+     ]
+    }
+   ],
+   "source": [
+    "# export\n",
+    "\n",
+    "\n",
+    "import os\n",
+    "import re\n",
+    "from pathlib import Path\n",
+    "\n",
+    "import nbdev\n",
+    "import nbformat\n",
+    "from fastcore.script import call_parse\n",
+    "from nbdev.export import (\n",
+    "    _add2all,\n",
+    "    _deal_import,\n",
+    "    _from_future_import,\n",
+    "    _is_external_export,\n",
+    "    _mk_flag_re,\n",
+    "    _re_blank_export,\n",
+    "    _re_mod_export,\n",
+    "    check_re,\n",
+    "    export_names,\n",
+    "    extra_add,\n",
+    "    find_default_export,\n",
+    "    get_config,\n",
+    "    get_nbdev_module,\n",
+    "    notebook2script,\n",
+    "    read_nb,\n",
+    "    save_nbdev_module,\n",
+    "    split_flags_and_code,\n",
+    ")\n",
+    "from nbformat import NotebookNode"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "# export\n",
+    "\n",
+    "_re_named_export = _mk_flag_re(\n",
+    "    \"exportn_[a-zA-Z0-9:_]+\\W*$\",\n",
+    "    0,\n",
+    "    \"Matches any line with a named #exportn without any module name\",\n",
+    ")\n",
+    "\n",
+    "\n",
+    "def extract_named_export(cell: NotebookNode):\n",
+    "    name = None\n",
+    "    tst = check_re(cell, _re_named_export)\n",
+    "    if tst:\n",
+    "        pat = re.compile(rf\"\"\"exportn_[a-zA-Z0-9:_]+\\W*$\"\"\", re.MULTILINE | re.VERBOSE)\n",
+    "        pat_match = pat.search(tst.string).group(0).split(\"_\")\n",
+    "        if len(pat_match) == 2:\n",
+    "            name = pat_match[1].strip()\n",
+    "        elif len(pat_match) > 2:\n",
+    "            name = \"_\".join(pat_match[1:]).strip()\n",
+    "    return name"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "nb_path = Path(os.path.join(\"test\", \"test_export.ipynb\"))\n",
+    "nb = read_nb(nb_path)\n",
+    "default = find_default_export(nb[\"cells\"])\n",
+    "named_exports = [ne for ne in [extract_named_export(c) for c in nb[\"cells\"]] if ne]\n",
+    "assert len(named_exports) >= 3"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "cell = nbformat.v4.new_code_cell(f\"#export\\n some code\")\n",
+    "assert \"#export\" == check_re(cell, _re_blank_export).group(0)\n",
+    "assert extract_named_export(cell) == None\n",
+    "cell = nbformat.v4.new_code_cell(f\"#exportn_step:func\\n some code\")\n",
+    "assert \"#exportn_step:func\" == check_re(cell, _re_named_export).group(0).strip()\n",
+    "assert \"step:func\" == extract_named_export(cell)\n",
+    "cell = nbformat.v4.new_code_cell(f\"#exportn_step:func   \\n some code\")\n",
+    "assert \"#exportn_step:func\" == check_re(cell, _re_named_export).group(0).strip()\n",
+    "assert \"step:func\" == extract_named_export(cell)\n",
+    "cell = nbformat.v4.new_code_cell(f\"#exportn_step:func \\n some code\")\n",
+    "assert \"#exportn_step:func\" == check_re(cell, _re_named_export).group(0).strip()\n",
+    "assert \"step:func\" == extract_named_export(cell)\n",
+    "cell = nbformat.v4.new_code_cell(f\"#exportn_step:snake_case_func \\n some code\")\n",
+    "assert (\n",
+    "    \"#exportn_step:snake_case_func\" == check_re(cell, _re_named_export).group(0).strip()\n",
+    ")\n",
+    "assert \"step:snake_case_func\" == extract_named_export(cell)"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "# export\n",
+    "\n",
+    "\n",
+    "def is_export_extended(cell, default):\n",
+    "    \"\"\"Check if `cell` is to be exported and returns the name of the module\n",
+    "    to export it if provided. This version adds a named export.\"\"\"\n",
+    "    tst = check_re(cell, _re_named_export)\n",
+    "    if tst:\n",
+    "        if default is None:\n",
+    "            print(f\"No export destination, ignored:\\n{cell['source']}\")\n",
+    "        return default, _is_external_export(tst)\n",
+    "    tst = check_re(cell, _re_blank_export)\n",
+    "    if tst:\n",
+    "        if default is None:\n",
+    "            print(f\"No export destination, ignored:\\n{cell['source']}\")\n",
+    "        return default, _is_external_export(tst)\n",
+    "    tst = check_re(cell, _re_mod_export)\n",
+    "    if tst:\n",
+    "        return os.path.sep.join(tst.groups()[0].split(\".\")), _is_external_export(tst)\n",
+    "    else:\n",
+    "        return None"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "exports_extended = [e for e in [is_export_extended(c, default) for c in nb[\"cells\"]]]\n",
+    "assert type(exports_extended[1][0]) == str and exports_extended[1][1]\n",
+    "orig = [e for e in [nbdev.export.is_export(c, default) for c in nb[\"cells\"]] if e]\n",
+    "new = [e for e in [is_export_extended(c, default) for c in nb[\"cells\"]] if e]\n",
+    "assert len(new) == len(orig) + 4"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "# export\n",
+    "\n",
+    "\n",
+    "def set_orig_value(\n",
+    "    fname: str, c: NotebookNode, a: bool, e: str, default: str, bare: bool = None\n",
+    "):\n",
+    "    if bare:\n",
+    "        orig = \"\\n\"\n",
+    "    else:\n",
+    "        named_export = extract_named_export(c)\n",
+    "        if named_export:\n",
+    "            if e != default:\n",
+    "                named_export + f\" comes from {fname.name}\"\n",
+    "            orig = f\"# {named_export}\\n\"\n",
+    "        else:\n",
+    "            orig = (\n",
+    "                f'# {\"\" if a else \"Internal \"}C'\n",
+    "                if e == default\n",
+    "                else f\"# Comes from {fname.name}, c\"\n",
+    "            ) + \"ell\\n\"\n",
+    "    return orig"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "fname = str(nb_path)"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "assert any(\n",
+    "    c\n",
+    "    for c in [\n",
+    "        set_orig_value(fname, c, False, \"test_export\", \"test_export\")\n",
+    "        for c in nb[\"cells\"]\n",
+    "    ]\n",
+    "    if c == \"# step:first\\n\"\n",
+    ")"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "# Create a forked version of _notebook2script"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "# export\n",
+    "\n",
+    "\n",
+    "def _sciflow_notebook2script(fname, modules, silent=False, to_dict=None, bare=False):\n",
+    "    \"Finds cells starting with `#export` and puts them into a module created by `create_mod_files`\"\n",
+    "    bare = str(get_config().get(\"bare\", bare)) == \"True\"\n",
+    "    if os.environ.get(\"IN_TEST\", 0):\n",
+    "        return  # don't export if running tests\n",
+    "    sep = \"\\n\" * (int(get_config().get(\"cell_spacing\", \"1\")) + 1)\n",
+    "    fname = Path(fname)\n",
+    "    nb = read_nb(fname)\n",
+    "    default = find_default_export(nb[\"cells\"])\n",
+    "    if default is not None:\n",
+    "        default = os.path.sep.join(default.split(\".\"))\n",
+    "    mod = get_nbdev_module()\n",
+    "    exports = [is_export_extended(c, default) for c in nb[\"cells\"]]\n",
+    "    cells = [\n",
+    "        (i, c, e) for i, (c, e) in enumerate(zip(nb[\"cells\"], exports)) if e is not None\n",
+    "    ]\n",
+    "    for i, c, (e, a) in cells:\n",
+    "        if e not in modules:\n",
+    "            print(\n",
+    "                f'Warning: Exporting to \"{e}.py\" but this module is not part of this build'\n",
+    "            )\n",
+    "        fname_out = get_config().path(\"lib_path\") / f\"{e}.py\"\n",
+    "        orig = set_orig_value(fname, c, a, e, default)\n",
+    "        flag_lines, code_lines = split_flags_and_code(c)\n",
+    "        code_lines = _deal_import(code_lines, fname_out)\n",
+    "        code = sep + orig + \"\\n\".join(code_lines)\n",
+    "        names = export_names(code)\n",
+    "        flags = \"\\n\".join(flag_lines)\n",
+    "        extra, code = extra_add(flags, code)\n",
+    "        code = _from_future_import(fname_out, flags, code, to_dict)\n",
+    "        if a:\n",
+    "            if to_dict is None:\n",
+    "                _add2all(\n",
+    "                    fname_out,\n",
+    "                    [f\"'{f}'\" for f in names if \".\" not in f and len(f) > 0] + extra,\n",
+    "                )\n",
+    "        mod.index.update({f: fname.name for f in names})\n",
+    "        code = re.sub(r\" +$\", \"\", code, flags=re.MULTILINE)\n",
+    "        if code != sep + orig[:-1]:\n",
+    "            if to_dict is not None:\n",
+    "                to_dict[e].append((i, fname, code))\n",
+    "            else:\n",
+    "                with open(fname_out, \"a\", encoding=\"utf8\") as f:\n",
+    "                    f.write(code)\n",
+    "        if f\"{e}.py\" not in mod.modules:\n",
+    "            mod.modules.append(f\"{e}.py\")\n",
+    "    save_nbdev_module(mod)\n",
+    "\n",
+    "    if not silent:\n",
+    "        print(f\"Converted {fname.name}.\")\n",
+    "    return to_dict"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "# export\n",
+    "\n",
+    "\n",
+    "@call_parse\n",
+    "def sciflow_build_lib():\n",
+    "    nbdev.export._notebook2script = _sciflow_notebook2script\n",
+    "    notebook2script()"
+   ]
+  }
+ ],
+ "metadata": {
+  "availableInstances": [
+   {
+    "_defaultOrder": 0,
+    "_isFastLaunch": true,
+    "category": "General purpose",
+    "gpuNum": 0,
+    "hideHardwareSpecs": false,
+    "memoryGiB": 4,
+    "name": "ml.t3.medium",
+    "vcpuNum": 2
+   },
+   {
+    "_defaultOrder": 1,
+    "_isFastLaunch": false,
+    "category": "General purpose",
+    "gpuNum": 0,
+    "hideHardwareSpecs": false,
+    "memoryGiB": 8,
+    "name": "ml.t3.large",
+    "vcpuNum": 2
+   },
+   {
+    "_defaultOrder": 2,
+    "_isFastLaunch": false,
+    "category": "General purpose",
+    "gpuNum": 0,
+    "hideHardwareSpecs": false,
+    "memoryGiB": 16,
+    "name": "ml.t3.xlarge",
+    "vcpuNum": 4
+   },
+   {
+    "_defaultOrder": 3,
+    "_isFastLaunch": false,
+    "category": "General purpose",
+    "gpuNum": 0,
+    "hideHardwareSpecs": false,
+    "memoryGiB": 32,
+    "name": "ml.t3.2xlarge",
+    "vcpuNum": 8
+   },
+   {
+    "_defaultOrder": 4,
+    "_isFastLaunch": true,
+    "category": "General purpose",
+    "gpuNum": 0,
+    "hideHardwareSpecs": false,
+    "memoryGiB": 8,
+    "name": "ml.m5.large",
+    "vcpuNum": 2
+   },
+   {
+    "_defaultOrder": 5,
+    "_isFastLaunch": false,
+    "category": "General purpose",
+    "gpuNum": 0,
+    "hideHardwareSpecs": false,
+    "memoryGiB": 16,
+    "name": "ml.m5.xlarge",
+    "vcpuNum": 4
+   },
+   {
+    "_defaultOrder": 6,
+    "_isFastLaunch": false,
+    "category": "General purpose",
+    "gpuNum": 0,
+    "hideHardwareSpecs": false,
+    "memoryGiB": 32,
+    "name": "ml.m5.2xlarge",
+    "vcpuNum": 8
+   },
+   {
+    "_defaultOrder": 7,
+    "_isFastLaunch": false,
+    "category": "General purpose",
+    "gpuNum": 0,
+    "hideHardwareSpecs": false,
+    "memoryGiB": 64,
+    "name": "ml.m5.4xlarge",
+    "vcpuNum": 16
+   },
+   {
+    "_defaultOrder": 8,
+    "_isFastLaunch": false,
+    "category": "General purpose",
+    "gpuNum": 0,
+    "hideHardwareSpecs": false,
+    "memoryGiB": 128,
+    "name": "ml.m5.8xlarge",
+    "vcpuNum": 32
+   },
+   {
+    "_defaultOrder": 9,
+    "_isFastLaunch": false,
+    "category": "General purpose",
+    "gpuNum": 0,
+    "hideHardwareSpecs": false,
+    "memoryGiB": 192,
+    "name": "ml.m5.12xlarge",
+    "vcpuNum": 48
+   },
+   {
+    "_defaultOrder": 10,
+    "_isFastLaunch": false,
+    "category": "General purpose",
+    "gpuNum": 0,
+    "hideHardwareSpecs": false,
+    "memoryGiB": 256,
+    "name": "ml.m5.16xlarge",
+    "vcpuNum": 64
+   },
+   {
+    "_defaultOrder": 11,
+    "_isFastLaunch": false,
+    "category": "General purpose",
+    "gpuNum": 0,
+    "hideHardwareSpecs": false,
+    "memoryGiB": 384,
+    "name": "ml.m5.24xlarge",
+    "vcpuNum": 96
+   },
+   {
+    "_defaultOrder": 12,
+    "_isFastLaunch": false,
+    "category": "General purpose",
+    "gpuNum": 0,
+    "hideHardwareSpecs": false,
+    "memoryGiB": 8,
+    "name": "ml.m5d.large",
+    "vcpuNum": 2
+   },
+   {
+    "_defaultOrder": 13,
+    "_isFastLaunch": false,
+    "category": "General purpose",
+    "gpuNum": 0,
+    "hideHardwareSpecs": false,
+    "memoryGiB": 16,
+    "name": "ml.m5d.xlarge",
+    "vcpuNum": 4
+   },
+   {
+    "_defaultOrder": 14,
+    "_isFastLaunch": false,
+    "category": "General purpose",
+    "gpuNum": 0,
+    "hideHardwareSpecs": false,
+    "memoryGiB": 32,
+    "name": "ml.m5d.2xlarge",
+    "vcpuNum": 8
+   },
+   {
+    "_defaultOrder": 15,
+    "_isFastLaunch": false,
+    "category": "General purpose",
+    "gpuNum": 0,
+    "hideHardwareSpecs": false,
+    "memoryGiB": 64,
+    "name": "ml.m5d.4xlarge",
+    "vcpuNum": 16
+   },
+   {
+    "_defaultOrder": 16,
+    "_isFastLaunch": false,
+    "category": "General purpose",
+    "gpuNum": 0,
+    "hideHardwareSpecs": false,
+    "memoryGiB": 128,
+    "name": "ml.m5d.8xlarge",
+    "vcpuNum": 32
+   },
+   {
+    "_defaultOrder": 17,
+    "_isFastLaunch": false,
+    "category": "General purpose",
+    "gpuNum": 0,
+    "hideHardwareSpecs": false,
+    "memoryGiB": 192,
+    "name": "ml.m5d.12xlarge",
+    "vcpuNum": 48
+   },
+   {
+    "_defaultOrder": 18,
+    "_isFastLaunch": false,
+    "category": "General purpose",
+    "gpuNum": 0,
+    "hideHardwareSpecs": false,
+    "memoryGiB": 256,
+    "name": "ml.m5d.16xlarge",
+    "vcpuNum": 64
+   },
+   {
+    "_defaultOrder": 19,
+    "_isFastLaunch": false,
+    "category": "General purpose",
+    "gpuNum": 0,
+    "hideHardwareSpecs": false,
+    "memoryGiB": 384,
+    "name": "ml.m5d.24xlarge",
+    "vcpuNum": 96
+   },
+   {
+    "_defaultOrder": 20,
+    "_isFastLaunch": false,
+    "category": "General purpose",
+    "gpuNum": 0,
+    "hideHardwareSpecs": true,
+    "memoryGiB": 0,
+    "name": "ml.geospatial.interactive",
+    "supportedImageNames": [
+     "sagemaker-geospatial-v1-0"
+    ],
+    "vcpuNum": 0
+   },
+   {
+    "_defaultOrder": 21,
+    "_isFastLaunch": true,
+    "category": "Compute optimized",
+    "gpuNum": 0,
+    "hideHardwareSpecs": false,
+    "memoryGiB": 4,
+    "name": "ml.c5.large",
+    "vcpuNum": 2
+   },
+   {
+    "_defaultOrder": 22,
+    "_isFastLaunch": false,
+    "category": "Compute optimized",
+    "gpuNum": 0,
+    "hideHardwareSpecs": false,
+    "memoryGiB": 8,
+    "name": "ml.c5.xlarge",
+    "vcpuNum": 4
+   },
+   {
+    "_defaultOrder": 23,
+    "_isFastLaunch": false,
+    "category": "Compute optimized",
+    "gpuNum": 0,
+    "hideHardwareSpecs": false,
+    "memoryGiB": 16,
+    "name": "ml.c5.2xlarge",
+    "vcpuNum": 8
+   },
+   {
+    "_defaultOrder": 24,
+    "_isFastLaunch": false,
+    "category": "Compute optimized",
+    "gpuNum": 0,
+    "hideHardwareSpecs": false,
+    "memoryGiB": 32,
+    "name": "ml.c5.4xlarge",
+    "vcpuNum": 16
+   },
+   {
+    "_defaultOrder": 25,
+    "_isFastLaunch": false,
+    "category": "Compute optimized",
+    "gpuNum": 0,
+    "hideHardwareSpecs": false,
+    "memoryGiB": 72,
+    "name": "ml.c5.9xlarge",
+    "vcpuNum": 36
+   },
+   {
+    "_defaultOrder": 26,
+    "_isFastLaunch": false,
+    "category": "Compute optimized",
+    "gpuNum": 0,
+    "hideHardwareSpecs": false,
+    "memoryGiB": 96,
+    "name": "ml.c5.12xlarge",
+    "vcpuNum": 48
+   },
+   {
+    "_defaultOrder": 27,
+    "_isFastLaunch": false,
+    "category": "Compute optimized",
+    "gpuNum": 0,
+    "hideHardwareSpecs": false,
+    "memoryGiB": 144,
+    "name": "ml.c5.18xlarge",
+    "vcpuNum": 72
+   },
+   {
+    "_defaultOrder": 28,
+    "_isFastLaunch": false,
+    "category": "Compute optimized",
+    "gpuNum": 0,
+    "hideHardwareSpecs": false,
+    "memoryGiB": 192,
+    "name": "ml.c5.24xlarge",
+    "vcpuNum": 96
+   },
+   {
+    "_defaultOrder": 29,
+    "_isFastLaunch": true,
+    "category": "Accelerated computing",
+    "gpuNum": 1,
+    "hideHardwareSpecs": false,
+    "memoryGiB": 16,
+    "name": "ml.g4dn.xlarge",
+    "vcpuNum": 4
+   },
+   {
+    "_defaultOrder": 30,
+    "_isFastLaunch": false,
+    "category": "Accelerated computing",
+    "gpuNum": 1,
+    "hideHardwareSpecs": false,
+    "memoryGiB": 32,
+    "name": "ml.g4dn.2xlarge",
+    "vcpuNum": 8
+   },
+   {
+    "_defaultOrder": 31,
+    "_isFastLaunch": false,
+    "category": "Accelerated computing",
+    "gpuNum": 1,
+    "hideHardwareSpecs": false,
+    "memoryGiB": 64,
+    "name": "ml.g4dn.4xlarge",
+    "vcpuNum": 16
+   },
+   {
+    "_defaultOrder": 32,
+    "_isFastLaunch": false,
+    "category": "Accelerated computing",
+    "gpuNum": 1,
+    "hideHardwareSpecs": false,
+    "memoryGiB": 128,
+    "name": "ml.g4dn.8xlarge",
+    "vcpuNum": 32
+   },
+   {
+    "_defaultOrder": 33,
+    "_isFastLaunch": false,
+    "category": "Accelerated computing",
+    "gpuNum": 4,
+    "hideHardwareSpecs": false,
+    "memoryGiB": 192,
+    "name": "ml.g4dn.12xlarge",
+    "vcpuNum": 48
+   },
+   {
+    "_defaultOrder": 34,
+    "_isFastLaunch": false,
+    "category": "Accelerated computing",
+    "gpuNum": 1,
+    "hideHardwareSpecs": false,
+    "memoryGiB": 256,
+    "name": "ml.g4dn.16xlarge",
+    "vcpuNum": 64
+   },
+   {
+    "_defaultOrder": 35,
+    "_isFastLaunch": false,
+    "category": "Accelerated computing",
+    "gpuNum": 1,
+    "hideHardwareSpecs": false,
+    "memoryGiB": 61,
+    "name": "ml.p3.2xlarge",
+    "vcpuNum": 8
+   },
+   {
+    "_defaultOrder": 36,
+    "_isFastLaunch": false,
+    "category": "Accelerated computing",
+    "gpuNum": 4,
+    "hideHardwareSpecs": false,
+    "memoryGiB": 244,
+    "name": "ml.p3.8xlarge",
+    "vcpuNum": 32
+   },
+   {
+    "_defaultOrder": 37,
+    "_isFastLaunch": false,
+    "category": "Accelerated computing",
+    "gpuNum": 8,
+    "hideHardwareSpecs": false,
+    "memoryGiB": 488,
+    "name": "ml.p3.16xlarge",
+    "vcpuNum": 64
+   },
+   {
+    "_defaultOrder": 38,
+    "_isFastLaunch": false,
+    "category": "Accelerated computing",
+    "gpuNum": 8,
+    "hideHardwareSpecs": false,
+    "memoryGiB": 768,
+    "name": "ml.p3dn.24xlarge",
+    "vcpuNum": 96
+   },
+   {
+    "_defaultOrder": 39,
+    "_isFastLaunch": false,
+    "category": "Memory Optimized",
+    "gpuNum": 0,
+    "hideHardwareSpecs": false,
+    "memoryGiB": 16,
+    "name": "ml.r5.large",
+    "vcpuNum": 2
+   },
+   {
+    "_defaultOrder": 40,
+    "_isFastLaunch": false,
+    "category": "Memory Optimized",
+    "gpuNum": 0,
+    "hideHardwareSpecs": false,
+    "memoryGiB": 32,
+    "name": "ml.r5.xlarge",
+    "vcpuNum": 4
+   },
+   {
+    "_defaultOrder": 41,
+    "_isFastLaunch": false,
+    "category": "Memory Optimized",
+    "gpuNum": 0,
+    "hideHardwareSpecs": false,
+    "memoryGiB": 64,
+    "name": "ml.r5.2xlarge",
+    "vcpuNum": 8
+   },
+   {
+    "_defaultOrder": 42,
+    "_isFastLaunch": false,
+    "category": "Memory Optimized",
+    "gpuNum": 0,
+    "hideHardwareSpecs": false,
+    "memoryGiB": 128,
+    "name": "ml.r5.4xlarge",
+    "vcpuNum": 16
+   },
+   {
+    "_defaultOrder": 43,
+    "_isFastLaunch": false,
+    "category": "Memory Optimized",
+    "gpuNum": 0,
+    "hideHardwareSpecs": false,
+    "memoryGiB": 256,
+    "name": "ml.r5.8xlarge",
+    "vcpuNum": 32
+   },
+   {
+    "_defaultOrder": 44,
+    "_isFastLaunch": false,
+    "category": "Memory Optimized",
+    "gpuNum": 0,
+    "hideHardwareSpecs": false,
+    "memoryGiB": 384,
+    "name": "ml.r5.12xlarge",
+    "vcpuNum": 48
+   },
+   {
+    "_defaultOrder": 45,
+    "_isFastLaunch": false,
+    "category": "Memory Optimized",
+    "gpuNum": 0,
+    "hideHardwareSpecs": false,
+    "memoryGiB": 512,
+    "name": "ml.r5.16xlarge",
+    "vcpuNum": 64
+   },
+   {
+    "_defaultOrder": 46,
+    "_isFastLaunch": false,
+    "category": "Memory Optimized",
+    "gpuNum": 0,
+    "hideHardwareSpecs": false,
+    "memoryGiB": 768,
+    "name": "ml.r5.24xlarge",
+    "vcpuNum": 96
+   },
+   {
+    "_defaultOrder": 47,
+    "_isFastLaunch": false,
+    "category": "Accelerated computing",
+    "gpuNum": 1,
+    "hideHardwareSpecs": false,
+    "memoryGiB": 16,
+    "name": "ml.g5.xlarge",
+    "vcpuNum": 4
+   },
+   {
+    "_defaultOrder": 48,
+    "_isFastLaunch": false,
+    "category": "Accelerated computing",
+    "gpuNum": 1,
+    "hideHardwareSpecs": false,
+    "memoryGiB": 32,
+    "name": "ml.g5.2xlarge",
+    "vcpuNum": 8
+   },
+   {
+    "_defaultOrder": 49,
+    "_isFastLaunch": false,
+    "category": "Accelerated computing",
+    "gpuNum": 1,
+    "hideHardwareSpecs": false,
+    "memoryGiB": 64,
+    "name": "ml.g5.4xlarge",
+    "vcpuNum": 16
+   },
+   {
+    "_defaultOrder": 50,
+    "_isFastLaunch": false,
+    "category": "Accelerated computing",
+    "gpuNum": 1,
+    "hideHardwareSpecs": false,
+    "memoryGiB": 128,
+    "name": "ml.g5.8xlarge",
+    "vcpuNum": 32
+   },
+   {
+    "_defaultOrder": 51,
+    "_isFastLaunch": false,
+    "category": "Accelerated computing",
+    "gpuNum": 1,
+    "hideHardwareSpecs": false,
+    "memoryGiB": 256,
+    "name": "ml.g5.16xlarge",
+    "vcpuNum": 64
+   },
+   {
+    "_defaultOrder": 52,
+    "_isFastLaunch": false,
+    "category": "Accelerated computing",
+    "gpuNum": 4,
+    "hideHardwareSpecs": false,
+    "memoryGiB": 192,
+    "name": "ml.g5.12xlarge",
+    "vcpuNum": 48
+   },
+   {
+    "_defaultOrder": 53,
+    "_isFastLaunch": false,
+    "category": "Accelerated computing",
+    "gpuNum": 4,
+    "hideHardwareSpecs": false,
+    "memoryGiB": 384,
+    "name": "ml.g5.24xlarge",
+    "vcpuNum": 96
+   },
+   {
+    "_defaultOrder": 54,
+    "_isFastLaunch": false,
+    "category": "Accelerated computing",
+    "gpuNum": 8,
+    "hideHardwareSpecs": false,
+    "memoryGiB": 768,
+    "name": "ml.g5.48xlarge",
+    "vcpuNum": 192
+   },
+   {
+    "_defaultOrder": 55,
+    "_isFastLaunch": false,
+    "category": "Accelerated computing",
+    "gpuNum": 8,
+    "hideHardwareSpecs": false,
+    "memoryGiB": 1152,
+    "name": "ml.p4d.24xlarge",
+    "vcpuNum": 96
+   },
+   {
+    "_defaultOrder": 56,
+    "_isFastLaunch": false,
+    "category": "Accelerated computing",
+    "gpuNum": 8,
+    "hideHardwareSpecs": false,
+    "memoryGiB": 1152,
+    "name": "ml.p4de.24xlarge",
+    "vcpuNum": 96
+   }
+  ],
+  "instance_type": "ml.m5.large",
+  "kernelspec": {
+   "display_name": "Python 3 (SageMaker Distribution v0 CPU)",
+   "language": "python",
+   "name": "python3__SAGEMAKER_INTERNAL__arn:aws:sagemaker:eu-west-1:819792524951:image/sagemaker-distribution-cpu-v0"
+  },
+  "language_info": {
+   "codemirror_mode": {
+    "name": "ipython",
+    "version": 3
+   },
+   "file_extension": ".py",
+   "mimetype": "text/x-python",
+   "name": "python",
+   "nbconvert_exporter": "python",
+   "pygments_lexer": "ipython3",
+   "version": "3.8.17"
+  }
+ },
+ "nbformat": 4,
+ "nbformat_minor": 4
+}

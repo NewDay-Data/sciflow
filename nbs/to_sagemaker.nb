@@ -1,12 +1,25 @@
 {
  "cells": [
   {
+   "cell_type": "raw",
+   "metadata": {},
+   "source": [
+    "---\n",
+    "description: Converts from a `sciflow` format notebook to a `sagemaker` pipeline.\n",
+    "output-file: to_sagemaker.html\n",
+    "title: Sciflow Notebook to Sagemaker Pipeline\n",
+    "\n",
+    "---\n",
+    "\n"
+   ]
+  },
+  {
    "cell_type": "code",
    "execution_count": null,
    "metadata": {},
    "outputs": [],
    "source": [
-    "# default_exp to_sagemaker"
+    "#| default_exp to_sagemaker"
    ]
   },
   {
@@ -25,7 +38,7 @@
    "metadata": {},
    "outputs": [],
    "source": [
-    "# export\n",
+    "#| export\n",
     "\n",
     "\n",
     "import os\n",
@@ -52,20 +65,6 @@
     "    prepare_env,\n",
     "    titleize,\n",
     ")"
-   ]
-  },
-  {
-   "cell_type": "markdown",
-   "metadata": {},
-   "source": [
-    "# Sciflow Notebook to Sagemaker Pipeline\n",
-    "\n",
-    "> Converts from a `sciflow` format notebook to a `sagemaker` pipeline. \n",
-    "\n",
-    "Currently Supported features:\n",
-    "\n",
-    "* Linear/sequential DAGs\n",
-    "* Simple `Parameters`"
    ]
   },
   {
@@ -122,7 +121,7 @@
    "metadata": {},
    "outputs": [],
    "source": [
-    "# export\n",
+    "#| export\n",
     "\n",
     "\n",
     "def nb_to_sagemaker_pipeline(\n",
@@ -192,7 +191,7 @@
    "metadata": {},
    "outputs": [],
    "source": [
-    "# export\n",
+    "#| export\n",
     "\n",
     "\n",
     "def is_train_step(step):\n",
@@ -251,7 +250,7 @@
    "metadata": {},
    "outputs": [],
    "source": [
-    "# export\n",
+    "#| export\n",
     "\n",
     "\n",
     "def set_sm_params(params, has_processing_step, has_train_step):\n",
@@ -304,7 +303,7 @@
    "metadata": {},
    "outputs": [],
    "source": [
-    "#  export\n",
+    "#| export\n",
     "\n",
     "\n",
     "def write_pipeline_to_files(\n",
@@ -600,7 +599,7 @@
    "metadata": {},
    "outputs": [],
    "source": [
-    "#  export\n",
+    "#| export\n",
     "\n",
     "\n",
     "def write_params(flow_file, param_meta, ind):\n",
@@ -633,7 +632,7 @@
    "metadata": {},
    "outputs": [],
    "source": [
-    "#  export\n",
+    "#| export\n",
     "\n",
     "\n",
     "def write_sm_params(flow_file, sm_params, ind):\n",
@@ -664,7 +663,7 @@
    "metadata": {},
    "outputs": [],
    "source": [
-    "# export\n",
+    "#| export\n",
     "\n",
     "\n",
     "def write_script_processor(flow_file, ind, proc_image_uri, proc_instance_type):\n",
@@ -686,7 +685,7 @@
    "metadata": {},
    "outputs": [],
    "source": [
-    "# export\n",
+    "#| export\n",
     "\n",
     "\n",
     "def extract_step_vars(step, param_names, processing_flow_scope, train_flow_scope):\n",
@@ -800,7 +799,7 @@
    "metadata": {},
    "outputs": [],
    "source": [
-    "# export\n",
+    "#| export\n",
     "\n",
     "\n",
     "def format_job_arguments(param_meta):\n",
@@ -864,7 +863,7 @@
    "metadata": {},
    "outputs": [],
    "source": [
-    "# export\n",
+    "#| export\n",
     "\n",
     "\n",
     "def format_hyperparams(param_meta):\n",
@@ -901,7 +900,7 @@
    "metadata": {},
    "outputs": [],
    "source": [
-    "# export\n",
+    "#| export\n",
     "\n",
     "\n",
     "def format_arg(arg, param_meta):\n",
@@ -1124,7 +1123,7 @@
    "metadata": {},
    "outputs": [],
    "source": [
-    "# export\n",
+    "#| export\n",
     "\n",
     "\n",
     "def format_args(params):\n",
@@ -1157,7 +1156,7 @@
    "metadata": {},
    "outputs": [],
    "source": [
-    "# export\n",
+    "#| export\n",
     "\n",
     "\n",
     "def generate_sagemaker_modules(\n",
@@ -1358,7 +1357,7 @@
    "metadata": {},
    "outputs": [],
    "source": [
-    "# export\n",
+    "#| export\n",
     "\n",
     "\n",
     "def write_step_tracker(\n",
@@ -1407,7 +1406,7 @@
    "metadata": {},
    "outputs": [],
    "source": [
-    "# export\n",
+    "#| export\n",
     "\n",
     "\n",
     "def write_preamble(step, sm_module_file, ind):\n",
@@ -1524,7 +1523,7 @@
    "metadata": {},
    "outputs": [],
    "source": [
-    "# export\n",
+    "#| export\n",
     "\n",
     "\n",
     "def generate_flows(track_experiment=True, clear_dir=True):\n",
@@ -1547,7 +1546,7 @@
    "metadata": {},
    "outputs": [],
    "source": [
-    "# export\n",
+    "#| export\n",
     "\n",
     "\n",
     "@call_parse\n",

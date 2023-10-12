@@ -1,12 +1,24 @@
 {
  "cells": [
   {
+   "cell_type": "raw",
+   "metadata": {},
+   "source": [
+    "---\n",
+    "output-file: run_flow.html\n",
+    "title: Verify and Run Sciflow Flows\n",
+    "\n",
+    "---\n",
+    "\n"
+   ]
+  },
+  {
    "cell_type": "code",
    "execution_count": null,
    "metadata": {},
    "outputs": [],
    "source": [
-    "# default_exp run_flow"
+    "#| default_exp run_flow"
    ]
   },
   {
@@ -25,7 +37,7 @@
    "metadata": {},
    "outputs": [],
    "source": [
-    "# export\n",
+    "#| export\n",
     "\n",
     "\n",
     "import asyncio\n",
@@ -41,13 +53,6 @@
     "from nbdev.export import find_default_export, get_config, read_nb\n",
     "\n",
     "from sciflow.utils import chunks, get_flow_path, prepare_env, run_shell_cmd"
-   ]
-  },
-  {
-   "cell_type": "markdown",
-   "metadata": {},
-   "source": [
-    "# Verify and Run Sciflow Flows"
    ]
   },
   {
@@ -80,7 +85,7 @@
    "metadata": {},
    "outputs": [],
    "source": [
-    "# export\n",
+    "#| export\n",
     "\n",
     "\n",
     "def check_is_init():\n",
@@ -97,7 +102,7 @@
    "metadata": {},
    "outputs": [],
    "source": [
-    "# export\n",
+    "#| export\n",
     "\n",
     "\n",
     "def make_shell_cmd(\n",
@@ -122,7 +127,7 @@
    "metadata": {},
    "outputs": [],
    "source": [
-    "# export\n",
+    "#| export\n",
     "\n",
     "\n",
     "def check_call_flow(\n",
@@ -195,7 +200,7 @@
    "metadata": {},
    "outputs": [],
    "source": [
-    "# slow\n",
+    "#| slow\n",
     "\n",
     "ret_code, output = check_call_flow(\n",
     "    nb_path, flow_provider=\"metaflow\", flow_command=\"run\"\n",
@@ -210,7 +215,7 @@
    "metadata": {},
    "outputs": [],
    "source": [
-    "# slow\n",
+    "#| slow\n",
     "\n",
     "ret_code, output = check_call_flow(nb_path, flow_command=\"run\")\n",
     "assert ret_code == 0\n",
@@ -244,7 +249,7 @@
    "metadata": {},
    "outputs": [],
    "source": [
-    "# slow\n",
+    "#| slow\n",
     "\n",
     "ret_code, output = check_call_flow(\n",
     "    nb_path, flow_provider=\"sagemaker\", flow_command=\"run\"\n",
@@ -266,7 +271,7 @@
    "metadata": {},
    "outputs": [],
    "source": [
-    "# export\n",
+    "#| export\n",
     "\n",
     "\n",
     "def check_call_flows(\n",
@@ -329,7 +334,7 @@
    "metadata": {},
    "outputs": [],
    "source": [
-    "# slow\n",
+    "#| slow\n",
     "\n",
     "check_call_flows(\n",
     "    get_config(cfg_name=\"test/settings.ini\"),\n",
@@ -353,7 +358,7 @@
    "metadata": {},
    "outputs": [],
    "source": [
-    "# slow\n",
+    "#| slow\n",
     "\n",
     "nb_path = Path(Path(\".\").resolve(), \"test\", \"test_multistep.ipynb\")\n",
     "ret_code, output = check_call_flow(\n",
@@ -380,7 +385,7 @@
    "metadata": {},
    "outputs": [],
    "source": [
-    "# export\n",
+    "#| export\n",
     "\n",
     "\n",
     "async def flow_task(\n",
@@ -411,7 +416,7 @@
    "metadata": {},
    "outputs": [],
    "source": [
-    "# export\n",
+    "#| export\n",
     "\n",
     "\n",
     "def run_flow_async(\n",
@@ -430,7 +435,7 @@
    "metadata": {},
    "outputs": [],
    "source": [
-    "# slow\n",
+    "#| slow\n",
     "\n",
     "task = run_flow_async(\n",
     "    Path(Path(\".\").resolve(), \"test\", \"test_multistep.ipynb\"),\n",
@@ -445,7 +450,7 @@
    "metadata": {},
    "outputs": [],
    "source": [
-    "# slow\n",
+    "#| slow\n",
     "await task\n",
     "assert 0 == task.result()[0]"
    ]
@@ -456,7 +461,7 @@
    "metadata": {},
    "outputs": [],
    "source": [
-    "# slow\n",
+    "#| slow\n",
     "\n",
     "task = run_flow_async(\n",
     "    Path(Path(\".\").resolve(), \"test\", \"test_export.ipynb\"),\n",
@@ -472,7 +477,7 @@
    "metadata": {},
    "outputs": [],
    "source": [
-    "# slow\n",
+    "#| slow\n",
     "\n",
     "await task\n",
     "assert 0 == task.result()[0]"
@@ -484,7 +489,7 @@
    "metadata": {},
    "outputs": [],
    "source": [
-    "# slow\n",
+    "#| slow\n",
     "\n",
     "task = run_flow_async(\n",
     "    Path(Path(\".\").resolve(), \"test\", \"test_multistep.ipynb\"),\n",
@@ -500,7 +505,7 @@
    "metadata": {},
    "outputs": [],
    "source": [
-    "# slow\n",
+    "#| slow\n",
     "\n",
     "await task\n",
     "assert 0 == task.result()[0]"
@@ -512,7 +517,7 @@
    "metadata": {},
    "outputs": [],
    "source": [
-    "# export\n",
+    "#| export\n",
     "\n",
     "\n",
     "async def run_flows_async(\n",
@@ -575,7 +580,7 @@
    "metadata": {},
    "outputs": [],
    "source": [
-    "# slow\n",
+    "#| slow\n",
     "\n",
     "task = run_flows_async(\n",
     "    get_config(cfg_name=\"test/settings.ini\"),\n",
@@ -590,7 +595,7 @@
    "metadata": {},
    "outputs": [],
    "source": [
-    "# slow\n",
+    "#| slow\n",
     "\n",
     "await task"
    ]
@@ -601,7 +606,7 @@
    "metadata": {},
    "outputs": [],
    "source": [
-    "# slow\n",
+    "#| slow\n",
     "\n",
     "task = run_flows_async(\n",
     "    get_config(cfg_name=\"test/settings.ini\"),\n",
@@ -617,7 +622,7 @@
    "metadata": {},
    "outputs": [],
    "source": [
-    "# slow\n",
+    "#| slow\n",
     "\n",
     "await task"
    ]
@@ -648,7 +653,7 @@
    "metadata": {},
    "outputs": [],
    "source": [
-    "# export\n",
+    "#| export\n",
     "\n",
     "\n",
     "def iter_param_grid(param_grid):\n",
@@ -682,7 +687,7 @@
    "metadata": {},
    "outputs": [],
    "source": [
-    "# export\n",
+    "#| export\n",
     "\n",
     "\n",
     "def sample_grid_space(param_grid: Dict[str, Iterable[Any]], num_samples: int):\n",
@@ -712,7 +717,7 @@
    "metadata": {},
    "outputs": [],
    "source": [
-    "# export\n",
+    "#| export\n",
     "\n",
     "\n",
     "async def search_batches(flow_nb_path, flow_provider, task_batches):\n",
@@ -742,7 +747,7 @@
    "metadata": {},
    "outputs": [],
    "source": [
-    "# export\n",
+    "#| export\n",
     "\n",
     "\n",
     "def search_flow_grid(\n",
@@ -771,7 +776,7 @@
    "metadata": {},
    "outputs": [],
    "source": [
-    "# export\n",
+    "#| export\n",
     "\n",
     "\n",
     "def extract_results(future_tasks):\n",
@@ -806,7 +811,7 @@
    "metadata": {},
    "outputs": [],
    "source": [
-    "# slow\n",
+    "#| slow\n",
     "\n",
     "future_tasks = await ensure_future(\n",
     "    search_flow_grid(\n",
@@ -825,7 +830,7 @@
    "metadata": {},
    "outputs": [],
    "source": [
-    "# slow\n",
+    "#| slow\n",
     "\n",
     "results = extract_results(future_tasks)\n",
     "results"
@@ -837,7 +842,7 @@
    "metadata": {},
    "outputs": [],
    "source": [
-    "# export\n",
+    "#| export\n",
     "\n",
     "\n",
     "@call_parse\n",
@@ -851,7 +856,7 @@
    "metadata": {},
    "outputs": [],
    "source": [
-    "# export\n",
+    "#| export\n",
     "\n",
     "\n",
     "@call_parse\n",
@@ -865,7 +870,7 @@
    "metadata": {},
    "outputs": [],
    "source": [
-    "# export\n",
+    "#| export\n",
     "\n",
     "\n",
     "@call_parse\n",
@@ -879,7 +884,7 @@
    "metadata": {},
    "outputs": [],
    "source": [
-    "# export\n",
+    "#| export\n",
     "\n",
     "\n",
     "@call_parse\n",

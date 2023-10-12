@@ -1,40 +1,22 @@
 {
  "cells": [
   {
-   "cell_type": "code",
-   "execution_count": null,
-   "metadata": {},
-   "outputs": [],
-   "source": [
-    "# default_exp packaging"
-   ]
-  },
-  {
-   "cell_type": "markdown",
+   "cell_type": "raw",
    "metadata": {},
    "source": [
-    "# Simplified conda & pip packaging & deployment\n",
+    "---\n",
+    "description: Package management can be challenging for Data Science workflows. Many\n",
+    "  enterprises will not be able to publish all their packages to public repositories\n",
+    "  like pypi or conda. Different stages of the Data Science lifecycle require different\n",
+    "  capabilities with respect to library management. Early stage research values flexibility\n",
+    "  and the ability to add the latest packages on the fly. Production models want reliability\n",
+    "  and known, fixed dependencies. This module aims to make it easier to meet these\n",
+    "  goals.\n",
+    "output-file: packaging.html\n",
+    "title: Simplified conda & pip packaging & deployment\n",
     "\n",
-    "> Package management can be challenging for Data Science workflows. Many enterprises will not be able to publish all their packages to public repositories like pypi or conda. Different stages of the Data Science lifecycle require different capabilities with respect to library management. Early stage research values flexibility and the ability to add the latest packages on the fly. Production models want reliability and known, fixed dependencies. This module aims to make it easier to meet these goals.\n",
-    "\n",
-    "# 1. Determine minimal dependencies\n",
-    "\n",
-    "We are explicit about the code that makes up the Data Science workflow using the sciflow steps/flows method. This helps extract the virtual environments which are needed to run the flows & allows downstream processes to have a reliable (pinned) version of dependencies that work for a workflow instance.\n",
-    "\n",
-    "## 1.1 Dependency Calculation\n",
-    "* [pigar](https://github.com/damnever/pigar): the pigar library is used to calculate the dependencies used of all modules in the `sciflow` lib.\n",
-    "\n",
-    "# 2. Making It Easier\n",
-    "\n",
-    "Additions to `Makefile`\n",
-    "\n",
-    "```\n",
-    "local_release: art_pip art_conda\n",
-    "art_pip: deploy to private artifactory pypi repository\n",
-    "art_conda: deploy to private artifactory conda channel\n",
-    "```\n",
-    "\n",
-    "The `sciflow_prepare` command is used to prepare the environment with any auithentication details that are needed for package management."
+    "---\n",
+    "\n"
    ]
   },
   {
@@ -43,7 +25,16 @@
    "metadata": {},
    "outputs": [],
    "source": [
-    "# export\n",
+    "#| default_exp packaging"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "#| export\n",
     "\n",
     "import os\n",
     "import subprocess\n",
@@ -74,7 +65,7 @@
    "metadata": {},
    "outputs": [],
    "source": [
-    "# export\n",
+    "#| export\n",
     "\n",
     "\n",
     "def reqs_file_to_sep_str(pip_reqs_path: Path) -> str:\n",
@@ -89,7 +80,7 @@
    "metadata": {},
    "outputs": [],
    "source": [
-    "# export\n",
+    "#| export\n",
     "\n",
     "\n",
     "def run_py_module(command, args, cwd, env=None):\n",
@@ -118,7 +109,7 @@
    "metadata": {},
    "outputs": [],
    "source": [
-    "# export\n",
+    "#| export\n",
     "\n",
     "\n",
     "def determine_dependencies(\n",
@@ -147,7 +138,7 @@
    "metadata": {},
    "outputs": [],
    "source": [
-    "# export\n",
+    "#| export\n",
     "\n",
     "\n",
     "def reqs_lines_to_sep_str(req_lines: List[str], sep: str = \" \"):\n",
@@ -235,7 +226,7 @@
    "metadata": {},
    "outputs": [],
    "source": [
-    "# export\n",
+    "#| export\n",
     "\n",
     "\n",
     "def update_requirements(\n",
@@ -324,7 +315,7 @@
    "metadata": {},
    "outputs": [],
    "source": [
-    "# export\n",
+    "#| export\n",
     "\n",
     "\n",
     "def create_conda_meta_file(project_dir: Path = None, out_file: str = \"meta.yaml\"):\n",
@@ -369,7 +360,7 @@
    "metadata": {},
    "outputs": [],
    "source": [
-    "# export\n",
+    "#| export\n",
     "\n",
     "\n",
     "@call_parse\n",
@@ -401,7 +392,7 @@
    "metadata": {},
    "outputs": [],
    "source": [
-    "# export\n",
+    "#| export\n",
     "\n",
     "\n",
     "def delete_multiple_element(list_object, indices):\n",
@@ -417,7 +408,7 @@
    "metadata": {},
    "outputs": [],
    "source": [
-    "# export\n",
+    "#| export\n",
     "\n",
     "\n",
     "def read_deploy_vars():\n",
@@ -453,7 +444,7 @@
    "metadata": {},
    "outputs": [],
    "source": [
-    "# export\n",
+    "#| export\n",
     "\n",
     "\n",
     "def write_art_conda_envs_to_file():\n",
@@ -516,7 +507,7 @@
    "metadata": {},
    "outputs": [],
    "source": [
-    "# export\n",
+    "#| export\n",
     "\n",
     "\n",
     "def correct_pypirc():\n",
@@ -550,7 +541,7 @@
    "metadata": {},
    "outputs": [],
    "source": [
-    "# export\n",
+    "#| export\n",
     "\n",
     "\n",
     "@call_parse\n",

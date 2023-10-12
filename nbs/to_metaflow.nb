@@ -1,12 +1,25 @@
 {
  "cells": [
   {
+   "cell_type": "raw",
+   "metadata": {},
+   "source": [
+    "---\n",
+    "description: Converts from a `sciflow` format notebook to a `metaflow` flow.\n",
+    "output-file: to_metaflow.html\n",
+    "title: Sciflow Notebook to MetaFlow Flow\n",
+    "\n",
+    "---\n",
+    "\n"
+   ]
+  },
+  {
    "cell_type": "code",
    "execution_count": null,
    "metadata": {},
    "outputs": [],
    "source": [
-    "# default_exp to_metaflow"
+    "#| default_exp to_metaflow"
    ]
   },
   {
@@ -25,7 +38,7 @@
    "metadata": {},
    "outputs": [],
    "source": [
-    "# export\n",
+    "#| export\n",
     "\n",
     "\n",
     "import os\n",
@@ -41,20 +54,6 @@
     "from sciflow.params import params_as_dict\n",
     "from sciflow.parse_module import FuncDetails, extract_module_only, extract_steps\n",
     "from sciflow.utils import get_flow_path, indent_multiline, prepare_env, titleize"
-   ]
-  },
-  {
-   "cell_type": "markdown",
-   "metadata": {},
-   "source": [
-    "# Sciflow Notebook to MetaFlow Flow\n",
-    "\n",
-    "> Converts from a `sciflow` format notebook to a `metaflow` flow. \n",
-    "\n",
-    "Supported features:\n",
-    "\n",
-    "* Linear/sequential DAGs\n",
-    "* Simple `Parameters`"
    ]
   },
   {
@@ -75,7 +74,7 @@
    "metadata": {},
    "outputs": [],
    "source": [
-    "# export\n",
+    "#| export\n",
     "\n",
     "\n",
     "def rename_steps_for_metaflow(steps):\n",
@@ -144,7 +143,7 @@
    "metadata": {},
    "outputs": [],
    "source": [
-    "# export\n",
+    "#| export\n",
     "\n",
     "\n",
     "def nb_to_metaflow(nb_path: Path, flow_path: Path, silent=True, track_experiment=True):\n",
@@ -196,7 +195,7 @@
    "metadata": {},
    "outputs": [],
    "source": [
-    "#  export\n",
+    "#| export\n",
     "\n",
     "\n",
     "def write_module_to_file(\n",
@@ -260,7 +259,7 @@
    "metadata": {},
    "outputs": [],
    "source": [
-    "#  export\n",
+    "#| export\n",
     "\n",
     "\n",
     "def write_params(flow_file, param_meta, ind, track_experiment):\n",
@@ -310,7 +309,7 @@
    "metadata": {},
    "outputs": [],
    "source": [
-    "# export\n",
+    "#| export\n",
     "\n",
     "\n",
     "def format_arg(arg, param_meta):\n",
@@ -383,7 +382,7 @@
    "metadata": {},
    "outputs": [],
    "source": [
-    "# export\n",
+    "#| export\n",
     "\n",
     "\n",
     "def write_track_capture(flow_file, ind, num_indents):\n",
@@ -403,7 +402,7 @@
    "metadata": {},
    "outputs": [],
    "source": [
-    "# export\n",
+    "#| export\n",
     "\n",
     "\n",
     "def write_track_internal_helper(\n",
@@ -471,7 +470,7 @@
    "metadata": {},
    "outputs": [],
    "source": [
-    "# export\n",
+    "#| export\n",
     "\n",
     "\n",
     "def write_cli_wrapper(flow_path, flow_base_key, steps):\n",
@@ -622,7 +621,7 @@
    "metadata": {},
    "outputs": [],
    "source": [
-    "# export\n",
+    "#| export\n",
     "\n",
     "\n",
     "def generate_flows(config=None, track_experiment=True, clear_dir=True):\n",
@@ -663,7 +662,7 @@
    "metadata": {},
    "outputs": [],
    "source": [
-    "# export\n",
+    "#| export\n",
     "\n",
     "\n",
     "@call_parse\n",
