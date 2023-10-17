@@ -74,7 +74,7 @@ def delete_dir(s3_res, bucket_name, prefix):
     bucket = s3_res.Bucket(bucket_name)
     bucket.objects.filter(Prefix=prefix).delete()
 
-# %% ../nbs/s3_utils.ipynb 16
+# %% ../nbs/s3_utils.ipynb 15
 # | export
 
 
@@ -88,7 +88,7 @@ def bucket_exists(s3_res, bucket_name):
             return False
     return True
 
-# %% ../nbs/s3_utils.ipynb 18
+# %% ../nbs/s3_utils.ipynb 17
 # | export
 
 
@@ -106,7 +106,7 @@ def list_s3_subdirs(s3_res, bucket_name, prefix):
     distinct_subdirs = set(subdirs)
     return sorted(list(distinct_subdirs))
 
-# %% ../nbs/s3_utils.ipynb 21
+# %% ../nbs/s3_utils.ipynb 20
 # | export
 
 
@@ -116,14 +116,14 @@ def list_bucket(bucket_name, prefix, s3_res=None):
     all_keys = [obj.key for obj in bucket.objects.filter(Prefix=prefix)]
     return all_keys
 
-# %% ../nbs/s3_utils.ipynb 23
+# %% ../nbs/s3_utils.ipynb 22
 # | export
 
 
 def put_data(s3_res, bucket_name, key, binary_data):
     s3_res.Object(bucket_name, key).put(Body=binary_data)
 
-# %% ../nbs/s3_utils.ipynb 26
+# %% ../nbs/s3_utils.ipynb 25
 # | export
 
 
@@ -131,7 +131,7 @@ def load_json(s3_res, bucket_name, key):
     obj = s3_res.Object(bucket_name, key)
     return json.load(obj.get()["Body"])
 
-# %% ../nbs/s3_utils.ipynb 29
+# %% ../nbs/s3_utils.ipynb 28
 # | export
 
 
@@ -154,7 +154,7 @@ def upload_directory(s3_client, path, bucket_name, prefix):
                 )
                 s3_client.upload_file(os.path.join(root, file), bucket_name, upload_key)
 
-# %% ../nbs/s3_utils.ipynb 31
+# %% ../nbs/s3_utils.ipynb 30
 # | export
 
 
@@ -172,7 +172,7 @@ def download_directory(s3_client, s3_res, bucket_name, remote_key, local_dir):
         s3_client.download_file(bucket_name, file, f"{local_path}")
         assert local_path.exists()
 
-# %% ../nbs/s3_utils.ipynb 34
+# %% ../nbs/s3_utils.ipynb 33
 # | export
 
 

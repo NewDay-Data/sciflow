@@ -147,6 +147,6 @@ def get_flow_path(nb_path, config=None, flow_provider="metaflow"):
         config = get_config()
     flows_dir = Path(config.path("flows_path"), flow_provider)
     if not flows_dir.exists():
-        flows_dir.mkdir()
+        flows_dir.mkdir(parents=True)
 
     return Path(flows_dir, f"{module_name.split('.')[-1]}.py")

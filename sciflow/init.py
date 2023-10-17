@@ -18,7 +18,6 @@ from .utils import prepare_env
 
 env_file_blank = """export USER=
 export SCIFLOW_BUCKET=
-export SCIFLOW_BUCKET_TABLE_ALIAS=
 """
 
 # %% ../nbs/init.ipynb 6
