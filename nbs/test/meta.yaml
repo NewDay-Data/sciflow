@@ -8,6 +8,7 @@ requirements:
   - setuptools
   run:
   - boto3==1.28.61
+  - botocore==1.31.64
   - execnb==0.1.5
   - fastcore==1.5.29
   - joblib==1.3.2
@@ -20,7 +21,7 @@ requirements:
   - pigar==2.1.1
   - PyYAML==6.0.1
   - sagemaker==2.191.0
-  - -egit+https://github.com/NewDay-Data/sciflow.git@99387dd2f61ba478029ae3f417456d14cebdd262#egg=sciflow
+  - -egit+https://github.com/NewDay-Data/sciflow.git@47a50098b9bcb8e127c706efa8a6ab748f080e69#egg=sciflow
   - scilint==0.2.1
 source:
   path: /home/sagemaker-user/git/sciflow

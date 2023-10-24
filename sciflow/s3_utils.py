@@ -2,9 +2,9 @@
 
 # %% auto 0
 __all__ = ['is_valid_bucket', 's3_join', 'objects_exist_in_dir', 'delete_dir', 'bucket_exists', 'list_s3_subdirs', 'list_bucket',
-           'put_data', 'load_json', 'upload_directory', 'download_directory', 'S3File']
+           'put_data', 'load_json', 'upload_directory', 'download_directory']
 
-# %% ../nbs/s3_utils.ipynb 2
+# %% ../nbs/s3_utils.ipynb 3
 # | export
 
 import json
@@ -22,7 +22,7 @@ from nbdev.export import get_config
 
 from .utils import lib_path, prepare_env
 
-# %% ../nbs/s3_utils.ipynb 3
+# %% ../nbs/s3_utils.ipynb 9
 # | export
 
 
@@ -50,14 +50,14 @@ def is_valid_bucket(bucket_name):
     except socket.error:
         return True
 
-# %% ../nbs/s3_utils.ipynb 5
+# %% ../nbs/s3_utils.ipynb 12
 # | export
 
 
 def s3_join(*args):
     return os.path.join(*args).replace("\\", "/")
 
-# %% ../nbs/s3_utils.ipynb 7
+# %% ../nbs/s3_utils.ipynb 15
 # | export
 
 
@@ -66,7 +66,7 @@ def objects_exist_in_dir(s3_res, bucket_name, prefix):
     all_keys = [el.key for el in bucket.objects.filter(Prefix=prefix)]
     return len(all_keys) > 0
 
-# %% ../nbs/s3_utils.ipynb 10
+# %% ../nbs/s3_utils.ipynb 17
 # | export
 
 
@@ -74,7 +74,7 @@ def delete_dir(s3_res, bucket_name, prefix):
     bucket = s3_res.Bucket(bucket_name)
     bucket.objects.filter(Prefix=prefix).delete()
 
-# %% ../nbs/s3_utils.ipynb 15
+# %% ../nbs/s3_utils.ipynb 22
 # | export
 
 
@@ -88,7 +88,7 @@ def bucket_exists(s3_res, bucket_name):
             return False
     return True
 
-# %% ../nbs/s3_utils.ipynb 17
+# %% ../nbs/s3_utils.ipynb 25
 # | export
 
 
@@ -106,7 +106,7 @@ def list_s3_subdirs(s3_res, bucket_name, prefix):
     distinct_subdirs = set(subdirs)
     return sorted(list(distinct_subdirs))
 
-# %% ../nbs/s3_utils.ipynb 20
+# %% ../nbs/s3_utils.ipynb 29
 # | export
 
 
@@ -116,14 +116,14 @@ def list_bucket(bucket_name, prefix, s3_res=None):
     all_keys = [obj.key for obj in bucket.objects.filter(Prefix=prefix)]
     return all_keys
 
-# %% ../nbs/s3_utils.ipynb 22
+# %% ../nbs/s3_utils.ipynb 32
 # | export
 
 
 def put_data(s3_res, bucket_name, key, binary_data):
     s3_res.Object(bucket_name, key).put(Body=binary_data)
 
-# %% ../nbs/s3_utils.ipynb 25
+# %% ../nbs/s3_utils.ipynb 36
 # | export
 
 
@@ -131,7 +131,7 @@ def load_json(s3_res, bucket_name, key):
     obj = s3_res.Object(bucket_name, key)
     return json.load(obj.get()["Body"])
 
-# %% ../nbs/s3_utils.ipynb 28
+# %% ../nbs/s3_utils.ipynb 40
 # | export
 
 
@@ -154,7 +154,7 @@ def upload_directory(s3_client, path, bucket_name, prefix):
                 )
                 s3_client.upload_file(os.path.join(root, file), bucket_name, upload_key)
 
-# %% ../nbs/s3_utils.ipynb 30
+# %% ../nbs/s3_utils.ipynb 43
 # | export
 
 
@@ -171,64 +171,3 @@ def download_directory(s3_client, s3_res, bucket_name, remote_key, local_dir):
             local_path.parent.mkdir(parents=True)
         s3_client.download_file(bucket_name, file, f"{local_path}")
         assert local_path.exists()
-
-# %% ../nbs/s3_utils.ipynb 33
-# | export
-
-
-import io
-
-
-# Copied from: https://alexwlchan.net/2019/02/working-with-large-s3-objects/
-class S3File(io.RawIOBase):
-    def __init__(self, s3_object):
-        self.s3_object = s3_object
-        self.position = 0
-
-    def __repr__(self):
-        return "<%s s3_object=%r>" % (type(self).__name__, self.s3_object)
-
-    @property
-    def size(self):
-        return self.s3_object.content_length
-
-    def tell(self):
-        return self.position
-
-    def seek(self, offset, whence=io.SEEK_SET):
-        if whence == io.SEEK_SET:
-            self.position = offset
-        elif whence == io.SEEK_CUR:
-            self.position += offset
-        elif whence == io.SEEK_END:
-            self.position = self.size + offset
-        else:
-            raise ValueError(
-                f"invalid whence ({whence}, should be {io.SEEK_SET}, io.SEEK_CUR {io.SEEK_END})"
-            )
-
-        return self.position
-
-    def seekable(self):
-        return True
-
-    def read(self, size=-1):
-        if size == -1:
-            # Read to the end of the file
-            range_header = "bytes=%d-" % self.position
-            self.seek(offset=0, whence=io.SEEK_END)
-        else:
-            new_position = self.position + size
-
-            # If we're going to read beyond the end of the object, return
-            # the entire object.
-            if new_position >= self.size:
-                return self.read()
-
-            range_header = "bytes=%d-%d" % (self.position, new_position - 1)
-            self.seek(offset=size, whence=io.SEEK_CUR)
-
-        return self.s3_object.get(Range=range_header)["Body"].read()
-
-    def readable(self):
-        return True

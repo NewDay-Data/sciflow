@@ -4,7 +4,7 @@
 __all__ = ['pp', 'extract_module_only', 'extract_step_code', 'FuncLister', 'FuncDetails', 'extract_return_stmt', 'parse_step',
            'extract_return_var_names', 'extract_steps']
 
-# %% ../nbs/parse_module.ipynb 2
+# %% ../nbs/parse_module.ipynb 4
 # | export
 
 import ast
@@ -16,7 +16,7 @@ from pathlib import Path
 import pandas as pd
 from nbdev.export import get_config
 
-# %% ../nbs/parse_module.ipynb 3
+# %% ../nbs/parse_module.ipynb 7
 # | export
 
 
@@ -26,7 +26,7 @@ def extract_module_only(package_module_name):
         package_name, module_name = module_name.split(".")
     return module_name
 
-# %% ../nbs/parse_module.ipynb 6
+# %% ../nbs/parse_module.ipynb 11
 # | export
 
 
@@ -56,7 +56,7 @@ def extract_step_code(
         step_code[key] = "".join(step_code[key])
     return step_code
 
-# %% ../nbs/parse_module.ipynb 9
+# %% ../nbs/parse_module.ipynb 15
 # | export
 
 
@@ -93,7 +93,7 @@ class FuncDetails:
             f"FuncDetails(name={self.name},args={self.args},has_return={self.has_return}):\n{self.code.strip()}"
         )
 
-# %% ../nbs/parse_module.ipynb 11
+# %% ../nbs/parse_module.ipynb 18
 # | export
 
 
@@ -113,7 +113,7 @@ def extract_return_stmt(func_name, code):
         )
     return return_stmt
 
-# %% ../nbs/parse_module.ipynb 15
+# %% ../nbs/parse_module.ipynb 23
 # | export
 
 
@@ -134,7 +134,7 @@ def parse_step(step_code: str):
         step_code,
     )
 
-# %% ../nbs/parse_module.ipynb 16
+# %% ../nbs/parse_module.ipynb 25
 # | export
 
 
@@ -151,7 +151,7 @@ def extract_return_var_names(step):
             keys.append(key.strip(' ",'))
     return keys
 
-# %% ../nbs/parse_module.ipynb 20
+# %% ../nbs/parse_module.ipynb 30
 # | export
 
 
@@ -160,7 +160,7 @@ def extract_steps(module_path: Path):
     steps = [parse_step(step_code[k]) for k in step_code.keys()]
     return steps
 
-# %% ../nbs/parse_module.ipynb 22
+# %% ../nbs/parse_module.ipynb 32
 # | export
 
 

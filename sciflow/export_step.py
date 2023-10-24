@@ -3,12 +3,13 @@
 # %% auto 0
 __all__ = ['ExportModuleProc', 'optional_procs', 'nb_named_export', 'sciflow_export']
 
-# %% ../nbs/export_step.ipynb 2
+# %% ../nbs/export_step.ipynb 3
 # | export
 
 import os
 from collections import defaultdict
 from warnings import warn
+from pathlib import Path
 
 import nbdev
 from fastcore.basics import ifnone
@@ -20,7 +21,9 @@ from nbdev.doclinks import _build_modidx, add_init, nbglob, nbglob_cli
 from nbdev.maker import ModuleMaker
 from nbdev.process import NBProcessor
 
-# %% ../nbs/export_step.ipynb 3
+from .utils import load_nb
+
+# %% ../nbs/export_step.ipynb 7
 # |export
 # adapted from nbdev.export
 
@@ -42,14 +45,13 @@ class ExportModuleProc:
         self.in_all[ifnone(exp_to, "#")].append(cell)
 
     # Add a named step directive
-
     def _export_step_(self, cell, step_name, exp_to=None):
         self._exporti_(cell, exp_to)
         self.in_all[ifnone(exp_to, "#")].append(cell)
 
     _exports_ = _export_
 
-# %% ../nbs/export_step.ipynb 5
+# %% ../nbs/export_step.ipynb 9
 # |export
 # copied from nbdv.export
 
@@ -64,7 +66,7 @@ def optional_procs():
         ]
     )
 
-# %% ../nbs/export_step.ipynb 6
+# %% ../nbs/export_step.ipynb 12
 # |export
 # adapted from nbdev.export
 
@@ -94,7 +96,7 @@ def nb_named_export(
         )
         mm.make(cells, all_cells, lib_path=lib_path)
 
-# %% ../nbs/export_step.ipynb 7
+# %% ../nbs/export_step.ipynb 21
 # |export
 # adapted from nbdev.doclinks
 

@@ -3,7 +3,7 @@
 # %% auto 0
 __all__ = ['env_file_blank', 'write_env_file', 'read_env_file', 'edit_pythonpath', 'write_edited_pythonpath', 'sciflow_init']
 
-# %% ../nbs/init.ipynb 3
+# %% ../nbs/init.ipynb 4
 # | export
 
 import os
@@ -13,14 +13,14 @@ from fastcore.script import Param, call_parse
 
 from .utils import prepare_env
 
-# %% ../nbs/init.ipynb 5
+# %% ../nbs/init.ipynb 7
 # | export
 
 env_file_blank = """export USER=
 export SCIFLOW_BUCKET=
 """
 
-# %% ../nbs/init.ipynb 6
+# %% ../nbs/init.ipynb 9
 # | export
 
 
@@ -37,7 +37,7 @@ def write_env_file(sciflow_dir: Path = None):
     else:
         print(f"Skipping SciFlow environment file creation - already exists")
 
-# %% ../nbs/init.ipynb 9
+# %% ../nbs/init.ipynb 12
 # | export
 
 
@@ -45,11 +45,16 @@ def read_env_file(sciflow_dir: Path = None):
     if sciflow_dir is None:
         sciflow_dir = Path("~/.sciflow").expanduser()
     env_path = Path(sciflow_dir, "env").resolve()
-    with open(env_path, "r") as env_file:
-        lines = env_file.readlines()
+    try:
+        with open(env_path, "r") as env_file:
+            lines = env_file.readlines()
+    except FileNotFoundError:
+        raise FileNotFoundError(
+            "The Sciflow environment file is missing - have you run sciflow_init?"
+        )
     return lines
 
-# %% ../nbs/init.ipynb 11
+# %% ../nbs/init.ipynb 16
 # | export
 
 
@@ -76,7 +81,7 @@ def edit_pythonpath(env_lines, dir_to_add: Path):
         )
     return new_text
 
-# %% ../nbs/init.ipynb 12
+# %% ../nbs/init.ipynb 21
 # | export
 
 
@@ -89,7 +94,7 @@ def write_edited_pythonpath(project_root: Path, sciflow_dir: Path = None):
     with open(env_path, "w") as env_file:
         env_file.write(new_text)
 
-# %% ../nbs/init.ipynb 16
+# %% ../nbs/init.ipynb 27
 # | export
 
 
