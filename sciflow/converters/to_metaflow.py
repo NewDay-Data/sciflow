@@ -4,7 +4,7 @@
 __all__ = ['rename_steps_for_metaflow', 'nb_to_metaflow', 'write_module_to_file', 'write_params', 'format_arg', 'write_steps',
            'write_track_capture', 'generate_flows', 'sciflow_metaflow']
 
-# %% ../../nbs/converters/to_metaflow.ipynb 3
+# %% ../../nbs/converters/to_metaflow.ipynb 4
 # | export
 
 
@@ -19,7 +19,7 @@ from fastcore.script import Param, bool_arg, call_parse
 from nbdev.config import get_config
 from nbdev.doclinks import nbglob
 
-from ..params import extract_param_meta, params_as_dict
+from ..params import extract_param_meta, params_as_dict, ParamMeta
 from ..parse_module import FuncDetails, extract_module_only, extract_steps
 from sciflow.utils import (
     find_default_export,
@@ -29,7 +29,7 @@ from sciflow.utils import (
     titleize,
 )
 
-# %% ../../nbs/converters/to_metaflow.ipynb 5
+# %% ../../nbs/converters/to_metaflow.ipynb 8
 # | export
 
 
@@ -40,7 +40,7 @@ def rename_steps_for_metaflow(steps):
         elif i == len(steps) - 1:
             step.name = "end"
 
-# %% ../../nbs/converters/to_metaflow.ipynb 11
+# %% ../../nbs/converters/to_metaflow.ipynb 16
 # | export
 
 
@@ -81,7 +81,7 @@ def nb_to_metaflow(nb_path: Path, flow_path: Path, silent=True):
             f"Converted {nb_name} to {flow_class_name} in: {os.path.basename(flow_path)}"
         )
 
-# %% ../../nbs/converters/to_metaflow.ipynb 12
+# %% ../../nbs/converters/to_metaflow.ipynb 18
 # | export
 
 
@@ -127,24 +127,24 @@ def write_module_to_file(
         flow_file.write('if __name__ == "__main__":\n')
         flow_file.write(f"{ind}{flow_class_name}()")
 
-# %% ../../nbs/converters/to_metaflow.ipynb 13
+# %% ../../nbs/converters/to_metaflow.ipynb 20
 # | export
 
 
-def write_params(flow_file, param_meta, ind):
-    for param in param_meta.keys():
-        if param_meta[param].is_scalar:
+def write_params(flow_file, param_metas, ind):
+    for param in param_metas.keys():
+        if param_metas[param].is_scalar:
             flow_file.write(f"{ind}{param} = Parameter('{param}', default={param})\n")
-        elif param_meta[param].is_json_type:
+        elif param_metas[param].is_json_type:
             flow_file.write(
                 f"{ind}{param} = Parameter('{param}', default=json.dumps({param}), type=JSONType)\n"
             )
-        elif param_meta[param].instance_type == PosixPath:
+        elif param_metas[param].instance_type == PosixPath:
             flow_file.write(
                 f"{ind}{param} = Parameter('{param}', default=str({param}))\n"
             )
 
-# %% ../../nbs/converters/to_metaflow.ipynb 16
+# %% ../../nbs/converters/to_metaflow.ipynb 25
 # | export
 
 
@@ -154,6 +154,9 @@ def format_arg(arg, param_meta):
     else:
         result = "self." + arg
     return result
+
+# %% ../../nbs/converters/to_metaflow.ipynb 28
+# | export
 
 
 def write_steps(flow_file, steps, orig_step_names, param_meta, ind):
@@ -188,7 +191,7 @@ def write_steps(flow_file, steps, orig_step_names, param_meta, ind):
             flow_file.write(f"{ind}{ind}self.next(self.{next_step})\n")
         flow_file.write("\n")
 
-# %% ../../nbs/converters/to_metaflow.ipynb 17
+# %% ../../nbs/converters/to_metaflow.ipynb 30
 # | export
 
 
@@ -202,7 +205,7 @@ def write_track_capture(flow_file, ind, num_indents):
     flow_file.write(f"{base_ind}{ind}else:\n")
     flow_file.write(f"{base_ind}{ind}{ind}self.__dict__[key] = results[key]\n")
 
-# %% ../../nbs/converters/to_metaflow.ipynb 24
+# %% ../../nbs/converters/to_metaflow.ipynb 46
 # | export
 
 
@@ -218,7 +221,7 @@ def generate_flows(config=None, clear_dir=True):
             silent=False,
         )
 
-# %% ../../nbs/converters/to_metaflow.ipynb 26
+# %% ../../nbs/converters/to_metaflow.ipynb 50
 # | export
 
 

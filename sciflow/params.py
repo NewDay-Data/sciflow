@@ -6,7 +6,7 @@ __all__ = ['DEFAULT_PARAMS_CELL', 'supported_parameters', 'supported_args', 'sup
            'extract_as_files', 'extract_params_as_dict', 'params_as_dict', 'ParamMeta', 'load_module',
            'extract_param_meta']
 
-# %% ../nbs/params.ipynb 2
+# %% ../nbs/params.ipynb 3
 # | export
 
 import os
@@ -25,7 +25,7 @@ from nbdev.config import get_config
 from nbdev.doclinks import nbglob
 from nbformat.notebooknode import NotebookNode
 
-# %% ../nbs/params.ipynb 5
+# %% ../nbs/params.ipynb 7
 # | export
 
 
@@ -33,7 +33,7 @@ def find_params_cell(nb: NotebookNode):
     params_cell = [c for c in nb["cells"] if c["metadata"] == {"tags": ["parameters"]}]
     return params_cell
 
-# %% ../nbs/params.ipynb 8
+# %% ../nbs/params.ipynb 10
 # | export
 
 DEFAULT_PARAMS_CELL = {
@@ -44,7 +44,7 @@ DEFAULT_PARAMS_CELL = {
     "source": "# parameters\n",
 }
 
-# %% ../nbs/params.ipynb 9
+# %% ../nbs/params.ipynb 12
 # | export
 
 
@@ -58,7 +58,7 @@ def add_missing_params_cell(nb_path: Path, persist: bool = True):
         nbformat.write(nb, nb_path)
     return nb
 
-# %% ../nbs/params.ipynb 12
+# %% ../nbs/params.ipynb 16
 # | export
 
 
@@ -66,7 +66,7 @@ def extract_params(nb: NotebookNode):
     params_cell = find_params_cell(nb)
     return params_cell[0]["source"] if len(params_cell) > 0 else None
 
-# %% ../nbs/params.ipynb 14
+# %% ../nbs/params.ipynb 19
 # | export
 
 
@@ -75,7 +75,7 @@ def extract_params_to_file(nb_path: Path, params_file_path: Path):
     with open(params_file_path, "w") as params_file:
         params_file.writelines(params_code)
 
-# %% ../nbs/params.ipynb 16
+# %% ../nbs/params.ipynb 22
 # | export
 
 
@@ -90,7 +90,7 @@ def list_mod_files(files):
             modules.append(default)
     return modules
 
-# %% ../nbs/params.ipynb 17
+# %% ../nbs/params.ipynb 24
 # | export
 
 
@@ -104,7 +104,7 @@ def extract_as_files(suffix="_params.py"):
     for nb_path, pf_path in zip(nbs, params_files):
         extract_params_to_file(nb_path, pf_path)
 
-# %% ../nbs/params.ipynb 18
+# %% ../nbs/params.ipynb 26
 # | exporti
 
 
@@ -117,7 +117,7 @@ def _lines_to_dict(lines: Iterable[str]):
         result[key.strip()] = val.strip('\n "')
     return result
 
-# %% ../nbs/params.ipynb 19
+# %% ../nbs/params.ipynb 28
 # | export
 
 
@@ -127,7 +127,7 @@ def extract_params_as_dict(params_file_path: Path):
         params = _lines_to_dict(params_file.readlines())
     return params
 
-# %% ../nbs/params.ipynb 21
+# %% ../nbs/params.ipynb 31
 # | export
 
 
@@ -136,7 +136,7 @@ def params_as_dict(nb_path: Path):
     params = _lines_to_dict(StringIO(params_code).readlines())
     return params
 
-# %% ../nbs/params.ipynb 26
+# %% ../nbs/params.ipynb 36
 # | export
 
 supported_parameters = (str, int, float)
@@ -147,7 +147,7 @@ suppported_types.extend(supported_parameters)
 suppported_types.extend(supported_args)
 suppported_types.extend(supported_conversion_args)
 
-# %% ../nbs/params.ipynb 27
+# %% ../nbs/params.ipynb 38
 # | export
 
 
@@ -160,7 +160,7 @@ class ParamMeta:
     has_metaflow_param: bool
     has_sagemaker_param: bool
 
-# %% ../nbs/params.ipynb 28
+# %% ../nbs/params.ipynb 40
 # | export
 
 
@@ -173,7 +173,7 @@ def load_module(fully_qualified_module_name):
     module = import_module(fully_qualified_module_name, package)
     return module
 
-# %% ../nbs/params.ipynb 33
+# %% ../nbs/params.ipynb 45
 # | export
 
 

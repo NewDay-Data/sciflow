@@ -198,7 +198,7 @@ def set_sm_params(params, has_processing_step, has_train_step):
             )
     return sm_params
 
-# %% ../../nbs/converters/to_sagemaker.ipynb 36
+# %% ../../nbs/converters/to_sagemaker.ipynb 35
 # | export
 
 
@@ -261,7 +261,7 @@ def nb_to_sagemaker_pipeline(
         steps_vars,
     )
 
-# %% ../../nbs/converters/to_sagemaker.ipynb 38
+# %% ../../nbs/converters/to_sagemaker.ipynb 37
 # | export
 
 
@@ -515,7 +515,7 @@ def write_pipeline_to_files(
 
         return steps_param_meta, steps_vars
 
-# %% ../../nbs/converters/to_sagemaker.ipynb 40
+# %% ../../nbs/converters/to_sagemaker.ipynb 39
 # | export
 
 
@@ -531,7 +531,7 @@ def write_script_processor(flow_file, ind, proc_image_uri, proc_instance_type):
     flow_file.write(f'{ind}{ind}{ind}{ind}{ind}"SCIFLOW_BUCKET": self.bucket}}\n')
     flow_file.write(f"{ind}{ind})\n")
 
-# %% ../../nbs/converters/to_sagemaker.ipynb 42
+# %% ../../nbs/converters/to_sagemaker.ipynb 41
 # | export
 
 
@@ -557,7 +557,7 @@ def extract_step_vars(step, param_names, processing_flow_scope, train_flow_scope
         }
     return result
 
-# %% ../../nbs/converters/to_sagemaker.ipynb 46
+# %% ../../nbs/converters/to_sagemaker.ipynb 45
 # | export
 
 
@@ -635,7 +635,7 @@ def write_steps(
 
     return steps_param_meta, steps_vars
 
-# %% ../../nbs/converters/to_sagemaker.ipynb 53
+# %% ../../nbs/converters/to_sagemaker.ipynb 52
 # | export
 
 
@@ -817,7 +817,7 @@ def generate_sagemaker_modules(
             sm_module_file.write(f"{ind}args = parse_args()\n")
             sm_module_file.write(f"{ind}main(**vars(args))\n")
 
-# %% ../../nbs/converters/to_sagemaker.ipynb 55
+# %% ../../nbs/converters/to_sagemaker.ipynb 54
 # | export
 
 
@@ -894,7 +894,7 @@ def write_preamble(step, sm_module_file, ind):
     )
     sm_module_file.write(f"{ind}return result")
 
-# %% ../../nbs/converters/to_sagemaker.ipynb 63
+# %% ../../nbs/converters/to_sagemaker.ipynb 62
 # | export
 
 
@@ -908,7 +908,7 @@ def generate_flows(nb_glob: str = None, clear_dir: bool = True):
             nb_path, get_flow_path(nb_path, flow_provider="sagemaker"), silent=False
         )
 
-# %% ../../nbs/converters/to_sagemaker.ipynb 66
+# %% ../../nbs/converters/to_sagemaker.ipynb 65
 # | export
 
 

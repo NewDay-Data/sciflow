@@ -66,7 +66,7 @@ def determine_dependencies(
 
     return reqs_file_to_sep_str(os.path.join(out_dir, generated_pip_file_name))
 
-# %% ../nbs/packaging.ipynb 21
+# %% ../nbs/packaging.ipynb 22
 # | export
 
 
@@ -90,7 +90,7 @@ def update_requirements(
     with open(out_path, "w") as configfile:
         config.write(configfile)
 
-# %% ../nbs/packaging.ipynb 27
+# %% ../nbs/packaging.ipynb 28
 # | export
 
 
@@ -113,7 +113,7 @@ def create_conda_meta_file(project_dir: Path = None, out_file: str = "meta.yaml"
     with open(os.path.join(project_dir, out_file), "w") as conda_build_file:
         yaml.dump(meta_data, conda_build_file)
 
-# %% ../nbs/packaging.ipynb 30
+# %% ../nbs/packaging.ipynb 31
 # | export
 
 
@@ -123,7 +123,7 @@ def sciflow_update_reqs():
     update_requirements()
     print("Updated library requirements for conda & nbdev")
 
-# %% ../nbs/packaging.ipynb 33
+# %% ../nbs/packaging.ipynb 34
 # | export
 
 
@@ -133,7 +133,7 @@ def delete_multiple_element(list_object, indices):
         if idx < len(list_object):
             list_object.pop(idx)
 
-# %% ../nbs/packaging.ipynb 34
+# %% ../nbs/packaging.ipynb 35
 # | export
 
 
@@ -153,7 +153,7 @@ def read_deploy_vars():
     }
     return deployment
 
-# %% ../nbs/packaging.ipynb 36
+# %% ../nbs/packaging.ipynb 37
 # | export
 
 
@@ -191,7 +191,7 @@ def write_art_conda_envs_to_file():
         profile_file.writelines(existing_lines)
     return existing_lines
 
-# %% ../nbs/packaging.ipynb 39
+# %% ../nbs/packaging.ipynb 40
 # | export
 
 

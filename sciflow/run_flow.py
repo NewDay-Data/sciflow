@@ -6,7 +6,7 @@ __all__ = ['check_is_init', 'make_shell_cmd', 'check_call_flow', 'check_call_flo
            'extract_results', 'sciflow_check_metaflows', 'sciflow_check_sagemaker_flows', 'sciflow_run_metaflows',
            'sciflow_run_sagemaker_flows']
 
-# %% ../nbs/run_flow.ipynb 3
+# %% ../nbs/run_flow.ipynb 4
 # | export
 
 
@@ -31,7 +31,7 @@ from sciflow.utils import (
     run_shell_cmd,
 )
 
-# %% ../nbs/run_flow.ipynb 6
+# %% ../nbs/run_flow.ipynb 9
 # | export
 
 
@@ -42,7 +42,7 @@ def check_is_init():
         print(f"PYTHONPATH={sys.path}")
         raise ValueError("Project is not in path; have you run sciflow_init?")
 
-# %% ../nbs/run_flow.ipynb 7
+# %% ../nbs/run_flow.ipynb 11
 # | export
 
 
@@ -61,7 +61,7 @@ def make_shell_cmd(
 
     return f"python '{flow_path}' {flow_command}"
 
-# %% ../nbs/run_flow.ipynb 8
+# %% ../nbs/run_flow.ipynb 14
 # | export
 
 
@@ -74,7 +74,7 @@ def check_call_flow(
     pipe, output = run_shell_cmd(cmd)
     return pipe.returncode, output
 
-# %% ../nbs/run_flow.ipynb 19
+# %% ../nbs/run_flow.ipynb 26
 # | export
 
 
@@ -122,7 +122,7 @@ def check_call_flows(
                 return sys.exit(exit_code)
     return exit_code
 
-# %% ../nbs/run_flow.ipynb 25
+# %% ../nbs/run_flow.ipynb 33
 # | export
 
 
@@ -137,7 +137,6 @@ async def flow_task(
 
     stdout, stderr = await proc.communicate()
 
-    # print(f"[{cmd!r} exited with {proc.returncode}]")
     err = ""
     out = ""
     if stderr:
@@ -147,7 +146,7 @@ async def flow_task(
 
     return proc.returncode, err + out
 
-# %% ../nbs/run_flow.ipynb 26
+# %% ../nbs/run_flow.ipynb 35
 # | export
 
 
@@ -160,7 +159,7 @@ def run_flow_async(
     )
     return task
 
-# %% ../nbs/run_flow.ipynb 33
+# %% ../nbs/run_flow.ipynb 43
 # | export
 
 
@@ -217,7 +216,7 @@ async def run_flows_async(
                 return sys.exit(exit_code)
     return exit_code
 
-# %% ../nbs/run_flow.ipynb 40
+# %% ../nbs/run_flow.ipynb 51
 # | export
 
 
@@ -234,7 +233,7 @@ def iter_param_grid(param_grid):
                 params = dict(zip(keys, v))
                 yield params
 
-# %% ../nbs/run_flow.ipynb 42
+# %% ../nbs/run_flow.ipynb 54
 # | export
 
 
@@ -246,7 +245,7 @@ def sample_grid_space(param_grid: Dict[str, Iterable[Any]], num_samples: int):
         samples = pd.Series(samples).sample(num_samples).tolist()
     return samples
 
-# %% ../nbs/run_flow.ipynb 44
+# %% ../nbs/run_flow.ipynb 57
 # | export
 
 
@@ -270,7 +269,7 @@ async def search_batches(flow_nb_path, flow_provider, task_batches):
         futures.append(await asyncio.wait(tasks))
     return futures
 
-# %% ../nbs/run_flow.ipynb 45
+# %% ../nbs/run_flow.ipynb 59
 # | export
 
 
@@ -293,7 +292,7 @@ def search_flow_grid(
     futures = search_batches(flow_nb_path, flow_provider, task_batches)
     return futures
 
-# %% ../nbs/run_flow.ipynb 46
+# %% ../nbs/run_flow.ipynb 61
 # | export
 
 
@@ -304,7 +303,7 @@ def extract_results(future_tasks):
     results = [t.result() for t in completed_tasks]
     return results
 
-# %% ../nbs/run_flow.ipynb 50
+# %% ../nbs/run_flow.ipynb 67
 # | export
 
 
@@ -312,7 +311,7 @@ def extract_results(future_tasks):
 def sciflow_check_metaflows():
     check_call_flows(get_config())
 
-# %% ../nbs/run_flow.ipynb 51
+# %% ../nbs/run_flow.ipynb 69
 # | export
 
 
@@ -320,7 +319,7 @@ def sciflow_check_metaflows():
 def sciflow_check_sagemaker_flows():
     check_call_flows(get_config(), flow_provider="sagemaker")
 
-# %% ../nbs/run_flow.ipynb 52
+# %% ../nbs/run_flow.ipynb 71
 # | export
 
 
@@ -328,7 +327,7 @@ def sciflow_check_sagemaker_flows():
 def sciflow_run_metaflows():
     check_call_flows(get_config(), flow_command="run")
 
-# %% ../nbs/run_flow.ipynb 53
+# %% ../nbs/run_flow.ipynb 73
 # | export
 
 
