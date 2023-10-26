@@ -17,4 +17,4 @@ numpy==1.24.1
 pandas==1.1.3
 PyYAML==6.0.1
 sagemaker==2.191.0
-scilint==0.2.2
+scilint==0.2.3
