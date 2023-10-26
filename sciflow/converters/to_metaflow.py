@@ -205,7 +205,7 @@ def write_track_capture(flow_file, ind, num_indents):
     flow_file.write(f"{base_ind}{ind}else:\n")
     flow_file.write(f"{base_ind}{ind}{ind}self.__dict__[key] = results[key]\n")
 
-# %% ../../nbs/converters/to_metaflow.ipynb 46
+# %% ../../nbs/converters/to_metaflow.ipynb 49
 # | export
 
 
@@ -221,7 +221,7 @@ def generate_flows(config=None, clear_dir=True):
             silent=False,
         )
 
-# %% ../../nbs/converters/to_metaflow.ipynb 50
+# %% ../../nbs/converters/to_metaflow.ipynb 53
 # | export
 
 
