@@ -1,0 +1,21 @@
+---
+  exclusions: "nbs/test/"
+  fail_over: 0
+  out_dir: "/tmp/sciflow/scilint/"
+  precision: 3
+  print_syntax_errors: true
+  evaluate: true
+  nb_path_display: "parent"
+  warnings:
+    lt:
+      calls_per_func_median: 1
+      calls_per_func_mean: 1
+      in_func_pct: 20
+      tests_func_coverage_pct: 20
+      tests_per_func_mean: 0.5
+      markdown_code_pct: 5
+    gt:
+      total_code_len: 50000
+      loc_per_md_section: 2000
+    equals:
+      has_syntax_error: true
