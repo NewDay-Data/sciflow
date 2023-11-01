@@ -1,6 +1,6 @@
 package:
   name: sciflow
-  version: 0.0.1
+  version: 1.0.0
 requirements:
   host:
   - pip
@@ -21,7 +21,7 @@ requirements:
   - pigar==2.1.1
   - PyYAML==6.0.1
   - sagemaker==2.191.0
-  - -egit+https://github.com/NewDay-Data/sciflow.git@97465969221776e2783bf7d860a4be2994ebe08f#egg=sciflow
-  - scilint==0.2.2
+  - -egit+https://github.com/NewDay-Data/sciflow.git@906e5b843ba2fa4fce1ca7e0385af47b6e360671#egg=sciflow
+  - scilint==0.2.3
 source:
   path: /home/sagemaker-user/git/sciflow

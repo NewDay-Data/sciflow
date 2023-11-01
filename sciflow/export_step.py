@@ -8,8 +8,8 @@ __all__ = ['ExportModuleProc', 'optional_procs', 'nb_named_export', 'sciflow_exp
 
 import os
 from collections import defaultdict
-from warnings import warn
 from pathlib import Path
+from warnings import warn
 
 import nbdev
 from fastcore.basics import ifnone
