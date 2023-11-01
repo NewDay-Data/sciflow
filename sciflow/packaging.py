@@ -19,6 +19,7 @@ from urllib.parse import urlparse
 import yaml
 from fastcore.script import call_parse
 from nbdev.export import get_config
+
 from .utils import run_py_module
 
 # %% ../nbs/packaging.ipynb 9
@@ -71,7 +72,9 @@ def determine_dependencies(
 
 
 def update_requirements(
-    project_dir: Path = None, output_filename: str = "settings.ini"
+    project_dir: Path = None,
+    output_filename: str = "settings.ini",
+    reqs_str: str = None,
 ):
     if project_dir is None:
         lib_path = get_config().path("lib_path")
@@ -82,7 +85,8 @@ def update_requirements(
     config.read(settings_path)
 
     os.path.join(project_dir, "requirements-generated.txt")
-    reqs_str = determine_dependencies(out_dir=project_dir)
+    if reqs_str is None:
+        reqs_str = determine_dependencies(out_dir=project_dir)
 
     out_path = os.path.join(project_dir, output_filename)
     config.set("DEFAULT", "requirements", reqs_str)
@@ -94,10 +98,15 @@ def update_requirements(
 # | export
 
 
-def create_conda_meta_file(project_dir: Path = None, out_file: str = "meta.yaml"):
+def create_conda_meta_file(
+    project_dir: Path = None, out_file: str = "meta.yaml", reqs_str: str = None
+):
     if project_dir is None:
         lib_path = get_config().path("lib_path")
         project_dir = lib_path.resolve().parent
+
+    if reqs_str is None:
+        determine_dependencies(out_dir=project_dir)
 
     meta_data = {
         "package": {
@@ -107,7 +116,7 @@ def create_conda_meta_file(project_dir: Path = None, out_file: str = "meta.yaml"
         "source": {"path": str(get_config().path("lib_path").resolve().parent)},
         "requirements": {
             "host": ["pip", "python", "setuptools"],
-            "run": determine_dependencies(out_dir=project_dir).split(" "),
+            "run": reqs_str.split(" "),
         },
     }
     with open(os.path.join(project_dir, out_file), "w") as conda_build_file:
