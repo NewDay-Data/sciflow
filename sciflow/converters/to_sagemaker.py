@@ -601,6 +601,7 @@ def write_steps(
                 return_vars,
                 step_vars,
                 flow_file,
+                flow_path,
                 ind,
                 step,
                 param_meta,
@@ -617,6 +618,7 @@ def write_steps(
                 return_vars,
                 step_vars,
                 flow_file,
+                flow_path,
                 ind,
                 step,
                 param_meta,
@@ -634,6 +636,197 @@ def write_steps(
         flow_file.write("\n")
 
     return steps_param_meta, steps_vars
+
+# %% ../../nbs/converters/to_sagemaker.ipynb 47
+# | export
+
+
+def _write_processing_step(
+    return_vars,
+    step_vars,
+    flow_file,
+    flow_path,
+    ind,
+    step,
+    param_meta,
+    outputs,
+    lib_name,
+    proc_image_uri,
+    proc_instance_type,
+    module_local_name,
+):
+    steps_param_meta = {}
+
+    write_script_processor(flow_file, ind, proc_image_uri, proc_instance_type)
+    flow_file.write("\n")
+    flow_file.write(f"{ind}{ind}{step.name}_step = ProcessingStep(\n")
+    flow_file.write(f'{ind}{ind}{ind}name = "{step.name}",\n')
+    flow_file.write(f"{ind}{ind}{ind}processor = script_processor,\n")
+    flow_file.write(
+        f'{ind}{ind}{ind}code = f"{{self.flow_s3_uri}}/code/_sciflow_{module_local_name}_{step.name}.py",\n'
+    )
+    job_arg_pairs = [
+        ("--bucket_name", "self.bucket"),
+        ("--flow_base_key", "self.flow_base_key"),
+        ("--flow_run_id", "self.flow_run_id"),
+        ("--lib_name", f'"{lib_name}"'),
+        ("--remote_key", "self.lib_code_key"),
+    ]
+    flow_file.write(f"{ind}{ind}{ind}inputs = [\n")
+    flow_file.write(
+        f'{ind}{ind}{ind}{ind}ProcessingInput(source=f"{{self.flow_s3_uri}}/requirements.txt", destination="/opt/ml/processing/requirements"),\n'
+    )
+
+    if len(step_vars) > 0:
+        step_param_meta = {k: param_meta[k] for k in step_vars["step_input"]}
+        steps_param_meta[step.name] = step_param_meta
+        if len(step_param_meta) > 0:
+            # Job Args
+            job_args = format_job_arguments(step_param_meta)
+            job_arg_pairs.extend(zip(job_args[::2], job_args[1::2]))
+
+        # ProcInputs
+        if (
+            len(step_vars["step_proc_vars"]) > 0
+            or len(step_vars["step_train_vars"]) > 0
+        ):
+            flow_file.write(
+                "\n".join(
+                    [
+                        f'{ind}{ind}{ind}{ind}ProcessingInput(source=self.{outputs[cv]}, destination="/opt/ml/processing/input/{cv}"),\n'
+                        for cv in step_vars["step_train_vars"]
+                        + step_vars["step_proc_vars"]
+                    ]
+                )
+            )
+    flow_file.write(f"{ind}{ind}{ind}],\n")
+
+    if len(return_vars) > 0:
+        # ProcOutputs
+        proc_outs = {
+            (
+                v,
+                f'{step.name}_step.properties.ProcessingOutputConfig.Outputs["{v}"].S3Output.S3Uri',
+            )
+            for v in return_vars
+        }
+        outputs.update(proc_outs)
+
+        if len(proc_outs) > 0:
+            flow_file.write(f"{ind}{ind}{ind}outputs = [\n")
+            flow_file.write(
+                "\n".join(
+                    [
+                        f'{ind}{ind}{ind}{ind}ProcessingOutput(output_name="{v}", source="/opt/ml/processing/output/{v}"),'
+                        for v in [x[0] for x in proc_outs]
+                    ]
+                )
+                + "\n"
+            )
+            flow_file.write(f"{ind}{ind}{ind}],\n")
+
+    flow_file.write(f"{ind}{ind}{ind}job_arguments=[\n")
+    for job_arg_pair in job_arg_pairs:
+        flow_file.write(
+            f'{ind}{ind}{ind}{ind}"{job_arg_pair[0]}", {job_arg_pair[1]},\n'
+        )
+    flow_file.write(f"{ind}{ind}{ind}],\n")
+
+    flow_file.write(f"{ind}{ind})\n")
+    return steps_param_meta
+
+# %% ../../nbs/converters/to_sagemaker.ipynb 49
+# | export
+
+
+def _write_train_step(
+    return_vars,
+    step_vars,
+    flow_file,
+    flow_path,
+    ind,
+    step,
+    param_meta,
+    outputs,
+    lib_name,
+    train_image_uri,
+    train_instance_type,
+    module_local_name,
+):
+    steps_param_meta = {}
+
+    if len(step_vars) > 0:
+        train_outs = {
+            (v, f"{step.name}_step.properties.ModelArtifacts.S3ModelArtifacts")
+            for v in return_vars
+        }
+        outputs.update(train_outs)
+
+        flow_file.write(f"{ind}{ind}metrics_regex = None\n")
+        flow_file.write(f"{ind}{ind}if 'metric_names' in self.__dict__:\n")
+        flow_file.write(
+            f'{ind}{ind}{ind}metrics = self.metric_names.split(",")\n',
+        )
+        flow_file.write(
+            f'{ind}{ind}{ind}metrics_regex = [{{"Name": m, "Regex": f"{{m}}=(.*?);"}} for m in metrics]\n'
+        )
+        flow_file.write(f"\n")
+        flow_file.write(f"{ind}{ind}estimator = Estimator(\n")
+        flow_file.write(f'{ind}{ind}{ind}image_uri = "{train_image_uri}",\n')
+        flow_file.write(
+            f'{ind}{ind}{ind}entry_point = "_sciflow_{module_local_name}_{step.name}.py",\n'
+        )
+        flow_file.write(f'{ind}{ind}{ind}source_dir = "{flow_path.parent}",\n')
+        # Repeated code - refactor
+        step_param_meta = {k: param_meta[k] for k in step_vars["step_input"]}
+        steps_param_meta[step.name] = step_param_meta
+        hyper_params = {
+            "bucket_name": "self.bucket",
+            "flow_base_key": "self.flow_base_key",
+            "flow_run_id": "self.flow_run_id",
+            "lib_name": f'"{lib_name}"',
+            "remote_key": "self.lib_code_key",
+        }
+        if len(step_vars["step_input"]) > 0:
+            hyper_params.update(format_hyperparams(step_param_meta))
+        flow_file.write(f"{ind}{ind}{ind}hyperparameters = {{\n")
+        for key, val in hyper_params.items():
+            flow_file.write(f'{ind}{ind}{ind}{ind}"{key}": {val},\n')
+        flow_file.write(f"{ind}{ind}{ind}}},\n")
+        flow_file.write(f'{ind}{ind}{ind}instance_type = "{train_instance_type}",\n')
+        flow_file.write(f"{ind}{ind}{ind}instance_count = 1,\n")
+        flow_file.write(f"{ind}{ind}{ind}output_path = self.flow_s3_uri,\n")
+        flow_file.write(f'{ind}{ind}{ind}base_job_name = "{step.name}",\n')
+        flow_file.write(
+            f'{ind}{ind}{ind}code_location = f"{{self.flow_s3_uri}}/code",\n'
+        )
+        flow_file.write(f"{ind}{ind}{ind}sagemaker_session = self.sagemaker_session,\n")
+        flow_file.write(f"{ind}{ind}{ind}role = self.role,\n")
+        flow_file.write(f"{ind}{ind}{ind}metric_definitions=metrics_regex,\n")
+        flow_file.write(f"{ind}{ind}{ind}enable_sagemaker_metrics=True,\n")
+        flow_file.write(
+            f"{ind}{ind}{ind}environment={{'AWS_DEFAULT_REGION': self.region,\n"
+        )
+        flow_file.write(f"{ind}{ind}{ind}{ind}{ind}'SCIFLOW_BUCKET': self.bucket}}\n")
+        flow_file.write(f"{ind}{ind})\n")
+        flow_file.write("\n")
+        flow_file.write(f"{ind}{ind}{step.name}_step = TrainingStep(\n")
+        flow_file.write(f'{ind}{ind}{ind}name="{step.name}",\n')
+        flow_file.write(f"{ind}{ind}{ind}estimator=estimator,\n")
+        if "step_proc_vars" in step_vars and len(step_vars["step_proc_vars"]) > 0:
+            flow_file.write(f"{ind}{ind}{ind}inputs={{\n")
+            for training_input in step_vars["step_proc_vars"]:
+                flow_file.write(
+                    f'{ind}{ind}{ind}{ind}"{training_input}": TrainingInput(\n'
+                )
+                # TODO store content type mapping
+                flow_file.write(
+                    f'{ind}{ind}{ind}{ind}{ind}s3_data=self.{outputs[training_input]}, content_type="text/csv"\n'
+                )
+                flow_file.write(f"{ind}{ind}{ind}{ind}),\n")
+            flow_file.write(f"{ind}{ind}{ind}}}\n")
+        flow_file.write(f"{ind}{ind})\n")
+    return steps_param_meta
 
 # %% ../../nbs/converters/to_sagemaker.ipynb 52
 # | export

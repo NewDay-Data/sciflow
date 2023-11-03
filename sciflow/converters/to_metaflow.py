@@ -218,8 +218,10 @@ def write_track_capture(flow_file, ind, num_indents):
 
 
 def generate_flows(config=None, clear_dir=True):
+    metaflows_dir = Path(get_config().path("flows_path"), "metaflow")
+    if not metaflows_dir.exists():
+        metaflows_dir.mkdir(parents=True)
     if clear_dir:
-        metaflows_dir = Path(get_config().path("flows_path"), "metaflow")
         [f.unlink() for f in metaflows_dir.iterdir() if not f.is_dir()]
     nb_paths = nbglob()
     for nb_path in nb_paths:
