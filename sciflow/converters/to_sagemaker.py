@@ -843,13 +843,8 @@ def generate_sagemaker_modules(
     steps_param_meta,
     steps_vars,
 ):
-    # Read in module file as lines.
     ind = "    "
     module_path = Path(lib_path(), lib_name, f"{module_name.replace('.', '/')}.py")
-
-    # Pass these in instead of replacing..
-    # TODO needs to be step specific
-    # pass these in
 
     with open(module_path) as module_file:
         module_lines = module_file.readlines()
@@ -876,8 +871,9 @@ def generate_sagemaker_modules(
         ]
 
         with open(sm_module_path, "w") as sm_module_file:
-            sm_module_file.write("".join(lines))
-            sm_module_file.write("\n\n# SCIFLOW->SAGEMAKER ADAPTER FROM THIS POINT\n")
+            sm_module_file.write(
+                "# SCIFLOW GENERATED SAGEMAKER MODULE - EDIT COMPANION NOTEBOOK\n"
+            )
             sm_module_file.write("import boto3\n")
             sm_module_file.write("import os\n")
             sm_module_file.write("import sys\n")
@@ -886,6 +882,23 @@ def generate_sagemaker_modules(
             sm_module_file.write("from pathlib import Path\n")
             sm_module_file.write("import argparse\n")
             sm_module_file.write("import subprocess\n")
+
+            if is_processing_step(step):
+                sm_module_file.write(
+                    f'has_additional_dependencies = Path("/opt/ml/processing/requirements/requirements.txt").exists()\n'
+                )
+                sm_module_file.write(f"if has_additional_dependencies:\n")
+                sm_module_file.write(
+                    f"{ind}print('Installing additional dependencies from requirements.txt')\n"
+                )
+                sm_module_file.write(
+                    f'{ind}subprocess.check_call([sys.executable, "-m", "pip", "install", "-r", "/opt/ml/processing/requirements/requirements.txt"])\n'
+                )
+                sm_module_file.write(
+                    f'{ind}print("Installed additional dependencies")\n'
+                )
+            sm_module_file.write("\n")
+            sm_module_file.write("".join(lines))
             sm_module_file.write("\n")
             write_preamble(step, sm_module_file, ind)
             sm_module_file.write("\n")
@@ -897,21 +910,6 @@ def generate_sagemaker_modules(
                 )
             else:
                 sm_module_file.write(f"def main({', '.join(main_args)}):\n")
-            if is_processing_step(step):
-                sm_module_file.write(
-                    f'{ind}has_additional_dependencies = Path("/opt/ml/processing/requirements/requirements.txt").exists()\n'
-                )
-                sm_module_file.write(f"{ind}if has_additional_dependencies:\n")
-                sm_module_file.write(
-                    f"{ind}{ind}print('Installing additional dependencies from requirements.txt')\n"
-                )
-                sm_module_file.write(
-                    f'{ind}{ind}subprocess.check_call([sys.executable, "-m", "pip", "install", "-r", "/opt/ml/processing/requirements/requirements.txt"])\n'
-                )
-                sm_module_file.write(
-                    f'{ind}{ind}print("Installed additional dependencies")\n'
-                )
-
             if (
                 is_processing_step(step)
                 and "step_train_vars" in steps_vars[step.name]
