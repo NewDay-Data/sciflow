@@ -105,15 +105,18 @@ class Topics:
 
 
 def fit(documents, workers=workers):
-    model = Topics(documents, workers=workers)
-    results = {"model": model}
+    model = Topics(documents, workers=float(workers) * 2)
+    training_artifact = {"some": np.arange(10**3)}
+    results = {"model": model, "training_artifact": training_artifact}
     return results
 
 # %% ../../nbs/test/test_multistep_no_params.ipynb 32
 # | export_step evaluate
 
 
-def evaluate(model):
+def evaluate(documents, model, training_artifact):
+    docs_len = len(documents)
+    artifact_len = training_artifact["some"].shape[0]
     topic_words, word_scores, topic_nums = model.get_topics(model.get_num_topics())
 
     topic_contains_non_empty_words = all([len(tw) > 0 for tw in topic_words])
@@ -128,7 +131,11 @@ def evaluate(model):
     )
     # You can add artifacts in a step that will be saved to block storage. Add the paths to the file on the local filesystem
     # and the artifact will be uploaded to remote storage.
-    artifacts = [lib_path("nbs", "test", "dataframe_artifact.csv")]
+    sample_df = pd.DataFrame(
+        {"a": model.get_topic_sizes()[0], "b": model.get_topic_sizes()[1]}
+    )
+    sample_df.to_csv("/tmp/dataframe_artifact.csv", index=False)
+    artifacts = ["/tmp/dataframe_artifact.csv"]
     # You can add step metrics too this time just add a list of 3-tuples where tuple order = (name, value, step)
     metrics = [("mae", 100, 0), ("mae", 67, 1), ("mae", 32, 2)]
     results = {

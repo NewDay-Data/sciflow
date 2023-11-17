@@ -107,15 +107,19 @@ class Topics:
 
 
 def fit(documents, workers=workers):
-    model = Topics(documents, workers=workers)
-    results = {"model": model}
+    docs_len = len(documents)
+    model = Topics(documents, workers=float(workers) * 2)
+    training_artifact = {"some": np.arange(10**3)}
+    results = {"model": model, "training_artifact": training_artifact}
     return results
 
 # %% ../../nbs/test/test_multistep.ipynb 33
 # | export_step evaluate
 
 
-def evaluate(model):
+def evaluate(documents, model, training_artifact):
+    docs_len = len(documents)
+    artifact_len = training_artifact["some"].shape[0]
     topic_words, word_scores, topic_nums = model.get_topics(model.get_num_topics())
 
     topic_contains_non_empty_words = all([len(tw) > 0 for tw in topic_words])

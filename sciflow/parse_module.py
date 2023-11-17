@@ -139,19 +139,39 @@ def parse_step(step_code: str):
 
 
 def extract_return_var_names(step):
-    results_index = step.code.find(f"{step.return_stmt} =")
-    if results_index == -1:
-        return []
-
+    tree = ast.parse(step.code)
     keys = []
-    for l in step.code[results_index:].split("\n"):
-        if l.strip().find(":") > -1:
-            key_prefix = l.split(":")[0]
-            key = key_prefix[key_prefix.find("{") + 1 :]
-            keys.append(key.strip(' ",'))
+
+    for node in ast.walk(tree):
+        if isinstance(node, ast.Return):
+            # Case 1: Direct dictionary return
+            if isinstance(node.value, ast.Dict):
+                for key in node.value.keys:
+                    if isinstance(key, ast.Str):
+                        keys.append(key.s)
+                    elif isinstance(key, ast.Constant):  # For Python 3.8+
+                        keys.append(key.value)
+
+            # Case 2: Variable returning a dictionary
+            elif isinstance(node.value, ast.Name):
+                var_name = node.value.id
+                # Now, find the assignment of this variable in the code
+                for assign_node in ast.walk(tree):
+                    if isinstance(assign_node, ast.Assign):
+                        for target in assign_node.targets:
+                            if isinstance(target, ast.Name) and target.id == var_name:
+                                if isinstance(assign_node.value, ast.Dict):
+                                    for key in assign_node.value.keys:
+                                        if isinstance(key, ast.Str):
+                                            keys.append(key.s)
+                                        elif isinstance(
+                                            key, ast.Constant
+                                        ):  # For Python 3.8+
+                                            keys.append(key.value)
+
     return keys
 
-# %% ../nbs/parse_module.ipynb 30
+# %% ../nbs/parse_module.ipynb 31
 # | export
 
 
@@ -160,7 +180,7 @@ def extract_steps(module_path: Path):
     steps = [parse_step(step_code[k]) for k in step_code.keys()]
     return steps
 
-# %% ../nbs/parse_module.ipynb 32
+# %% ../nbs/parse_module.ipynb 33
 # | export
 
 

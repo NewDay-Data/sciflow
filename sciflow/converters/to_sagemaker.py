@@ -536,6 +536,9 @@ def write_script_processor(flow_file, ind, proc_image_uri, proc_instance_type):
 
 
 def extract_step_vars(step, param_names, processing_flow_scope, train_flow_scope):
+    logger.debug(
+        f"Extracting step variables: {step.name} params: {param_names} proc scope: {processing_flow_scope} train scope: {train_flow_scope}"
+    )
     if len(step.args) == 0:
         result = {}
     else:
@@ -586,6 +589,7 @@ def write_steps(
 
     for i, step in enumerate(steps):
         return_vars = extract_return_var_names(step)
+        logger.debug(f"Extracted return vars: {return_vars} from step: {step.name}")
 
         step_vars = extract_step_vars(
             step, param_names, proc_flow_scope, train_flow_scope
@@ -690,12 +694,18 @@ def _write_processing_step(
             len(step_vars["step_proc_vars"]) > 0
             or len(step_vars["step_train_vars"]) > 0
         ):
+            # For now all output artefacts from training go into model directory. Not yet using the recommended /opt/ml/output/data
+            # https://docs.aws.amazon.com/sagemaker/latest/dg/your-algorithms-training-algo-output.html
+            proc_inputs = (
+                step_vars["step_proc_vars"]
+                if len(step_vars["step_train_vars"]) == 0
+                else step_vars["step_proc_vars"] + ["model"]
+            )
             flow_file.write(
                 "\n".join(
                     [
-                        f'{ind}{ind}{ind}{ind}ProcessingInput(source=self.{outputs[cv]}, destination="/opt/ml/processing/input/{cv}"),\n'
-                        for cv in step_vars["step_train_vars"]
-                        + step_vars["step_proc_vars"]
+                        f'{ind}{ind}{ind}{ind}ProcessingInput(source=self.{outputs[cv]}, destination="/opt/ml/processing/input/{cv}"),'
+                        for cv in proc_inputs
                     ]
                 )
             )
@@ -717,7 +727,7 @@ def _write_processing_step(
             flow_file.write(
                 "\n".join(
                     [
-                        f'{ind}{ind}{ind}{ind}ProcessingOutput(output_name="{v}", source="/opt/ml/processing/output/{v}"),'
+                        f'{ind}{ind}{ind}{ind}ProcessingOutput(destination=f"{{self.flow_s3_uri}}/{v}", output_name="{v}", source="/opt/ml/processing/output/{v}"),'
                         for v in [x[0] for x in proc_outs]
                     ]
                 )
@@ -820,6 +830,7 @@ def _write_train_step(
                     f'{ind}{ind}{ind}{ind}"{training_input}": TrainingInput(\n'
                 )
                 # TODO store content type mapping
+                # parquet should be: "application/octet-stream"
                 flow_file.write(
                     f'{ind}{ind}{ind}{ind}{ind}s3_data=self.{outputs[training_input]}, content_type="text/csv"\n'
                 )
