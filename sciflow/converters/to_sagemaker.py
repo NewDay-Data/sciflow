@@ -117,6 +117,10 @@ def write_params(flow_file, param_meta, ind):
             flow_file.write(
                 f"{ind}{param} = ParameterString(name='{param}', default_value={param})\n"
             )
+        elif param_meta[param].instance_type == bool:
+            flow_file.write(
+                f"{ind}{param} = ParameterBoolean(name='{param}', default_value={param})\n"
+            )
         elif param_meta[param].instance_type == PosixPath:
             flow_file.write(
                 f"{ind}{param} = ParameterString(name='{param}', default_value=str({param}))\n"
@@ -144,6 +148,10 @@ def write_sm_params(flow_file, sm_params, ind):
         elif type(val) == str:
             flow_file.write(
                 f"{ind}{key} = ParameterString(name='{key}', default_value=\"{val}\")\n"
+            )
+        elif type(val) == bool:
+            flow_file.write(
+                f"{ind}{key} = ParameterBoolean(name='{key}', default_value=\"{val}\")\n"
             )
         else:
             raise ValueError(
@@ -316,6 +324,20 @@ def write_pipeline_to_files(
         if has_train_step:
             flow_file.write("from sagemaker.inputs import TrainingInput\n")
             flow_file.write("from sagemaker.estimator import Estimator\n")
+        if "promote" in params.keys():
+            flow_file.write(
+                "from sagemaker.model_metrics import MetricsSource, ModelMetrics\n"
+            )
+            flow_file.write(
+                "from sagemaker.workflow.step_collections import RegisterModel\n"
+            )
+            flow_file.write(
+                "from sagemaker.workflow.conditions import ConditionEquals\n"
+            )
+            flow_file.write(
+                "from sagemaker.workflow.condition_step import ConditionStep\n"
+            )
+            flow_file.write("from sagemaker.workflow.functions import Join\n")
 
         has_sm_param = any((p.has_sagemaker_param for p in param_meta.values()))
         if has_sm_param or len(sm_params) > 0:
@@ -333,6 +355,10 @@ def write_pipeline_to_files(
                     sm_params_import += ", "
             if str in instance_types:
                 sm_params_import += "ParameterString"
+                if bool in instance_types:
+                    sm_params_import += ", "
+            if bool in instance_types:
+                sm_params_import += "ParameterBoolean"
 
             flow_file.write(sm_params_import + "\n")
 
@@ -361,7 +387,11 @@ def write_pipeline_to_files(
         )
 
         flow_file.write("\n")
-        flow_file.write(f"{ind}steps = {[s.name for s in steps]}\n")
+        step_names = [s.name for s in steps]
+        # Add manual promotion step at end of pipeline
+        if "promote" in params.keys():
+            step_names = step_names + ["cond_promote"]
+        flow_file.write(f"{ind}steps = {step_names}\n")
         flow_file.write("\n")
         steps_param_meta, steps_vars = write_steps(
             flow_path,
@@ -448,11 +478,17 @@ def write_pipeline_to_files(
         proc_steps = [s for s in steps if is_processing_step(s)]
         lib_reqs_path = Path(lib_path(), "requirements.txt")
         if not lib_reqs_path.exists():
+            logger.info(
+                f"No existing library requirements file found at: {lib_reqs_path} - generating a new one."
+            )
             determine_dependencies(generated_pip_file_name="requirements.txt")
         flow_reqs_path = Path(
             lib_path(), config.flows_path, "sagemaker", "requirements.txt"
         )
         if not flow_reqs_path.exists():
+            logger.info(
+                f"No existing flow requirements file found at: {flow_reqs_path} - copying the library requirements file from: {lib_reqs_path}"
+            )
             shutil.copyfile(lib_reqs_path, flow_reqs_path)
         flow_file.write(
             f'{ind}{ind}self.s3_client.upload_file("{flow_reqs_path}", self.bucket, f"{{self.s3_prefix}}/requirements.txt")\n'
@@ -638,6 +674,9 @@ def write_steps(
         flow_file.write(f"{ind}{ind}self.{step.name}_step = {step.name}_step\n")
         flow_file.write(f"{ind}{ind}return {step.name}_step\n")
         flow_file.write("\n")
+
+    if "promote" in param_names:
+        _write_manual_promote_step(flow_file, ind)
 
     return steps_param_meta, steps_vars
 
@@ -837,9 +876,69 @@ def _write_train_step(
                 flow_file.write(f"{ind}{ind}{ind}{ind}),\n")
             flow_file.write(f"{ind}{ind}{ind}}}\n")
         flow_file.write(f"{ind}{ind})\n")
+        flow_file.write(f"{ind}{ind}self.estimator = estimator\n")
     return steps_param_meta
 
 # %% ../../nbs/converters/to_sagemaker.ipynb 52
+# | export
+
+
+def _write_manual_promote_step(flow_file, ind):
+    # TODO preopr logic for detecting eval step
+    has_eval_step = True
+    if has_eval_step:
+        flow_file.write(f"{ind}def cond_promote(self):\n")
+        flow_file.write(f"{ind}{ind}model_metrics = ModelMetrics(\n")
+        flow_file.write(f"{ind}{ind}{ind}model_statistics=MetricsSource(\n")
+        flow_file.write(f"{ind}{ind}{ind}{ind}s3_uri=Join(\n")
+        flow_file.write(f'{ind}{ind}{ind}{ind}{ind}on="/",\n')
+        flow_file.write(f"{ind}{ind}{ind}{ind}{ind}values=[\n")
+        flow_file.write(
+            f'{ind}{ind}{ind}{ind}{ind}{ind}self.evaluate_step.arguments["ProcessingOutputConfig"]["Outputs"][0]["S3Output"][\n'
+        )
+        flow_file.write(f'{ind}{ind}{ind}{ind}{ind}{ind}{ind}"S3Uri"\n')
+        flow_file.write(f"{ind}{ind}{ind}{ind}{ind}{ind}],\n")
+        flow_file.write(f'{ind}{ind}{ind}{ind}{ind}{ind}"evaluation_report",\n')
+        flow_file.write(f"{ind}{ind}{ind}{ind}{ind}],\n")
+        flow_file.write(f"{ind}{ind}{ind}{ind}),\n")
+        flow_file.write(f'{ind}{ind}{ind}{ind}content_type="application/json",\n')
+        flow_file.write(f"{ind}{ind}{ind})\n")
+        flow_file.write(f"{ind}{ind})\n")
+
+    flow_file.write(f"{ind}{ind}step_register_model = RegisterModel(\n")
+    flow_file.write(f'{ind}{ind}{ind}{ind}name="Promote",\n')
+    flow_file.write(f"{ind}{ind}{ind}{ind}estimator=self.estimator,\n")
+    # TODO don't hardcode train step
+    flow_file.write(
+        f"{ind}{ind}{ind}{ind}model_data=self.fit_step.properties.ModelArtifacts.S3ModelArtifacts,\n"
+    )
+    flow_file.write(f'{ind}{ind}{ind}{ind}content_types=["text/csv"],\n')
+    flow_file.write(f'{ind}{ind}{ind}{ind}response_types=["text/csv"],\n')
+    # Params/config for inference and transform instances
+    flow_file.write(
+        f'{ind}{ind}{ind}{ind}inference_instances=["ml.t2.medium", "ml.m5.xlarge", "ml.m5.large"],\n'
+    )
+    flow_file.write(f'{ind}{ind}{ind}{ind}transform_instances=["ml.m5.xlarge"],\n')
+    flow_file.write(
+        f"{ind}{ind}{ind}{ind}model_package_group_name=self.flow_base_key,\n"
+    )
+    flow_file.write(f"{ind}{ind}{ind}{ind}model_metrics=model_metrics,\n")
+    flow_file.write(f"{ind}{ind})\n")
+
+    flow_file.write(f"{ind}{ind}cond_eq = ConditionEquals(\n")
+    flow_file.write(f"{ind}{ind}{ind}left=self.promote,\n")
+    flow_file.write(f"{ind}{ind}{ind}right=True,\n")
+    flow_file.write(f"{ind}{ind})\n")
+    flow_file.write(f"{ind}{ind}step_cond = ConditionStep(\n")
+    flow_file.write(f'{ind}{ind}{ind}name="Manual-Promote-Condition",\n')
+    flow_file.write(f"{ind}{ind}{ind}conditions=[cond_eq],\n")
+    flow_file.write(f"{ind}{ind}{ind}if_steps=[step_register_model],\n")
+    flow_file.write(f"{ind}{ind}{ind}else_steps=[],\n")
+    flow_file.write(f"{ind}{ind})\n")
+    flow_file.write(f"{ind}{ind}self.cond_promote_step = step_cond\n")
+    flow_file.write(f"{ind}{ind}return step_cond\n")
+
+# %% ../../nbs/converters/to_sagemaker.ipynb 55
 # | export
 
 
@@ -1019,7 +1118,7 @@ def generate_sagemaker_modules(
             sm_module_file.write(f"{ind}args = parse_args()\n")
             sm_module_file.write(f"{ind}main(**vars(args))\n")
 
-# %% ../../nbs/converters/to_sagemaker.ipynb 54
+# %% ../../nbs/converters/to_sagemaker.ipynb 57
 # | export
 
 
@@ -1096,21 +1195,27 @@ def write_preamble(step, sm_module_file, ind):
     )
     sm_module_file.write(f"{ind}return result")
 
-# %% ../../nbs/converters/to_sagemaker.ipynb 62
+# %% ../../nbs/converters/to_sagemaker.ipynb 67
 # | export
 
 
 def generate_flows(nb_glob: str = None, clear_dir: bool = True):
     if clear_dir:
-        metaflows_dir = Path(get_config().path("flows_path"), "sagemaker")
-        [f.unlink() for f in metaflows_dir.iterdir() if not f.is_dir()]
+        flows_dir = Path(get_config().path("flows_path"), "sagemaker")
+        [
+            f.unlink()
+            for f in flows_dir.iterdir()
+            if not f.is_dir()
+            if f.name != "requirements.txt"
+        ]
+
     nb_paths = nbglob(nb_glob)
     for nb_path in nb_paths:
         nb_to_sagemaker_pipeline(
             nb_path, get_flow_path(nb_path, flow_provider="sagemaker"), silent=False
         )
 
-# %% ../../nbs/converters/to_sagemaker.ipynb 65
+# %% ../../nbs/converters/to_sagemaker.ipynb 70
 # | export
 
 

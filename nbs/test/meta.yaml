@@ -21,7 +21,7 @@ requirements:
   - pigar==2.1.1
   - PyYAML==6.0.1
   - sagemaker==2.191.0
-  - -egit+https://github.com/NewDay-Data/sciflow.git@5926d594644ff7a854aadce861c8e0112e982bee#egg=sciflow
+  - -egit+https://github.com/NewDay-Data/sciflow.git@53e3afc875f5792db8cdbd16dc26debc1a60f98b#egg=sciflow
   - scilint==0.2.3
 source:
   path: /home/sagemaker-user/git/sciflow

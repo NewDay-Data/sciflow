@@ -139,7 +139,7 @@ def params_as_dict(nb_path: Path):
 # %% ../nbs/params.ipynb 36
 # | export
 
-supported_parameters = (str, int, float)
+supported_parameters = (str, int, float, bool)
 supported_args = (Dict, List)
 supported_conversion_args = (pd.Series, pd.DataFrame, np.ndarray, Path)
 suppported_types = []
