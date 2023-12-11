@@ -15,4 +15,4 @@ pandas == 1.4.1
 
 # examples/.ipynb_checkpoints/setup-checkpoint.py: 1,3
 # examples/setup.py: 1,3
-setuptools == 60.9.3
+setuptools == 65.5.1
