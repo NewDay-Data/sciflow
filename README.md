@@ -1,9 +1,6 @@
 # Sciflow 🔬
 ***Iterate from idea to impact***
 
-
-This library **bridges the gap between research and production for Data Science.** The interactive notebook is very well suited to facilitating exploration. In practice however this environment does have some limitations with respect to quality and stability. 
-
 `SciFlow` is a meta-workflow tool that **converts your notebook-based workflow** consistent, observable and managed workflows using existing **popular Data Science worflow frameworks** through the use of some simple commands. It mixes the strengths of the notebook environment: flexibility, access to data and constant feedback with the strengths of production-like workflows: resilience and dedicated compute.
 
 ## Convert from Notebooks to Managed Worflows
@@ -149,13 +146,7 @@ You can use the settings.ini fle from `sciflow` as a base to edit and make chang
 ~/codedir/project: sciflow_tidy
 ```
 
-### 3.3 Inspect your notebooks for any potential quality issues [Experimental]
-
-```console
-~/codedir/project: sciflow_lint
-```
-
-### 3.4 Convert your Python Moules to Workflows
+### 3.3 Convert your Python Moules to Workflows
 
 ```console
 ~/codedir/project: sciflow_metaflow
@@ -164,7 +155,7 @@ You can use the settings.ini fle from `sciflow` as a base to edit and make chang
 ~/codedir/project: sciflow_check_sagemaker_flows
 ```
 
-### 3.5 Running your workflows
+### 3.4 Running your workflows
 
 ```console
 ~/codedir/project: sciflow_run_metaflows
@@ -173,12 +164,10 @@ You can use the settings.ini fle from `sciflow` as a base to edit and make chang
 
 
 # Commands
-       
-* sciflow_build_lib
+    
+* sciflow_init
+* sciflow_export
 * nbdev_test_nbs
-* sciflow_tidy
-* sciflow_clean
-* sciflow_lint
 * sciflow_metaflow
 * sciflow_sagemaker
 * sciflow_check_metaflows
