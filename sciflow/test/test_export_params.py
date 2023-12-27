@@ -1,4 +1,4 @@
-# export
+# | export
 
 # TODO: only dealing with simple params for now - scalars & string values
 some_params = len([1, 2, 3])
