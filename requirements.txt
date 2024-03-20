@@ -1,5 +1,5 @@
 asttokens==2.4.0
-black==23.3.0
+black==24.3.0
 boto3==1.28.61
 botocore==1.31.64
 execnb==0.1.5
